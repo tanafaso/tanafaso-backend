@@ -1,7 +1,5 @@
 package com.omar.azkar.controllers;
 
-import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
-import com.omar.azkar.entities.User;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -37,9 +35,9 @@ public class AuthenticationController {
       HttpHeaders headers = new HttpHeaders();
       headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + client.getAccessToken()
           .getTokenValue());
-      HttpEntity entity = new HttpEntity("", headers);
+      HttpEntity httpEntity = new HttpEntity("", headers);
       ResponseEntity<Map> response = restTemplate
-          .exchange(userInfoEndpointUri, HttpMethod.GET, entity, Map.class);
+          .exchange(userInfoEndpointUri, HttpMethod.GET, httpEntity, Map.class);
       Map userAttributes = response.getBody();
       return new AuthenticationControllerResponse(true, (String) userAttributes.get("email"));
     }
