@@ -15,10 +15,9 @@ public class UserController {
   @Autowired
   private UserRepo userRepo;
 
-  @GetMapping(path = "/user", produces = "application/json")
-  public List<User> getUser() {
-    List<User> users = userRepo.findAll();
-    return users;
+  @GetMapping(path = "/users", produces = "application/json")
+  public List<User> getUsers() {
+    return userRepo.findAll();
   }
 
   @GetMapping(path = "/user/{id}", produces = "application/json")
