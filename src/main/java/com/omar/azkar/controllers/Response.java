@@ -2,7 +2,7 @@ package com.omar.azkar.controllers;
 
 public class Response {
 
-  boolean success;
+  private boolean success;
 
   public Response(boolean success) {
     this.success = success;
