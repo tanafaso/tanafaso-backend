@@ -41,7 +41,6 @@ public class AuthenticationController {
       ResponseEntity<Map> response = restTemplate
           .exchange(userInfoEndpointUri, HttpMethod.GET, entity, Map.class);
       Map userAttributes = response.getBody();
-      System.out.println("omorsi " + (String) userAttributes.get("email"));
       return new AuthenticationControllerResponse(true, (String) userAttributes.get("email"));
     }
     return new AuthenticationControllerResponse(false, null);
