@@ -1,8 +1,11 @@
 package com.omar.azkar.repos;
 
 import com.omar.azkar.entities.User;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface UserRepo extends CrudRepository<User, Integer> {
+import java.util.Optional;
+
+public interface UserRepo extends MongoRepository<User, Integer> {
+    Optional<User> findById(String id);
 
 }
