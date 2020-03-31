@@ -1,21 +1,17 @@
-logging:
-  level:
-    org:
-      springframework:
-        web: DEBUG
+logging.level.org.springframework:
+  web: DEBUG
+
 server:
   port: ${SERVER_PORT}
 
 spring:
-  data:
-    mongodb:
-      uri: mongodb://${DATABASE_USER}:${DATABASE_PASSWORD}@localhost:27017/${DATABASE_NAME}
+  data.mongodb:
+    uri: mongodb://${DATABASE_USER}:${DATABASE_PASSWORD}@localhost:27017/${DATABASE_NAME}
   http:
     log-request-details: true
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+  security.oauth2.client.registration.google:
+    client-id: ${GOOGLE_CLIENT_ID}
+    client-secret: ${GOOGLE_CLIENT_SECRET}
+
+security:
+  ignored: /**
