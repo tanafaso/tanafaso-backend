@@ -18,4 +18,3 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .failureUrl("/loginFailure");
   }
 }
-
