@@ -4,9 +4,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.omar.azkar.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,12 +23,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    @Value("${app.jwtSecret}")
+    private String jwtSecret;
+
     @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException {
         String token = getJwtToken(httpServletRequest);
         if(token != null) {
 
-            JWTVerifier verifier = JWT.require(Algorithm.HMAC512("mysupersecret")).build();
+            JWTVerifier verifier = JWT.require(Algorithm.HMAC512(jwtSecret)).build();
             try {
                 String userId = verifier.verify(token).getSubject();
                 UserDetails userDetails = userDetailsService.loadUserById(userId);
