@@ -1,64 +1,54 @@
 package com.omar.azkar.controllers;
 
-import java.util.Map;
+import java.io.UnsupportedEncodingException;
+import java.util.Date;
+
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 @RestController
 public class AuthenticationController {
-
   @Autowired
   private OAuth2AuthorizedClientService authorizedClientService;
 
+  @Value("${app.jwtSecret}")
+  private String jwtSecret;
+
   @GetMapping("/loginSuccess")
-  public AuthenticationControllerResponse getLoginInfo(OAuth2AuthenticationToken authentication) {
-    OAuth2AuthorizedClient client = authorizedClientService
-        .loadAuthorizedClient(
-            authentication.getAuthorizedClientRegistrationId(),
-            authentication.getName());
+  public ResponseEntity<AuthenticationControllerResponse> getLoginInfo(OAuth2AuthenticationToken authentication) throws UnsupportedEncodingException {
+    // TODO: Get id from database using info in "authentication"
+    String token = JWT.create().withSubject("5e837b4babae1b83f1b636b0").withExpiresAt(new Date(System.currentTimeMillis()+86400000 /* 1 day */))
+            .sign(Algorithm.HMAC512(jwtSecret));
 
-    String userInfoEndpointUri = client.getClientRegistration()
-        .getProviderDetails().getUserInfoEndpoint().getUri();
-
-    if (!StringUtils.isEmpty(userInfoEndpointUri)) {
-      RestTemplate restTemplate = new RestTemplate();
-      HttpHeaders headers = new HttpHeaders();
-      headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + client.getAccessToken()
-          .getTokenValue());
-      HttpEntity httpEntity = new HttpEntity("", headers);
-      ResponseEntity<Map> response = restTemplate
-          .exchange(userInfoEndpointUri, HttpMethod.GET, httpEntity, Map.class);
-      Map userAttributes = response.getBody();
-      return new AuthenticationControllerResponse(true, (String) userAttributes.get("email"));
-    }
-    return new AuthenticationControllerResponse(false, null);
+    HttpHeaders httpHeaders = new HttpHeaders();
+    httpHeaders.add("Authorization", "Bearer " + token);
+    return new ResponseEntity<>(new AuthenticationControllerResponse(true, token),
+           httpHeaders,
+           HttpStatus.OK);
   }
 
   private static class AuthenticationControllerResponse extends Response {
 
-    private String userEmail;
+    private String token;
 
-    public AuthenticationControllerResponse(boolean success, String userEmail) {
+    public AuthenticationControllerResponse(boolean success, String token) {
       super(success);
-      this.userEmail = userEmail;
+      this.token = token;
     }
 
-    public void setUserEmail(String userEmail) {
-      this.userEmail = userEmail;
+    public void setToken(String userEmail) {
+      this.token = token;
     }
 
-    public String getUserEmail() {
-      return userEmail;
+    public String getToken() {
+      return token;
     }
   }
 }
