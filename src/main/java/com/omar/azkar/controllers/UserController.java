@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,8 +17,8 @@ public class UserController {
   private UserRepo userRepo;
 
   @GetMapping(path = "/users", produces = "application/json")
-  public List<User> getUsers() {
-    return userRepo.findAll();
+  public ResponseEntity<List<User>> getUsers() {
+    return ResponseEntity.ok(userRepo.findAll());
   }
 
   @GetMapping(path = "/user/{id}", produces = "application/json")

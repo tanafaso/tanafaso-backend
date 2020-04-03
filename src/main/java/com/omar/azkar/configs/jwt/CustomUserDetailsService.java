@@ -13,20 +13,20 @@ import java.util.Optional;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private UserRepo userRepository;
+  @Autowired
+  private UserRepo userRepository;
 
-    @Override
-    public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
-        // TODO: return the actual user.
-        return null;
-    }
+  @Override
+  public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
+    // TODO: return the actual user.
+    return null;
+  }
 
-    public UserDetails loadUserById(String id) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()) {
-            return new UserPrincipal(user.get());
-        }
-        return null;
+  public UserDetails loadUserById(String id) {
+    Optional<User> user = userRepository.findById(id);
+    if (user.isPresent()) {
+      return new UserPrincipal(user.get());
     }
+    return null;
+  }
 }

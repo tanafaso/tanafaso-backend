@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class AuthenticationController {
+
   @Autowired
   private OAuth2AuthorizedClientService authorizedClientService;
 
@@ -22,16 +23,18 @@ public class AuthenticationController {
   private String jwtSecret;
 
   @GetMapping("/loginSuccess")
-  public ResponseEntity<AuthenticationControllerResponse> getLoginInfo(OAuth2AuthenticationToken authentication) throws UnsupportedEncodingException {
+  public ResponseEntity<AuthenticationControllerResponse> getLoginInfo(
+      OAuth2AuthenticationToken authentication) throws UnsupportedEncodingException {
     // TODO: Get id from database using info in "authentication"
-    String token = JWT.create().withSubject("5e837b4babae1b83f1b636b0").withExpiresAt(new Date(System.currentTimeMillis()+86400000 /* 1 day */))
-            .sign(Algorithm.HMAC512(jwtSecret));
+    String token = JWT.create().withSubject("5e837b4babae1b83f1b636b0")
+        .withExpiresAt(new Date(System.currentTimeMillis() + 86400000 /* 1 day */))
+        .sign(Algorithm.HMAC512(jwtSecret));
 
     HttpHeaders httpHeaders = new HttpHeaders();
     httpHeaders.add("Authorization", "Bearer " + token);
     return new ResponseEntity<>(new AuthenticationControllerResponse(true, token),
-           httpHeaders,
-           HttpStatus.OK);
+        httpHeaders,
+        HttpStatus.OK);
   }
 
   private static class AuthenticationControllerResponse extends Response {
