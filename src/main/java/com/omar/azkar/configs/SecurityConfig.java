@@ -1,10 +1,13 @@
 package com.omar.azkar.configs;
 
-import com.omar.azkar.configs.jwt.JwtAuthenticationFilter;
+import com.omar.azkar.configs.Authentication.JwtAuthenticationFilter;
+import com.omar.azkar.configs.Authentication.OauthSuccessHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -15,6 +18,12 @@ import java.util.Arrays;
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
+  @Autowired
+  JwtAuthenticationFilter jwtAuthenticationFilter;
+
+  @Autowired
+  OauthSuccessHandler oauthSuccessHandler;
+
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.authorizeRequests()
@@ -22,18 +31,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .authenticated()
         .and()
         .oauth2Login()
-        .defaultSuccessUrl("/loginSuccess", true)
-        .failureUrl("/loginFailure");
-    http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        .failureUrl("/loginFailure")
+        .successHandler(oauthSuccessHandler)
+        .and()
+        .sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     // allowing cors origin.
     http.cors().and().csrf().disable();
-
-  }
-
-  @Bean
-  public JwtAuthenticationFilter jwtAuthenticationFilter() {
-    return new JwtAuthenticationFilter();
   }
 
   @Bean
