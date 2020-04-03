@@ -1,3 +1,4 @@
 .idea/
 target/
 azkar.iml
+env.sh
