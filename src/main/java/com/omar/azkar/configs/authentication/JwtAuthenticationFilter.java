@@ -1,4 +1,4 @@
-package com.omar.azkar.configs.Authentication;
+package com.omar.azkar.configs.authentication;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -7,6 +7,11 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.spring.security.api.authentication.PreAuthenticatedAuthenticationJsonWebToken;
 import com.omar.azkar.entities.User;
 import com.omar.azkar.services.UserService;
+import java.io.IOException;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -15,16 +20,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  String BEARER_TOKEN_PREFIX = "Bearer ";
+  static final String BEARER_TOKEN_PREFIX = "Bearer ";
 
   @Autowired
   private UserService userService;
