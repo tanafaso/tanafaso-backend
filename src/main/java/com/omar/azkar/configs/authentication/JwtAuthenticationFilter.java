@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.spring.security.api.authentication.PreAuthenticatedAuthenticationJsonWebToken;
 import com.google.gson.Gson;
 import com.omar.azkar.entities.User;
 import com.omar.azkar.services.UserService;
@@ -41,11 +40,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     if (token != null) {
       JWTVerifier verifier = JWT.require(Algorithm.HMAC512(jwtSecret)).build();
       try {
-        Authentication authToken = new PreAuthenticatedAuthenticationToken();
-            PreAuthenticatedAuthenticationJsonWebToken.usingToken(token)
-            .verify(verifier);
+        String decodedToken = verifier.verify(token).getSubject();
         UserPrincipal userPrincipal = new Gson()
-            .fromJson((String) authToken.getPrincipal(), UserPrincipal.class);
+            .fromJson(decodedToken, UserPrincipal.class);
+        Authentication authToken = new PreAuthenticatedAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
         User currentUser = userService
             .loadUserById(userPrincipal.getUserId());
         if (currentUser != null) {
