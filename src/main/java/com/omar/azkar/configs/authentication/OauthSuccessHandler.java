@@ -2,6 +2,7 @@ package com.omar.azkar.configs.authentication;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.google.gson.Gson;
 import com.omar.azkar.entities.User;
 import com.omar.azkar.repos.UserRepo;
 import java.io.IOException;
@@ -46,7 +47,10 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
       newUser.setEmail(email);
       currentUser = userRepo.save(newUser);
     }
-    String token = generateToken(currentUser.getId());
+    UserPrincipal userPrincipal = new UserPrincipal();
+    userPrincipal.setUserId(currentUser.getId());
+    String userPrincipalJson = new Gson().toJson(userPrincipal);
+    String token = generateToken(userPrincipalJson);
     httpServletResponse.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
   }
 

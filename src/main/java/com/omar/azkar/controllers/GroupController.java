@@ -1,6 +1,6 @@
 package com.omar.azkar.controllers;
 
-import com.omar.azkar.configs.jwt.UserPrincipal;
+import com.omar.azkar.configs.authentication.UserPrincipal;
 import com.omar.azkar.entities.Group;
 import com.omar.azkar.repos.GroupRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class GroupController {
         .getContext()
         .getAuthentication()
         .getPrincipal();
-    String userId = userPrincipal.user.getId();
+    String userId = userPrincipal.getUserId();
     Group newGroup = new Group();
     newGroup.setName(req.getName());
     newGroup.setAdminId(userId);

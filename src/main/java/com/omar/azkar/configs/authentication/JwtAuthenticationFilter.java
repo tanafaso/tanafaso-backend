@@ -5,6 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.spring.security.api.authentication.PreAuthenticatedAuthenticationJsonWebToken;
+import com.google.gson.Gson;
 import com.omar.azkar.entities.User;
 import com.omar.azkar.services.UserService;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -39,10 +41,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     if (token != null) {
       JWTVerifier verifier = JWT.require(Algorithm.HMAC512(jwtSecret)).build();
       try {
-        Authentication authToken = PreAuthenticatedAuthenticationJsonWebToken.usingToken(token)
+        Authentication authToken = new PreAuthenticatedAuthenticationToken();
+            PreAuthenticatedAuthenticationJsonWebToken.usingToken(token)
             .verify(verifier);
+        UserPrincipal userPrincipal = new Gson()
+            .fromJson((String) authToken.getPrincipal(), UserPrincipal.class);
         User currentUser = userService
-            .loadUserById(authToken.getPrincipal().toString());
+            .loadUserById(userPrincipal.getUserId());
         if (currentUser != null) {
           SecurityContextHolder.getContext().setAuthentication(authToken);
         }
