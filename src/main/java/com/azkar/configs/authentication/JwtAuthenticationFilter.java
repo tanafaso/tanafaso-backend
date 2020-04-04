@@ -43,7 +43,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String decodedToken = verifier.verify(token).getSubject();
         UserPrincipal userPrincipal = new Gson()
             .fromJson(decodedToken, UserPrincipal.class);
-        Authentication authToken = new PreAuthenticatedAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+        Authentication authToken = new PreAuthenticatedAuthenticationToken(userPrincipal, null,
+            userPrincipal.getAuthorities());
         User currentUser = userService
             .loadUserById(userPrincipal.getUserId());
         if (currentUser != null) {
