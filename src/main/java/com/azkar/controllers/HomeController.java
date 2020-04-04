@@ -1,4 +1,4 @@
-package com.omar.azkar.controllers;
+package com.azkar.controllers;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

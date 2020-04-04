@@ -1,4 +1,4 @@
-package com.omar.azkar.entities;
+package com.azkar.entities;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
