@@ -1,12 +1,12 @@
-package com.omar.azkar.configs.authentication;
+package com.azkar.configs.authentication;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.google.gson.Gson;
-import com.omar.azkar.entities.User;
-import com.omar.azkar.services.UserService;
+import com.azkar.entities.User;
+import com.azkar.services.UserService;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;

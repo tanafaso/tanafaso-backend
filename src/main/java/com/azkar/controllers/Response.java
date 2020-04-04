@@ -1,4 +1,4 @@
-package com.omar.azkar.controllers;
+package com.azkar.controllers;
 
 public class Response {
 

@@ -1,6 +1,6 @@
-package com.omar.azkar.repos;
+package com.azkar.repos;
 
-import com.omar.azkar.entities.User;
+import com.azkar.entities.User;
 import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

@@ -1,4 +1,4 @@
-package com.omar.azkar.configs.authentication;
+package com.azkar.configs.authentication;
 
 import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;
