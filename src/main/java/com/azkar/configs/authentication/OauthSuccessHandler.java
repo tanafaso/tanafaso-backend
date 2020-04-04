@@ -24,15 +24,16 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
 
   private static int TOKEN_TIMEOUT_IN_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-  @Autowired
-  UserRepo userRepo;
+  @Autowired UserRepo userRepo;
 
   @Value("${app.jwtSecret}")
   String jwtSecret;
 
   @Override
-  public void onAuthenticationSuccess(HttpServletRequest httpServletRequest,
-      HttpServletResponse httpServletResponse, Authentication authentication)
+  public void onAuthenticationSuccess(
+      HttpServletRequest httpServletRequest,
+      HttpServletResponse httpServletResponse,
+      Authentication authentication)
       throws IOException, ServletException {
     String email = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("email");
     String name = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("name");
@@ -51,9 +52,11 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
   }
 
   public String generateToken(String id) throws UnsupportedEncodingException {
-    String token = JWT.create().withSubject(id)
-        .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
-        .sign(Algorithm.HMAC512(jwtSecret));
+    String token =
+        JWT.create()
+            .withSubject(id)
+            .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
+            .sign(Algorithm.HMAC512(jwtSecret));
     return token;
   }
 }
