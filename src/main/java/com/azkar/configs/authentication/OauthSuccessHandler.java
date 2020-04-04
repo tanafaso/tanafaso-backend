@@ -2,9 +2,9 @@ package com.azkar.configs.authentication;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.google.gson.Gson;
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
