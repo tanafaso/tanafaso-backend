@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -34,8 +34,8 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
   public void onAuthenticationSuccess(HttpServletRequest httpServletRequest,
       HttpServletResponse httpServletResponse, Authentication authentication)
       throws IOException, ServletException {
-    String email = ((DefaultOidcUser) authentication.getPrincipal()).getAttribute("email");
-    String name = ((DefaultOidcUser) authentication.getPrincipal()).getAttribute("name");
+    String email = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("email");
+    String name = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("name");
     Optional<User> optionalUser = userRepo.findByEmail(email);
     User currentUser;
     if (optionalUser.isPresent()) {
