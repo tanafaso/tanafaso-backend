@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.spring.security.api.authentication.PreAuthenticatedAuthenticationJsonWebToken;
 import com.azkar.entities.User;
 import com.azkar.services.UserService;
 import com.google.gson.Gson;
@@ -27,6 +28,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   static final String BEARER_TOKEN_PREFIX = "Bearer ";
 
   @Autowired
+  Gson gson;
+
+  @Autowired
   private UserService userService;
 
   @Value("${app.jwtSecret}")
@@ -40,18 +44,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     if (token != null) {
       JWTVerifier verifier = JWT.require(Algorithm.HMAC512(jwtSecret)).build();
       try {
-        String decodedToken = verifier.verify(token).getSubject();
-        UserPrincipal userPrincipal = new Gson()
-            .fromJson(decodedToken, UserPrincipal.class);
-        Authentication authToken = new PreAuthenticatedAuthenticationToken(userPrincipal, null,
-            userPrincipal.getAuthorities());
+        String userId = verifier.verify(token).getSubject();
         User currentUser = userService
-            .loadUserById(userPrincipal.getUserId());
+            .loadUserById(userId);
         if (currentUser != null) {
+          UserPrincipal userPrincipal = new UserPrincipal();
+          userPrincipal.setUserId(userId);
+          Authentication authToken = new PreAuthenticatedAuthenticationToken(userPrincipal, null,
+              userPrincipal.getAuthorities());
           SecurityContextHolder.getContext().setAuthentication(authToken);
         }
       } catch (JWTVerificationException exception) {
-        // invalid token
+        // invalid token.
       }
     }
     filterChain.doFilter(httpServletRequest, httpServletResponse);

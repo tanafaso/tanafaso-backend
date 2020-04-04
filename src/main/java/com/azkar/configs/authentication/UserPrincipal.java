@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 public class UserPrincipal implements UserDetails {
 
-  String userId;
+  private String userId;
 
   public String getUserId() {
     return userId;

@@ -4,11 +4,11 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
-import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -23,17 +23,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class OauthSuccessHandler implements AuthenticationSuccessHandler {
 
-  private static int TOKEN_TIMEOUT_IN_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
+  private static long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.DAYS.toMillis(7);
 
-  @Autowired
-  UserRepo userRepo;
+  @Autowired UserRepo userRepo;
 
   @Value("${app.jwtSecret}")
   String jwtSecret;
 
   @Override
-  public void onAuthenticationSuccess(HttpServletRequest httpServletRequest,
-      HttpServletResponse httpServletResponse, Authentication authentication)
+  public void onAuthenticationSuccess(
+      HttpServletRequest httpServletRequest,
+      HttpServletResponse httpServletResponse,
+      Authentication authentication)
       throws IOException, ServletException {
     String email = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("email");
     String name = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("name");
@@ -47,17 +48,16 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
       newUser.setEmail(email);
       currentUser = userRepo.save(newUser);
     }
-    UserPrincipal userPrincipal = new UserPrincipal();
-    userPrincipal.setUserId(currentUser.getId());
-    String userPrincipalJson = new Gson().toJson(userPrincipal);
-    String token = generateToken(userPrincipalJson);
+    String token = generateToken(currentUser);
     httpServletResponse.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
   }
 
-  public String generateToken(String id) throws UnsupportedEncodingException {
-    String token = JWT.create().withSubject(id)
-        .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
-        .sign(Algorithm.HMAC512(jwtSecret));
+  public String generateToken(User user) throws UnsupportedEncodingException {
+    String token =
+        JWT.create()
+            .withSubject(user.getId())
+            .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
+            .sign(Algorithm.HMAC512(jwtSecret));
     return token;
   }
 }
