@@ -10,7 +10,8 @@ public abstract class ResponseBase<T> {
   T data;
   Error error;
 
-  static class Error {
+  @Getter
+  public static class Error {
 
     private final String message;
 
