@@ -19,7 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class GroupController {
 
-  @Autowired private GroupRepo groupRepo;
+  @Autowired
+  private GroupRepo groupRepo;
 
   @PostMapping(path = "/group", consumes = "application/json", produces = "application/json")
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
