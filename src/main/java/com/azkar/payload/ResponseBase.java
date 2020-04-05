@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-abstract public class ResponseBase<T> {
+public abstract class ResponseBase<T> {
   T data;
   Error error;
 
@@ -15,6 +15,5 @@ abstract public class ResponseBase<T> {
     public Error(String message) {
       this.message = message;
     }
-
   }
 }
