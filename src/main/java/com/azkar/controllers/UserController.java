@@ -1,9 +1,9 @@
 package com.azkar.controllers;
 
 import com.azkar.entities.User;
-import com.azkar.payload.UserControllerPayload.AddUserResponse;
-import com.azkar.payload.UserControllerPayload.GetUserResponse;
-import com.azkar.payload.UserControllerPayload.GetUsersResponse;
+import com.azkar.payload.usercontroller.AddUserResponse;
+import com.azkar.payload.usercontroller.GetUserResponse;
+import com.azkar.payload.usercontroller.GetUsersResponse;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
