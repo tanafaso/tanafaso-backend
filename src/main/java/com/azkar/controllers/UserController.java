@@ -4,6 +4,7 @@ import com.azkar.entities.User;
 import com.azkar.payload.AddUserResponse;
 import com.azkar.payload.GetUserResponse;
 import com.azkar.payload.GetUsersResponse;
+import com.azkar.payload.ResponseBase;
 import com.azkar.repos.UserRepo;
 import java.util.List;
 import java.util.Optional;
@@ -23,19 +24,19 @@ public class UserController {
   @GetMapping(path = "/users", produces = "application/json")
   public ResponseEntity<GetUsersResponse> getUsers() {
     GetUsersResponse response = new GetUsersResponse();
-    response.setBody(userRepo.findAll());
+    response.setData(userRepo.findAll());
     return ResponseEntity.ok(response);
   }
 
   @GetMapping(path = "/user/{id}", produces = "application/json")
   public ResponseEntity<GetUserResponse> getUser(@PathVariable String id) {
     Optional<User> user = userRepo.findById(id);
-    if (user.isPresent()) {
-      GetUserResponse response = new GetUserResponse();
-      response.setBody(user.get());
-      return ResponseEntity.ok(response);
+    if (!user.isPresent()) {
+      return ResponseEntity.notFound().build();
     }
-    return ResponseEntity.notFound().build();
+    GetUserResponse response = new GetUserResponse();
+    response.setData(user.get());
+    return ResponseEntity.ok(response);
   }
 
   @PostMapping(path = "/user", consumes = "application/json", produces = "application/json")
@@ -45,7 +46,7 @@ public class UserController {
     newUser.setEmail(user.getEmail());
     userRepo.save(newUser);
     AddUserResponse response = new AddUserResponse();
-    response.setBody(newUser);
+    response.setData(newUser);
     return ResponseEntity.ok(response);
   }
 }
