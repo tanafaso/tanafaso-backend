@@ -25,7 +25,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   static final String BEARER_TOKEN_PREFIX = "Bearer ";
 
-  @Autowired private UserService userService;
+  @Autowired
+  private UserService userService;
 
   @Value("${app.jwtSecret}")
   private String jwtSecret;

@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UserController {
 
-  @Autowired private UserRepo userRepo;
+  @Autowired
+  private UserRepo userRepo;
 
   @GetMapping(path = "/users", produces = "application/json")
   public ResponseEntity<GetUsersResponse> getUsers() {
