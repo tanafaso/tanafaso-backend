@@ -1,7 +1,7 @@
-package com.omar.azkar.configs;
+package com.azkar.configs;
 
-import com.omar.azkar.configs.authentication.JwtAuthenticationFilter;
-import com.omar.azkar.configs.authentication.OauthSuccessHandler;
+import com.azkar.configs.authentication.JwtAuthenticationFilter;
+import com.azkar.configs.authentication.OauthSuccessHandler;
 import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -17,11 +17,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-  @Autowired
-  JwtAuthenticationFilter jwtAuthenticationFilter;
+  @Autowired JwtAuthenticationFilter jwtAuthenticationFilter;
 
-  @Autowired
-  OauthSuccessHandler oauthSuccessHandler;
+  @Autowired OauthSuccessHandler oauthSuccessHandler;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
