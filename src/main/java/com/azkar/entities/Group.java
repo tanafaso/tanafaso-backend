@@ -18,10 +18,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Getter
 public class Group {
 
-  @Id private String id;
   @NonNull private final String name;
   @NonNull private final GroupCardinality cardinality;
   @NonNull private final String adminId;
+  @Id private String id;
   @NonNull private List<String> usersIds;
   @DBRef @Default private List<Challenge> challenges = new ArrayList<>();
   @CreatedDate private Date createdAt;
