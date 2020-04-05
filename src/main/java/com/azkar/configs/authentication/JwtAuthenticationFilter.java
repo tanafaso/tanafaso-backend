@@ -25,28 +25,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   static final String BEARER_TOKEN_PREFIX = "Bearer ";
 
-  @Autowired
-  private UserService userService;
+  @Autowired private UserService userService;
 
   @Value("${app.jwtSecret}")
   private String jwtSecret;
 
   @Override
-  protected void doFilterInternal(HttpServletRequest httpServletRequest,
-      HttpServletResponse httpServletResponse, FilterChain filterChain)
+  protected void doFilterInternal(
+      HttpServletRequest httpServletRequest,
+      HttpServletResponse httpServletResponse,
+      FilterChain filterChain)
       throws ServletException, IOException {
     String token = extractJwtToken(httpServletRequest);
     if (token != null) {
       JWTVerifier verifier = JWT.require(Algorithm.HMAC512(jwtSecret)).build();
       try {
         String userId = verifier.verify(token).getSubject();
-        User currentUser = userService
-            .loadUserById(userId);
+        User currentUser = userService.loadUserById(userId);
         if (currentUser != null) {
           UserPrincipal userPrincipal = new UserPrincipal();
           userPrincipal.setUserId(userId);
-          Authentication authToken = new PreAuthenticatedAuthenticationToken(userPrincipal, null,
-              userPrincipal.getAuthorities());
+          Authentication authToken =
+              new PreAuthenticatedAuthenticationToken(
+                  userPrincipal, null, userPrincipal.getAuthorities());
           SecurityContextHolder.getContext().setAuthentication(authToken);
         }
       } catch (JWTVerificationException exception) {
