@@ -24,12 +24,13 @@ public class GroupController {
 
   @PostMapping(path = "/group", consumes = "application/json", produces = "application/json")
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
+    AddGroupResponse response = new AddGroupResponse();
     UserPrincipal userPrincipal =
         (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     String userId = userPrincipal.getUserId();
     if (Strings.isNullOrEmpty(req.getName())) {
-      return ResponseEntity.badRequest()
-          .body(new AddGroupResponse(new Error("Cannot create a group with empty name.")));
+      response.setError(new Error("Cannot create a group with empty name."));
+      return ResponseEntity.badRequest().body(response);
     }
     Group newGroup =
         Group.builder()
@@ -39,6 +40,7 @@ public class GroupController {
             .usersIds(new ArrayList<>(Arrays.asList(userId)))
             .build();
     groupRepo.save(newGroup);
-    return ResponseEntity.ok(new AddGroupResponse(newGroup));
+    response.setData(newGroup);
+    return ResponseEntity.ok(response);
   }
 }

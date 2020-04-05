@@ -19,11 +19,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Group {
 
   @NonNull
-  private final String name;
-  @NonNull
   private final GroupCardinality cardinality;
   @NonNull
-  private final String adminId;
+  private String name;
+  @NonNull
+  private String adminId;
   @Id
   private String id;
   @NonNull
