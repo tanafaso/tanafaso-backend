@@ -9,5 +9,4 @@ public class BaseController {
 
   @Autowired
   CurrentUser currentUser;
-
 }
