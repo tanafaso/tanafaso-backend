@@ -17,9 +17,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-  @Autowired JwtAuthenticationFilter jwtAuthenticationFilter;
+  @Autowired
+  JwtAuthenticationFilter jwtAuthenticationFilter;
 
-  @Autowired OauthSuccessHandler oauthSuccessHandler;
+  @Autowired
+  OauthSuccessHandler oauthSuccessHandler;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
