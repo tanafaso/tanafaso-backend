@@ -17,11 +17,13 @@ public class UserInterceptor extends HandlerInterceptorAdapter {
   CurrentUser currentUser;
 
   @Override
-  public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
-      Object handler)
-      throws Exception {
-    PreAuthenticatedAuthenticationToken token = (PreAuthenticatedAuthenticationToken) SecurityContextHolder
-        .getContext().getAuthentication();
+  public boolean preHandle(
+      HttpServletRequest request,
+      HttpServletResponse response,
+      Object handler) {
+    PreAuthenticatedAuthenticationToken token =
+        (PreAuthenticatedAuthenticationToken) SecurityContextHolder.getContext()
+            .getAuthentication();
     currentUser.setId(((UserPrincipal) token.getPrincipal()).getUserId());
     return true;
   }
