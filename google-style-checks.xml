@@ -267,6 +267,8 @@
     </module>
     <module name="AnnotationLocation">
       <property name="id" value="AnnotationLocationMostCases"/>
+      <property name="allowSamelineSingleParameterlessAnnotation"
+        value="false"/>
       <property name="tokens"
         value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF"/>
     </module>

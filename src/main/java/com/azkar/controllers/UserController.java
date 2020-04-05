@@ -1,13 +1,14 @@
 package com.azkar.controllers;
 
-import com.azkar.controllers.responses.GetFriendsResponse;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.User;
 import com.azkar.payload.usercontroller.AddUserResponse;
+import com.azkar.payload.usercontroller.GetFriendsResponse;
 import com.azkar.payload.usercontroller.GetUserResponse;
 import com.azkar.payload.usercontroller.GetUsersResponse;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.UserRepo;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class UserController {
+public class UserController extends BaseController {
 
   @Autowired
   private UserRepo userRepo;
@@ -53,5 +54,19 @@ public class UserController {
     AddUserResponse response = new AddUserResponse();
     response.setData(newUser);
     return ResponseEntity.ok(response);
+  }
+
+  @GetMapping(path = "/users/friends")
+  public ResponseEntity<GetFriendsResponse> getFriends() {
+    List<Friendship> friendshipList = friendshipRepo.findByUserId1(currentUser.getId());
+
+    GetFriendsResponse getFriendsResponse = new GetFriendsResponse();
+    for (Friendship friendship : friendshipList) {
+      getFriendsResponse.getFriendshipStatusList().add(
+          GetFriendsResponse.FriendshipStatus.builder().userId(friendship.getUserId2())
+              .isPending(friendship.isPending()).build());
+    }
+
+    return ResponseEntity.ok(getFriendsResponse);
   }
 }

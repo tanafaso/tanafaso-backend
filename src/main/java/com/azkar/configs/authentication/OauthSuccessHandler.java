@@ -25,7 +25,8 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
 
   private static long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.DAYS.toMillis(7);
 
-  @Autowired UserRepo userRepo;
+  @Autowired
+  UserRepo userRepo;
 
   @Value("${app.jwtSecret}")
   String jwtSecret;
