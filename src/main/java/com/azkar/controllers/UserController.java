@@ -40,9 +40,7 @@ public class UserController {
 
   @PostMapping(path = "/user", consumes = "application/json", produces = "application/json")
   public ResponseEntity<AddUserResponse> addUser(@RequestBody User user) {
-    User newUser = new User();
-    newUser.setName(user.getName());
-    newUser.setEmail(user.getEmail());
+    User newUser = User.builder().name(user.getName()).email(user.getEmail()).build();
     userRepo.save(newUser);
     AddUserResponse response = new AddUserResponse();
     response.setData(newUser);
