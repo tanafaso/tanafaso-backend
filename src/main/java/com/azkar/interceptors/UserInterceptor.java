@@ -16,6 +16,7 @@ public class UserInterceptor extends HandlerInterceptorAdapter {
   @Autowired
   CurrentUser currentUser;
 
+
   @Override
   public boolean preHandle(
       HttpServletRequest request,

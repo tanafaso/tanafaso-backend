@@ -39,17 +39,8 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
       throws IOException, ServletException {
     String email = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("email");
     String name = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("name");
-    Optional<User> optionalUser = userRepo.findByEmail(email);
-    User currentUser;
-    if (optionalUser.isPresent()) {
-      currentUser = optionalUser.get();
-    } else {
-      User newUser = new User();
-      newUser.setName(name);
-      newUser.setEmail(email);
-      currentUser = userRepo.save(newUser);
-    }
-    String token = generateToken(currentUser);
+    User user = User.builder().email(email).name(name).build();
+    String token = generateToken(user);
     httpServletResponse.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
   }
 

@@ -6,21 +6,22 @@ import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document(collection = "friendships")
+@CompoundIndex(name = "user_user", def = "{'requesterId': 1, 'responderId': 1}", unique = true)
 @Data
-@Document(collection = "users")
 @Builder
-public class User {
+public class Friendship {
 
   @Id
   private String id;
-  @Indexed(unique = true)
-  private String email;
-  private String name;
-  @Indexed(unique = true)
-  private String username;
+  private String requesterId;
+  private String requesterUsername;
+  private String responderId;
+  private String responderUsername;
+  private boolean isPending;
   @CreatedDate
   private Date createdAt;
   @LastModifiedDate

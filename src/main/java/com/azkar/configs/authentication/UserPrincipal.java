@@ -1,20 +1,15 @@
 package com.azkar.configs.authentication;
 
 import java.util.Collection;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+@Data
 public class UserPrincipal implements UserDetails {
 
   private String userId;
-
-  public String getUserId() {
-    return userId;
-  }
-
-  public void setUserId(String userId) {
-    this.userId = userId;
-  }
+  private String username;
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
