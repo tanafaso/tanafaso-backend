@@ -60,10 +60,10 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
   }
 
   private String generateUsername(String name) throws UsernameGenerationException {
-    final int kMaxLocalPartMatches = 100;
-    final int kMaxGenerationTrials = 100;
-    for (int i = 0; i < kMaxGenerationTrials; i++) {
-      int randomSuffix = ThreadLocalRandom.current().nextInt(1, kMaxLocalPartMatches);
+    final int MAX_EXPECTED_NAME_MATCHES = 100;
+    final int MAX_GENERATION_TRIALS = 200;
+    for (int i = 0; i < MAX_GENERATION_TRIALS; i++) {
+      int randomSuffix = ThreadLocalRandom.current().nextInt(1, MAX_EXPECTED_NAME_MATCHES);
       String randomUsername = name + randomSuffix;
       if (!userRepo.findByUsername(randomUsername).isPresent()) {
         return randomUsername;
