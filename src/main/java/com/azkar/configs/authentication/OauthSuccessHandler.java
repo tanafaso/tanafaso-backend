@@ -59,13 +59,12 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
     httpServletResponse.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
   }
 
-  private String generateUsername(String email) throws UsernameGenerationException {
-    String localPart = email.substring(0, email.indexOf('@'));
+  private String generateUsername(String name) throws UsernameGenerationException {
     final int kMaxLocalPartMatches = 100;
     final int kMaxGenerationTrials = 100;
     for (int i = 0; i < kMaxGenerationTrials; i++) {
       int randomSuffix = ThreadLocalRandom.current().nextInt(1, kMaxLocalPartMatches);
-      String randomUsername = localPart + randomSuffix;
+      String randomUsername = name + randomSuffix;
       if (!userRepo.findByUsername(randomUsername).isPresent()) {
         return randomUsername;
       }
@@ -74,7 +73,11 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
   }
 
   private User buildNewUser(String email, String name) throws UsernameGenerationException {
-    return User.builder().email(email).username(generateUsername(email)).name(name).build();
+    return User.builder()
+        .email(email)
+        .username(generateUsername(name.replace(" ", "")))
+        .name(name)
+        .build();
   }
 
   private String generateToken(User user) throws UnsupportedEncodingException {
