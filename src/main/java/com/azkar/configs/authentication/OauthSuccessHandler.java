@@ -26,6 +26,8 @@ import org.springframework.stereotype.Component;
 public class OauthSuccessHandler implements AuthenticationSuccessHandler {
 
   private static long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.DAYS.toMillis(7);
+  private static final int MAX_EXPECTED_NAME_MATCHES = 100;
+  private static final int MAX_USERNAME_GENERATION_TRIALS = 200;
 
   @Autowired
   UserRepo userRepo;
@@ -60,9 +62,7 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
   }
 
   private String generateUsername(String name) throws UsernameGenerationException {
-    final int MAX_EXPECTED_NAME_MATCHES = 100;
-    final int MAX_GENERATION_TRIALS = 200;
-    for (int i = 0; i < MAX_GENERATION_TRIALS; i++) {
+    for (int i = 0; i < MAX_USERNAME_GENERATION_TRIALS; i++) {
       int randomSuffix = ThreadLocalRandom.current().nextInt(1, MAX_EXPECTED_NAME_MATCHES);
       String randomUsername = name + randomSuffix;
       if (!userRepo.findByUsername(randomUsername).isPresent()) {
