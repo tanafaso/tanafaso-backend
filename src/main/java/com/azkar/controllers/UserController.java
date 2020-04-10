@@ -12,24 +12,22 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(consumes = "application/json", produces = "application/json")
-public class UserController extends BaseController {
+public class UserController {
 
   @Autowired
   private UserRepo userRepo;
 
-  @GetMapping(path = "/users")
+  @GetMapping(path = "/users", produces = "application/json")
   public ResponseEntity<GetUsersResponse> getUsers() {
     GetUsersResponse response = new GetUsersResponse();
     response.setData(userRepo.findAll());
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping(path = "/user/{id}")
+  @GetMapping(path = "/user/{id}", produces = "application/json")
   public ResponseEntity<GetUserResponse> getUser(@PathVariable String id) {
     Optional<User> user = userRepo.findById(id);
     if (!user.isPresent()) {
@@ -40,7 +38,7 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @PostMapping(path = "/user")
+  @PostMapping(path = "/user", consumes = "application/json", produces = "application/json")
   public ResponseEntity<AddUserResponse> addUser(@RequestBody User user) {
     User newUser = User.builder().name(user.getName()).email(user.getEmail()).build();
     userRepo.save(newUser);

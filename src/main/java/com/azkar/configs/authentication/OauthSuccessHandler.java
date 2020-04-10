@@ -27,7 +27,8 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
 
   private static final int MAX_EXPECTED_NAME_MATCHES = 100;
   private static final int MAX_USERNAME_GENERATION_TRIALS = 200;
-  private static long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.DAYS.toMillis(7);
+
+  private static final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.DAYS.toMillis(7);
   @Autowired
   UserRepo userRepo;
 
