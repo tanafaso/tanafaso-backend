@@ -15,6 +15,7 @@ import com.azkar.repos.UserRepo;
 import com.azkar.requestbodies.RequestBodyException;
 import com.azkar.requestbodies.usercontroller.AddUserRequestBody;
 import com.azkar.requestbodies.usercontroller.ResolveFriendRequestBody;
+import com.mongodb.util.JSON;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +74,7 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @PostMapping(path = "/users/friends/{id}", produces =)
+  @PostMapping(path = "/users/friends/{id}", produces = JSON_CONTENT_TYPE)
   public ResponseEntity<AddFriendResponse> addFriend(@PathVariable String id) {
     AddFriendResponse response = new AddFriendResponse();
 
@@ -118,7 +119,7 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @PutMapping(path = "users/friends/{id}")
+  @PutMapping(path = "users/friends/{id}", consumes = JSON_CONTENT_TYPE, produces = JSON_CONTENT_TYPE)
   public ResponseEntity<ResolveFriendRequestResponse> resolveFriendRequest(
       @PathVariable String id, @RequestBody ResolveFriendRequestBody resolveFriendRequestBody) {
     resolveFriendRequestBody.validate();
@@ -148,7 +149,7 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @DeleteMapping(path = "users/friends/{id}")
+  @DeleteMapping(path = "users/friends/{id}", produces = JSON_CONTENT_TYPE)
   public ResponseEntity<DeleteFriendResponse> deleteFriend(@PathVariable String id) {
     DeleteFriendResponse response = new DeleteFriendResponse();
 
