@@ -1,6 +1,5 @@
 package com.azkar.controllers;
 
-import static com.azkar.controllers.BaseController.JSON_CONTENT_TYPE;
 
 import com.azkar.entities.User;
 import com.azkar.payload.usercontroller.AddUserResponse;
@@ -9,6 +8,7 @@ import com.azkar.payload.usercontroller.GetUsersResponse;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(produces = JSON_CONTENT_TYPE)
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserController extends BaseController {
 
   @Autowired
@@ -42,7 +42,7 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @PostMapping(path = "/user", consumes = JSON_CONTENT_TYPE)
+  @PostMapping(path = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddUserResponse> addUser(@RequestBody User user) {
     User newUser = User.builder().name(user.getName()).email(user.getEmail()).build();
     userRepo.save(newUser);
