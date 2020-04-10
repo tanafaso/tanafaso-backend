@@ -9,18 +9,18 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Data
 @Document(collection = "users")
 @Builder
+@Data
 public class User {
 
   @Id
   private String id;
-  @Indexed(unique = true)
+  @Indexed(name = "email_index", unique = true)
   private String email;
-  private String name;
-  @Indexed(unique = true)
+  @Indexed(name = "username_index", unique = true)
   private String username;
+  private String name;
   @CreatedDate
   private Date createdAt;
   @LastModifiedDate

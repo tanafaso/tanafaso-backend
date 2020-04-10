@@ -1,12 +1,12 @@
 package com.azkar.controllers;
 
-import com.azkar.entities.CurrentUser;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RestController;
+import com.azkar.configs.authentication.UserPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 
-@RestController
 public class BaseController {
+  protected static final String JSON_CONTENT_TYPE = "application/json";
 
-  @Autowired
-  CurrentUser currentUser;
+  protected UserPrincipal getCurrentUser() {
+    return (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+  }
 }

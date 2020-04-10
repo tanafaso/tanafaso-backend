@@ -20,10 +20,10 @@ public class GroupController extends BaseController {
   @Autowired
   private GroupRepo groupRepo;
 
-  @PostMapping(path = "/group", consumes = "application/json", produces = "application/json")
+  @PostMapping(path = "/group", consumes = JSON_CONTENT_TYPE, produces = JSON_CONTENT_TYPE)
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
     AddGroupResponse response = new AddGroupResponse();
-    String userId = currentUser.getId();
+    String userId = getCurrentUser().getId();
     if (Strings.isNullOrEmpty(req.getName())) {
       response.setError(new Error("Cannot create a group with empty name."));
       return ResponseEntity.badRequest().body(response);

@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Data
 public class UserPrincipal implements UserDetails {
 
-  private String userId;
+  private String id;
   private String username;
 
   @Override
