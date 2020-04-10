@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HomeController extends BaseController {
 
-  @GetMapping(value = "/", produces = "application/json")
+  @GetMapping(value = "/", produces = JSON_CONTENT_TYPE)
   ResponseEntity home() {
     return ResponseEntity.ok().build();
   }

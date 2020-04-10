@@ -1,5 +1,7 @@
 package com.azkar.controllers;
 
+import static com.azkar.controllers.BaseController.JSON_CONTENT_TYPE;
+
 import com.azkar.configs.authentication.UserPrincipal;
 import com.azkar.entities.Group;
 import com.azkar.payload.ResponseBase.Error;
@@ -14,15 +16,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping(produces = JSON_CONTENT_TYPE)
 public class GroupController extends BaseController {
 
   @Autowired
   private GroupRepo groupRepo;
 
-  @PostMapping(path = "/group", consumes = "application/json", produces = "application/json")
+  @PostMapping(path = "/group", consumes = JSON_CONTENT_TYPE)
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
     AddGroupResponse response = new AddGroupResponse();
     UserPrincipal userPrincipal =
