@@ -1,6 +1,5 @@
 package com.azkar.controllers;
 
-
 import com.azkar.entities.User;
 import com.azkar.payload.usercontroller.AddUserResponse;
 import com.azkar.payload.usercontroller.GetUserResponse;
