@@ -7,27 +7,30 @@ import com.azkar.payload.usercontroller.GetUsersResponse;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class UserController {
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+public class UserController extends BaseController {
 
   @Autowired
   private UserRepo userRepo;
 
-  @GetMapping(path = "/users", produces = "application/json")
+  @GetMapping(path = "/users")
   public ResponseEntity<GetUsersResponse> getUsers() {
     GetUsersResponse response = new GetUsersResponse();
     response.setData(userRepo.findAll());
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping(path = "/user/{id}", produces = "application/json")
+  @GetMapping(path = "/user/{id}")
   public ResponseEntity<GetUserResponse> getUser(@PathVariable String id) {
     Optional<User> user = userRepo.findById(id);
     if (!user.isPresent()) {
@@ -38,11 +41,9 @@ public class UserController {
     return ResponseEntity.ok(response);
   }
 
-  @PostMapping(path = "/user", consumes = "application/json", produces = "application/json")
+  @PostMapping(path = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddUserResponse> addUser(@RequestBody User user) {
-    User newUser = new User();
-    newUser.setName(user.getName());
-    newUser.setEmail(user.getEmail());
+    User newUser = User.builder().name(user.getName()).email(user.getEmail()).build();
     userRepo.save(newUser);
     AddUserResponse response = new AddUserResponse();
     response.setData(newUser);
