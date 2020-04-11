@@ -29,5 +29,4 @@ public class HomeControllerTest extends ControllerTestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().string(mapToJson(expectedResponse)));
   }
-
 }

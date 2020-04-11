@@ -13,11 +13,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import org.junit.After;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,7 +41,14 @@ public abstract class ControllerTestBase {
   @Value("${app.jwtSecret}")
   String jwtSecret;
 
+  @Autowired
+  MongoTemplate mongoTemplate;
   private String currentUserToken;
+
+  @After
+  public final void afterBase() {
+    mongoTemplate.getDb().drop();
+  }
 
   protected void authenticate(User user) {
     try {
