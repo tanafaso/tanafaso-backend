@@ -37,12 +37,13 @@ public abstract class ControllerTestBase {
   @Autowired
   UserRepo userRepo;
 
+  @Autowired
+  MongoTemplate mongoTemplate;
+
   // TODO(issue#40): Use different jwt secret in test environment.
   @Value("${app.jwtSecret}")
   String jwtSecret;
 
-  @Autowired
-  MongoTemplate mongoTemplate;
   private String currentUserToken;
 
   @After
