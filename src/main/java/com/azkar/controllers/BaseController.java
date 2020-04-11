@@ -5,7 +5,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 public class BaseController {
 
-  public UserPrincipal getCurrentUser() {
+  protected UserPrincipal getCurrentUser() {
     return (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
   }
 }
