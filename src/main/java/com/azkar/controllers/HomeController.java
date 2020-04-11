@@ -1,6 +1,5 @@
 package com.azkar.controllers;
 
-import org.springframework.http.MediaType;
 import com.azkar.entities.User;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.homecontroller.GetHomeResponse;
@@ -8,6 +7,7 @@ import com.azkar.repos.UserRepo;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
