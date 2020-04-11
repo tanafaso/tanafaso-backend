@@ -20,7 +20,7 @@ public class HomeControllerTest extends ControllerTestBase {
   }
 
   @Test
-  public void getHome_AuthenticatedUser_ShouldReturnUser() throws Exception {
+  public void getHome_authenticatedUser_shouldReturnUser() throws Exception {
     GetHomeResponse expectedResponse = new GetHomeResponse();
     expectedResponse.setData(user);
 
