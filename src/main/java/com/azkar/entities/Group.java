@@ -14,7 +14,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "groups")
-@Builder
+@Builder(toBuilder = true)
 @Getter
 public class Group {
 
@@ -28,7 +28,7 @@ public class Group {
   private String id;
   @NonNull
   private List<String> usersIds;
-  @DBRef
+  @DBRef(lazy = true)
   @Default
   private List<Challenge> challenges = new ArrayList<>();
   @CreatedDate
