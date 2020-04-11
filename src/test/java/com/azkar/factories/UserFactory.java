@@ -6,7 +6,7 @@ public class UserFactory {
 
   static int usersRequested = 0;
 
-  public static User getUser() {
+  public static User getNewUser() {
     usersRequested++;
     return User.builder()
         .id("testId" + usersRequested)

@@ -12,10 +12,7 @@ import com.azkar.payload.usercontroller.GetUsersResponse;
 import com.azkar.payload.usercontroller.ResolveFriendRequestResponse;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.UserRepo;
-import com.azkar.requestbodies.RequestBodyException;
-import com.azkar.requestbodies.usercontroller.AddUserRequestBody;
 import com.azkar.requestbodies.usercontroller.ResolveFriendRequestBody;
-import com.mongodb.util.JSON;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,15 +80,15 @@ public class UserController extends BaseController {
     // Check if the provided id is valid.
     Optional<User> responder = userRepo.findById(id);
     if (!responder.isPresent()) {
-      response.setError(new Error(AddFriendResponse.kUserNotFoundError));
-      return ResponseEntity.unprocessableEntity().body(response);
+      response.setError(new Error(AddFriendResponse.ERROR_USER_NOT_FOUND));
+      return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the current user already requested friendship with the other user.
     Optional<Friendship> friendship = friendshipRepo
         .findByRequesterIdAndResponderId(getCurrentUser().getId(), responder.get().getId());
     if (friendship.isPresent()) {
-      response.setError(new Error(AddFriendResponse.kFriendshipAlreadyRequestedError));
+      response.setError(new Error(AddFriendResponse.ERROR_FRIENDSHIP_ALREADY_REQUESTED));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -101,12 +98,8 @@ public class UserController extends BaseController {
         responder.get().getId(),
         getCurrentUser().getId());
     if (friendship.isPresent()) {
-      friendshipRepo.save(
-          Friendship.builder()
-              .requesterId(responder.get().getId())
-              .responderId(getCurrentUser().getId())
-              .isPending(false)
-              .build());
+      friendship.get().setPending(false);
+      friendshipRepo.save(friendship.get());
       return ResponseEntity.ok().body(response);
     }
 
@@ -121,24 +114,30 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @PutMapping(path = "users/friends/{id}", consumes = JSON_CONTENT_TYPE, produces = JSON_CONTENT_TYPE)
+  @PutMapping(path = "users/friends/{id}",
+      consumes = JSON_CONTENT_TYPE,
+      produces = JSON_CONTENT_TYPE)
   public ResponseEntity<ResolveFriendRequestResponse> resolveFriendRequest(
       @PathVariable String id, @RequestBody ResolveFriendRequestBody resolveFriendRequestBody) {
-    resolveFriendRequestBody.validate();
     ResolveFriendRequestResponse response = new ResolveFriendRequestResponse();
+    if (!resolveFriendRequestBody.validate()) {
+      response.setError(new Error("Unexpected request body"));
+      return ResponseEntity.badRequest().body(response);
+    }
 
     // Check if there is a friendship relation pending for the two users where the current user
-    // was the responder.
+    // is the responder.
     Optional<Friendship> friendship =
         friendshipRepo.findByRequesterIdAndResponderId(id, getCurrentUser().getId());
     if (!friendship.isPresent()) {
-      response.setError(new Error(ResolveFriendRequestResponse.kFriendshipNotFoundError));
+      response.setError(new Error(ResolveFriendRequestResponse.ERROR_NO_FRIEND_REQUEST_EXIST));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     // Check if the users are already friends.
     if (!friendship.get().isPending()) {
-      response.setError(new Error(ResolveFriendRequestResponse.kFriendshipNotPendingError));
+      response
+          .setError(new Error(ResolveFriendRequestResponse.ERROR_FRIEND_REQUEST_ALREADY_ACCEPTED));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -162,9 +161,11 @@ public class UserController extends BaseController {
     }
 
     if (!friendship.isPresent()) {
+      response.setError(new Error(DeleteFriendResponse.ERROR_NO_FRIENDSHIP));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
+    friendshipRepo.delete(friendship.get());
     return ResponseEntity.ok(response);
   }
 }

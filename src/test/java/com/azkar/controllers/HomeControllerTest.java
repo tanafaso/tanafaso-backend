@@ -1,4 +1,4 @@
-package com.azkar;
+package com.azkar.controllers;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -12,7 +12,7 @@ import org.springframework.http.MediaType;
 
 public class HomeControllerTest extends BaseControllerTest {
 
-  private static User user = UserFactory.getUser();
+  private static User user = UserFactory.getNewUser();
 
   @Before
   public void before() {
@@ -20,14 +20,13 @@ public class HomeControllerTest extends BaseControllerTest {
   }
 
   @Test
-  public void getHome_AuthenticatedUser_ShouldReturnUser() throws Exception {
+  public void getHome_authenticatedUser_shouldReturnUser() throws Exception {
     GetHomeResponse expectedResponse = new GetHomeResponse();
     expectedResponse.setData(user);
 
     prepareGetRequest("/")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
   }
-
 }
