@@ -9,18 +9,21 @@ import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class GroupController extends BaseController {
 
   @Autowired
   private GroupRepo groupRepo;
 
-  @PostMapping(path = "/group", consumes = JSON_CONTENT_TYPE, produces = JSON_CONTENT_TYPE)
+  @PostMapping(path = "/group", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
     AddGroupResponse response = new AddGroupResponse();
     String userId = getCurrentUser().getId();

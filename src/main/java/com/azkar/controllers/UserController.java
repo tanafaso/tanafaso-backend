@@ -19,6 +19,7 @@ import com.mongodb.util.JSON;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserController extends BaseController {
 
   @Autowired
@@ -44,7 +46,7 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping(path = "/users/{id}")
+  @GetMapping(path = "/user/{id}")
   public ResponseEntity<GetUserResponse> getUser(@PathVariable String id) {
     Optional<User> user = userRepo.findById(id);
     if (!user.isPresent()) {
@@ -55,7 +57,7 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @PostMapping(path = "/user", consumes = JSON_CONTENT_TYPE, produces = JSON_CONTENT_TYPE)
+  @PostMapping(path = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddUserResponse> addUser(@RequestBody User user) {
     User newUser = User.builder().name(user.getName()).email(user.getEmail()).build();
     userRepo.save(newUser);
