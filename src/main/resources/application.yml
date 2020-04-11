@@ -1,8 +1,9 @@
+debug: true
 app:
   jwtSecret: ${JWT_SECRET}
 
 logging.level.org.springframework:
-  web: DEBUG
+  web: TRACE
 
 server:
   port: ${SERVER_PORT}
