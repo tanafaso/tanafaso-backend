@@ -26,7 +26,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public abstract class BaseControllerTest {
+public abstract class ControllerTestBase {
 
   @Autowired
   MockMvc mockMvc;

@@ -10,9 +10,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
-public class HomeControllerTest extends BaseControllerTest {
+public class HomeControllerTest extends ControllerTestBase {
 
-  private static User user = UserFactory.getUser();
+  private static User user = UserFactory.getNewUser();
 
   @Before
   public void before() {
