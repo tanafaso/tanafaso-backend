@@ -1,8 +1,10 @@
 package com.azkar.entities;
 
 import com.mongodb.lang.NonNull;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,13 +22,19 @@ public class Challenge {
   private String id;
   @NonNull
   private String groupId;
+  @NonNull
   private String creatingUserId;
+  @NonNull
   private String motivation;
+  @NonNull
   private String name;
   private long expiryDate;
   private boolean isOngoing;
+  @NonNull
   private List<String> usersAccepted;
-  private List<String> usersFinished;
+  @Default
+  private List<String> usersFinished = new ArrayList<>();
+  @NonNull
   private List<Subchallenges> subChallenges;
   @CreatedDate
   private long createdAt;

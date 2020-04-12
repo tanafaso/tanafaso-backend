@@ -7,6 +7,7 @@ import com.azkar.payload.challengecontroller.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.AddPersonalChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.UserRepo;
+import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,7 @@ public class ChallengeController extends BaseController {
         .motivation(request.getMotivation())
         .expiryDate(request.getExpiryDate())
         .subChallenges(request.getSubChallenges())
+        .usersAccepted(ImmutableList.of(getCurrentUser().getUserId()))
         .creatingUserId(getCurrentUser().getUserId())
         .createdAt(Instant.now().getEpochSecond())
         .modifiedAt(Instant.now().getEpochSecond())
