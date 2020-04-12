@@ -2,13 +2,17 @@ package com.azkar;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
@@ -21,6 +25,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -65,7 +70,7 @@ public abstract class ControllerTestBase {
     }
   }
 
-  protected ResultActions prepareGetRequest(String path) throws Exception {
+  protected ResultActions performGetRequest(String path) throws Exception {
     assertThat(currentUserToken, notNullValue());
 
     return mockMvc
@@ -73,8 +78,57 @@ public abstract class ControllerTestBase {
             .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
   }
 
+  protected ResultActions performPostRequest(String path, String body) throws Exception {
+    assertThat(currentUserToken, notNullValue());
+
+    if (body == null) {
+      return mockMvc
+          .perform(post(path)
+              .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
+    }
+    return mockMvc
+        .perform(post(path)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body)
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
+  }
+
+  protected ResultActions performPutRequest(String path, String body) throws Exception {
+    assertThat(currentUserToken, notNullValue());
+
+    if (body == null) {
+      return mockMvc
+          .perform(put(path)
+              .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
+    }
+
+    return mockMvc
+        .perform(put(path)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body)
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
+  }
+
+  protected ResultActions performDeleteRequest(String path) throws Exception {
+    assertThat(currentUserToken, notNullValue());
+
+    return mockMvc
+        .perform(delete(path)
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
+  }
+
   protected String mapToJson(Object obj) throws JsonProcessingException {
     ObjectMapper objectMapper = new ObjectMapper();
     return objectMapper.writeValueAsString(obj);
+  }
+
+  protected <T> T mapFromJson(String json, TypeReference<T> c) throws JsonProcessingException {
+    ObjectMapper objectMapper = new ObjectMapper();
+    return objectMapper.readValue(json, c);
+  }
+
+  protected <T> T mapFromJson(String json, Class<T> c) throws JsonProcessingException {
+    ObjectMapper objectMapper = new ObjectMapper();
+    return objectMapper.readValue(json, c);
   }
 }
