@@ -24,7 +24,7 @@ public class HomeController extends BaseController {
   public ResponseEntity<GetHomeResponse> getHome() {
     GetHomeResponse response = new GetHomeResponse();
 
-    Optional<User> user = userRepo.findById(getCurrentUser().getUserId());
+    Optional<User> user = userRepo.findById(getCurrentUser().getId());
     if (!user.isPresent()) {
       response.setError(new Error(GetHomeResponse.ERROR_USER_NOT_FOUND));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
