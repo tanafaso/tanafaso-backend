@@ -3,6 +3,7 @@ package com.azkar;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.azkar.controllers.ControllerTestBase;
 import com.azkar.entities.User;
 import com.azkar.factories.UserFactory;
 import com.azkar.payload.homecontroller.GetHomeResponse;
@@ -24,7 +25,7 @@ public class HomeControllerTest extends ControllerTestBase {
     GetHomeResponse expectedResponse = new GetHomeResponse();
     expectedResponse.setData(user);
 
-    prepareGetRequest("/")
+    performGetRequest("/")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().string(mapToJson(expectedResponse)));
