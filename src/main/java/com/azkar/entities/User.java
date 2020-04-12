@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "users")
 @Builder
 @Data
-public class User {
+public class User extends EntityBase {
 
   @Id
   private String id;
