@@ -26,7 +26,7 @@ public class GroupController extends BaseController {
   @PostMapping(path = "/group", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
     AddGroupResponse response = new AddGroupResponse();
-    String userId = getCurrentUser().getId();
+    String userId = getCurrentUser().getUserId();
     if (Strings.isNullOrEmpty(req.getName())) {
       response.setError(new Error("Cannot create a group with empty name."));
       return ResponseEntity.badRequest().body(response);

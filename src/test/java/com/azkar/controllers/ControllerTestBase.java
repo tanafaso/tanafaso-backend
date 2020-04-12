@@ -35,7 +35,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext
-public abstract class BaseControllerTest {
+public abstract class ControllerTestBase {
 
   @Autowired
   MockMvc mockMvc;

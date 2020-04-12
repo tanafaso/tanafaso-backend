@@ -63,17 +63,17 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping(path = "/users/friends", produces = JSON_CONTENT_TYPE)
+  @GetMapping(path = "/users/friends")
   public ResponseEntity<GetFriendsResponse> getFriends() {
     GetFriendsResponse response = new GetFriendsResponse();
 
-    List<Friendship> friendships = friendshipRepo.findByRequesterId(getCurrentUser().getId());
-    friendships.addAll(friendshipRepo.findByResponderId(getCurrentUser().getId()));
+    List<Friendship> friendships = friendshipRepo.findByRequesterId(getCurrentUser().getUserId());
+    friendships.addAll(friendshipRepo.findByResponderId(getCurrentUser().getUserId()));
     response.setData(friendships);
     return ResponseEntity.ok(response);
   }
 
-  @PostMapping(path = "/users/friends/{id}", produces = JSON_CONTENT_TYPE)
+  @PostMapping(path = "/users/friends/{id}")
   public ResponseEntity<AddFriendResponse> addFriend(@PathVariable String id) {
     AddFriendResponse response = new AddFriendResponse();
 
@@ -86,7 +86,7 @@ public class UserController extends BaseController {
 
     // Check if the current user already requested friendship with the other user.
     Optional<Friendship> friendship = friendshipRepo
-        .findByRequesterIdAndResponderId(getCurrentUser().getId(), responder.get().getId());
+        .findByRequesterIdAndResponderId(getCurrentUser().getUserId(), responder.get().getId());
     if (friendship.isPresent()) {
       response.setError(new Error(AddFriendResponse.ERROR_FRIENDSHIP_ALREADY_REQUESTED));
       return ResponseEntity.unprocessableEntity().body(response);
@@ -96,7 +96,7 @@ public class UserController extends BaseController {
     // case then the friendship should not be pending anymore.
     friendship = friendshipRepo.findByRequesterIdAndResponderId(
         responder.get().getId(),
-        getCurrentUser().getId());
+        getCurrentUser().getUserId());
     if (friendship.isPresent()) {
       friendship.get().setPending(false);
       friendshipRepo.save(friendship.get());
@@ -105,7 +105,7 @@ public class UserController extends BaseController {
 
     friendshipRepo.insert(
         Friendship.builder()
-            .requesterId(getCurrentUser().getId())
+            .requesterId(getCurrentUser().getUserId())
             .requesterUsername(getCurrentUser().getUsername())
             .responderId(responder.get().getId())
             .responderUsername(responder.get().getUsername())
@@ -114,9 +114,7 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @PutMapping(path = "users/friends/{id}",
-      consumes = JSON_CONTENT_TYPE,
-      produces = JSON_CONTENT_TYPE)
+  @PutMapping(path = "users/friends/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<ResolveFriendRequestResponse> resolveFriendRequest(
       @PathVariable String id, @RequestBody ResolveFriendRequestBody resolveFriendRequestBody) {
     ResolveFriendRequestResponse response = new ResolveFriendRequestResponse();
@@ -128,7 +126,7 @@ public class UserController extends BaseController {
     // Check if there is a friendship relation pending for the two users where the current user
     // is the responder.
     Optional<Friendship> friendship =
-        friendshipRepo.findByRequesterIdAndResponderId(id, getCurrentUser().getId());
+        friendshipRepo.findByRequesterIdAndResponderId(id, getCurrentUser().getUserId());
     if (!friendship.isPresent()) {
       response.setError(new Error(ResolveFriendRequestResponse.ERROR_NO_FRIEND_REQUEST_EXIST));
       return ResponseEntity.unprocessableEntity().body(response);
@@ -150,14 +148,14 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @DeleteMapping(path = "users/friends/{id}", produces = JSON_CONTENT_TYPE)
+  @DeleteMapping(path = "users/friends/{id}")
   public ResponseEntity<DeleteFriendResponse> deleteFriend(@PathVariable String id) {
     DeleteFriendResponse response = new DeleteFriendResponse();
 
     Optional<Friendship> friendship =
-        friendshipRepo.findByRequesterIdAndResponderId(getCurrentUser().getId(), id);
+        friendshipRepo.findByRequesterIdAndResponderId(getCurrentUser().getUserId(), id);
     if (!friendship.isPresent()) {
-      friendship = friendshipRepo.findByRequesterIdAndResponderId(id, getCurrentUser().getId());
+      friendship = friendshipRepo.findByRequesterIdAndResponderId(id, getCurrentUser().getUserId());
     }
 
     if (!friendship.isPresent()) {

@@ -6,7 +6,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.azkar.controllers.BaseControllerTest;
+import com.azkar.controllers.ControllerTestBase;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.User;
 import com.azkar.factories.UserFactory;
@@ -28,7 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
-public class FriendshipTest extends BaseControllerTest {
+public class FriendshipTest extends ControllerTestBase {
 
   private static User user1 = UserFactory.getNewUser();
   private static User user2 = UserFactory.getNewUser();
