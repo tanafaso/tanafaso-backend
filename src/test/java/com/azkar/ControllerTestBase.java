@@ -1,4 +1,4 @@
-package com.azkar.controllers;
+package com.azkar;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
@@ -34,7 +34,6 @@ import org.springframework.test.web.servlet.ResultActions;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-@DirtiesContext
 public abstract class ControllerTestBase {
 
   @Autowired
