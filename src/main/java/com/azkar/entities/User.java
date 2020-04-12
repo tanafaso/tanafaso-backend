@@ -16,6 +16,7 @@ public class User {
   @Indexed(name = "email_index", unique = true)
   private String email;
   @Indexed(name = "username_index", unique = true)
+  private PersonalGroup personalGroup;
   private String username;
   private String name;
 }

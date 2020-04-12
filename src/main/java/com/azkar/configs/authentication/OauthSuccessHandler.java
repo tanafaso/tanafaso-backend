@@ -4,6 +4,8 @@ import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.azkar.entities.Group.GroupCardinality;
+import com.azkar.entities.PersonalGroup;
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
 import java.io.IOException;
@@ -14,6 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -27,8 +30,9 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
 
   private static final int MAX_EXPECTED_NAME_MATCHES = 100;
   private static final int MAX_USERNAME_GENERATION_TRIALS = 200;
-
+  private static final String GROUP_SUFFIX = "_group";
   private static final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.DAYS.toMillis(7);
+
   @Autowired
   UserRepo userRepo;
 
@@ -50,10 +54,16 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
     } else {
       try {
         currentUser = buildNewUser(email, name);
+        PersonalGroup group = PersonalGroup.builder()
+            .adminId(currentUser.getId())
+            .cardinality(GroupCardinality.SINGLE)
+            .name(currentUser.getUsername() + GROUP_SUFFIX)
+            .build();
+        currentUser.setPersonalGroup(group);
         userRepo.save(currentUser);
       } catch (UsernameGenerationException e) {
         httpServletResponse
-            .sendError(SC_INTERNAL_SERVER_ERROR, "Can not generate username for the new user.");
+            .sendError(SC_INTERNAL_SERVER_ERROR, "Cannot generate username for the new user.");
         return;
       }
     }
@@ -74,6 +84,7 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
 
   private User buildNewUser(String email, String name) throws UsernameGenerationException {
     return User.builder()
+        .id(new ObjectId().toString())
         .email(email)
         .username(generateUsername(name.replace(" ", "")))
         .name(name)
