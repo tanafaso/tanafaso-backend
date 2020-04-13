@@ -6,7 +6,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.azkar.controllers.ControllerTestBase;
+import com.azkar.ControllerTestBase;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.User;
@@ -240,7 +240,7 @@ public class FriendshipTest extends ControllerTestBase {
 
     authenticate(user1);
     MvcResult mvcResult =
-        prepareGetRequest("/friends")
+        performGetRequest("/friends")
             .andExpect(status().isOk())
             .andReturn();
 
@@ -259,7 +259,7 @@ public class FriendshipTest extends ControllerTestBase {
     );
     authenticate(user5);
     mvcResult =
-        prepareGetRequest("/friends")
+        performGetRequest("/friends")
             .andExpect(status().isOk())
             .andReturn();
 
@@ -327,25 +327,25 @@ public class FriendshipTest extends ControllerTestBase {
 
   private ResultActions sendFriendRequest(User requester, User responder) throws Exception {
     authenticate(requester);
-    return preparePutRequest(String.format("/friends/%s", responder.getId()),
+    return preformPutRequest(String.format("/friends/%s", responder.getId()),
         /*body=*/ null);
   }
 
   private ResultActions acceptFriendRequest(User responder, User requester) throws Exception {
     authenticate(responder);
-    return preparePutRequest(String.format("/friends/%s/accept", requester.getId()),
+    return preformPutRequest(String.format("/friends/%s/accept", requester.getId()),
         /*body=*/null);
   }
 
   private ResultActions rejectFriendRequest(User responder, User requester) throws Exception {
     authenticate(responder);
-    return preparePutRequest(String.format("/friends/%s/reject", requester.getId()),
+    return preformPutRequest(String.format("/friends/%s/reject", requester.getId()),
         /*body=*/null);
   }
 
   private ResultActions deleteFriend(User requester, User otherUser) throws Exception {
     authenticate(requester);
-    return prepareDeleteRequest(String.format("/friends/%s", otherUser.getId()));
+    return performDeleteRequest(String.format("/friends/%s", otherUser.getId()));
   }
 
   private void makeFriends(User user1, User user2) throws Exception {

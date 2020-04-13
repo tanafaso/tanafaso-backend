@@ -11,6 +11,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
+import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +27,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -33,6 +35,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext
 public abstract class ControllerTestBase {
 
   @Autowired
@@ -41,6 +44,9 @@ public abstract class ControllerTestBase {
   // TODO(issue#41): Use different database instance in test environment.
   @Autowired
   UserRepo userRepo;
+
+  @Autowired
+  UserService userService;
 
   @Autowired
   MongoTemplate mongoTemplate;
@@ -56,6 +62,10 @@ public abstract class ControllerTestBase {
     mongoTemplate.getDb().drop();
   }
 
+  protected void addNewUser(User user) {
+    userService.addNewUser(user);
+  }
+
   protected void authenticate(User user) {
     try {
       final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.MINUTES.toMillis(1);
@@ -64,7 +74,6 @@ public abstract class ControllerTestBase {
               .withSubject(user.getId())
               .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
               .sign(Algorithm.HMAC512(jwtSecret));
-      userRepo.save(user);
     } catch (UnsupportedEncodingException e) {
       e.printStackTrace();
     }
@@ -93,7 +102,7 @@ public abstract class ControllerTestBase {
             .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
   }
 
-  protected ResultActions performPutRequest(String path, String body) throws Exception {
+  protected ResultActions preformPutRequest(String path, String body) throws Exception {
     assertThat(currentUserToken, notNullValue());
 
     if (body == null) {
