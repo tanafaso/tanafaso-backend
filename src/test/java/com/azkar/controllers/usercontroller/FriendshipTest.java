@@ -327,19 +327,19 @@ public class FriendshipTest extends ControllerTestBase {
 
   private ResultActions sendFriendRequest(User requester, User responder) throws Exception {
     authenticate(requester);
-    return preformPutRequest(String.format("/friends/%s", responder.getId()),
+    return performPutRequest(String.format("/friends/%s", responder.getId()),
         /*body=*/ null);
   }
 
   private ResultActions acceptFriendRequest(User responder, User requester) throws Exception {
     authenticate(responder);
-    return preformPutRequest(String.format("/friends/%s/accept", requester.getId()),
+    return performPutRequest(String.format("/friends/%s/accept", requester.getId()),
         /*body=*/null);
   }
 
   private ResultActions rejectFriendRequest(User responder, User requester) throws Exception {
     authenticate(responder);
-    return preformPutRequest(String.format("/friends/%s/reject", requester.getId()),
+    return performPutRequest(String.format("/friends/%s/reject", requester.getId()),
         /*body=*/null);
   }
 

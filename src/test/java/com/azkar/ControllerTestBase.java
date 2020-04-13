@@ -100,7 +100,7 @@ public abstract class ControllerTestBase {
             .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
   }
 
-  protected ResultActions preformPutRequest(String path, String body) throws Exception {
+  protected ResultActions performPutRequest(String path, String body) throws Exception {
     assertThat(currentUserToken, notNullValue());
 
     if (body == null) {
