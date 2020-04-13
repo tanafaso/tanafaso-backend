@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Friendship {
+public class Friendship extends EntityBase {
 
   @Id
   private String id;
