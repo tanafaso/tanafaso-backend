@@ -1,14 +1,18 @@
 package com.azkar.entities;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "friendships")
@@ -21,13 +25,26 @@ public class Friendship {
 
   @Id
   private String id;
-  private String requesterId;
-  private String requesterUsername;
-  private String responderId;
-  private String responderUsername;
-  private boolean isPending;
+  @NotNull
+  @Indexed(name = "user_id_index")
+  private String userId;
+  @Default
+  private List<Friend> friends = new ArrayList<Friend>();
   @CreatedDate
-  private Date createdAt;
+  private long createdAt;
   @LastModifiedDate
-  private Date modifiedAt;
+  private long modifiedAt;
+
+  @Builder
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Friend {
+
+    @NotNull
+    private String userId;
+    @NotNull
+    private String username;
+    private boolean isPending;
+  }
 }

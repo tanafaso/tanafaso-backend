@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.azkar.controllers.ControllerTestBase;
 import com.azkar.entities.Friendship;
+import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.User;
 import com.azkar.factories.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
@@ -16,7 +17,6 @@ import com.azkar.payload.usercontroller.DeleteFriendResponse;
 import com.azkar.payload.usercontroller.GetFriendsResponse;
 import com.azkar.payload.usercontroller.ResolveFriendRequestResponse;
 import com.azkar.repos.FriendshipRepo;
-import com.azkar.requestbodies.usercontroller.ResolveFriendRequestBody;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,15 +42,11 @@ public class FriendshipTest extends ControllerTestBase {
 
   @Before
   public void before() {
-    /*
-     * Authenticate users to make sure they signed in at least once and exist in the database
-     * before any friendship operation.
-     */
-    authenticate(user1);
-    authenticate(user2);
-    authenticate(user3);
-    authenticate(user4);
-    authenticate(user5);
+    addNewUser(user1);
+    addNewUser(user2);
+    addNewUser(user3);
+    addNewUser(user4);
+    addNewUser(user5);
   }
 
   @Test
@@ -62,13 +58,16 @@ public class FriendshipTest extends ControllerTestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
 
-    assertThat(friendshipRepo.count(), is(1L));
-    Friendship friendship = friendshipRepo.findAll().get(0);
-    assertThat(friendship.getRequesterId(), equalTo(user1.getId()));
-    assertThat(friendship.getResponderId(), equalTo(user2.getId()));
-    assertThat(friendship.getRequesterUsername(), equalTo(user1.getUsername()));
-    assertThat(friendship.getResponderUsername(), equalTo(user2.getUsername()));
-    assertThat(friendship.isPending(), is(true));
+    Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
+    Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
+
+    assertThat(user1Friendship.getFriends().size(), is(0));
+    assertThat(user2Friendship.getFriends().size(), is(1));
+
+    Friend user2Friend = user2Friendship.getFriends().get(0);
+    assertThat(user2Friend.getUserId(), equalTo(user1.getId()));
+    assertThat(user2Friend.getUsername(), equalTo(user1.getUsername()));
+    assertThat(user2Friend.isPending(), is(true));
   }
 
   @Test
@@ -84,6 +83,7 @@ public class FriendshipTest extends ControllerTestBase {
         .andExpect(content().json(mapToJson(expectedResponse)));
   }
 
+
   @Test
   public void addFriend_responderRequestedBefore_shouldAddNonPendingFriendship() throws Exception {
     sendFriendRequest(user1, user2);
@@ -94,12 +94,23 @@ public class FriendshipTest extends ControllerTestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
 
-    assertThat(friendshipRepo.count(), is(1L));
-    Friendship friendship = friendshipRepo.findAll().get(0);
-    assertThat(friendship.getRequesterId(), equalTo(user1.getId()));
-    assertThat(friendship.getResponderId(), equalTo(user2.getId()));
-    assertThat(friendship.isPending(), is(false));
+    Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
+    Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
+
+    assertThat(user1Friendship.getFriends().size(), is(1));
+    assertThat(user2Friendship.getFriends().size(), is(1));
+
+    Friend user1Friend = user1Friendship.getFriends().get(0);
+    assertThat(user1Friend.getUserId(), equalTo(user2.getId()));
+    assertThat(user1Friend.getUsername(), equalTo(user2.getUsername()));
+    assertThat(user1Friend.isPending(), is(false));
+
+    Friend user2Friend = user2Friendship.getFriends().get(0);
+    assertThat(user2Friend.getUserId(), equalTo(user1.getId()));
+    assertThat(user2Friend.getUsername(), equalTo(user1.getUsername()));
+    assertThat(user2Friend.isPending(), is(false));
   }
+
 
   @Test
   public void addFriend_invalidResponder_shouldNotSucceed() throws Exception {
@@ -122,11 +133,38 @@ public class FriendshipTest extends ControllerTestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
 
-    assertThat(friendshipRepo.count(), is(1L));
-    Friendship friendship = friendshipRepo.findAll().get(0);
-    assertThat(friendship.getRequesterId(), equalTo(user1.getId()));
-    assertThat(friendship.getResponderId(), equalTo(user2.getId()));
-    assertThat(friendship.isPending(), is(false));
+    Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
+    Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
+
+    assertThat(user1Friendship.getFriends().size(), is(1));
+    assertThat(user2Friendship.getFriends().size(), is(1));
+
+    Friend user1Friend = user1Friendship.getFriends().get(0);
+    assertThat(user1Friend.getUserId(), equalTo(user2.getId()));
+    assertThat(user1Friend.getUsername(), equalTo(user2.getUsername()));
+    assertThat(user1Friend.isPending(), is(false));
+
+    Friend user2Friend = user2Friendship.getFriends().get(0);
+    assertThat(user2Friend.getUserId(), equalTo(user1.getId()));
+    assertThat(user2Friend.getUsername(), equalTo(user1.getUsername()));
+    assertThat(user2Friend.isPending(), is(false));
+  }
+
+  @Test
+  public void rejectFriendRequest_normalScenario_shouldSucceed() throws Exception {
+    sendFriendRequest(user1, user2);
+
+    ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
+    rejectFriendRequest(user2, user1)
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(mapToJson(expectedResponse)));
+
+    Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
+    Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
+
+    assertThat(user1Friendship.getFriends().size(), is(0));
+    assertThat(user2Friendship.getFriends().size(), is(0));
   }
 
   @Test
@@ -139,7 +177,11 @@ public class FriendshipTest extends ControllerTestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
 
-    assertThat(friendshipRepo.count(), is(0L));
+    Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
+    Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
+
+    assertThat(user1Friendship.getFriends().size(), is(0));
+    assertThat(user2Friendship.getFriends().size(), is(0));
   }
 
   @Test
@@ -149,7 +191,7 @@ public class FriendshipTest extends ControllerTestBase {
 
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
     expectedResponse
-        .setError(new Error(ResolveFriendRequestResponse.ERROR_NO_FRIEND_REQUEST_EXIST));
+        .setError(new Error(ResolveFriendRequestResponse.ERROR_FRIEND_REQUEST_ALREADY_ACCEPTED));
     acceptFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -181,65 +223,80 @@ public class FriendshipTest extends ControllerTestBase {
     makeFriends(user3, user4);
     makeFriends(user3, user1);
 
-    // Get user1 friends.
-
-    List<Friendship> expectedUser1Friendships = new ArrayList<Friendship>();
-    Friendship user1User5Friendship = Friendship.builder()
-        .requesterId(user1.getId())
-        .responderId(user5.getId())
-        .isPending(true).build();
-    expectedUser1Friendships.add(user1User5Friendship);
-
-    Friendship user1User2Friendship = Friendship.builder()
-        .requesterId(user1.getId())
-        .responderId(user2.getId())
-        .isPending(false).build();
-    expectedUser1Friendships.add(user1User2Friendship);
-
-    Friendship user1User3Friendship = Friendship.builder()
-        .requesterId(user3.getId())
-        .responderId(user1.getId())
-        .isPending(false).build();
-    expectedUser1Friendships.add(user1User3Friendship);
+    // user1 expected friends.
+    List<Friend> expectedUser1Friends = new ArrayList();
+    expectedUser1Friends.add(Friend.builder()
+        .userId(user2.getId())
+        .username(user2.getUsername())
+        .isPending(false)
+        .build()
+    );
+    expectedUser1Friends.add(Friend.builder()
+        .userId(user3.getId())
+        .username(user3.getUsername())
+        .isPending(false)
+        .build()
+    );
 
     authenticate(user1);
     MvcResult mvcResult =
-        prepareGetRequest("/users/friends")
+        prepareGetRequest("/friends")
             .andExpect(status().isOk())
             .andReturn();
 
     GetFriendsResponse getUser1FriendsResponse =
         mapFromJson(mvcResult.getResponse().getContentAsString(), GetFriendsResponse.class);
 
-    compareFriendshipList(getUser1FriendsResponse.getData(), expectedUser1Friendships);
+    compareFriendshipList(getUser1FriendsResponse.getData().getFriends(), expectedUser1Friends);
+
+    // user5 expected friends.
+    List<Friend> expectedUser5Friends = new ArrayList();
+    expectedUser5Friends.add(Friend.builder()
+        .userId(user1.getId())
+        .username(user1.getUsername())
+        .isPending(true)
+        .build()
+    );
+    authenticate(user5);
+    mvcResult =
+        prepareGetRequest("/friends")
+            .andExpect(status().isOk())
+            .andReturn();
+
+    GetFriendsResponse getUser5FriendsResponse =
+        mapFromJson(mvcResult.getResponse().getContentAsString(), GetFriendsResponse.class);
+
+    compareFriendshipList(getUser5FriendsResponse.getData().getFriends(), expectedUser5Friends);
+
   }
 
   @Test
   public void deleteFriend_normalScenario_shouldSucceed() throws Exception {
     makeFriends(user1, user2);
-    assertThat(friendshipRepo.count(), is(1L));
 
-    authenticate(user1);
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
-    prepareDeleteRequest(String.format("/users/friends/%s", user2.getId()))
-        .andExpect(status().isOk())
+    deleteFriend(user1, user2)
+        .andExpect(status().isNoContent())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
-    assertThat(friendshipRepo.count(), is(0L));
+
+    Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
+    Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
+
+    assertThat(user1Friendship.getFriends().size(), is(0));
+    assertThat(user2Friendship.getFriends().size(), is(0));
   }
 
   @Test
-  public void deleteFriend_friendRequestIsPending_shouldRemoveFriendRequest() throws Exception {
+  public void deleteFriend_friendRequestIsPending_shouldNotSucceed() throws Exception {
     sendFriendRequest(user1, user2);
-    assertThat(friendshipRepo.count(), is(1L));
 
-    authenticate(user1);
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
-    prepareDeleteRequest(String.format("/users/friends/%s", user2.getId()))
-        .andExpect(status().isOk())
+    expectedResponse.setError(new Error(DeleteFriendResponse.ERROR_NO_FRIENDSHIP));
+    deleteFriend(user1, user2)
+        .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
-    assertThat(friendshipRepo.count(), is(0L));
   }
 
   @Test
@@ -247,49 +304,48 @@ public class FriendshipTest extends ControllerTestBase {
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     expectedResponse.setError(new Error(DeleteFriendResponse.ERROR_NO_FRIENDSHIP));
 
-    authenticate(user1);
-    prepareDeleteRequest(String.format("/users/friends/%s", user2.getId()))
+    deleteFriend(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
-    assertThat(friendshipRepo.count(), is(0L));
   }
 
-  private void compareFriendshipList(List<Friendship> actual, List<Friendship> expected) {
-    Collections.sort(actual, Comparator.comparing(Friendship::getResponderId));
-    Collections.sort(expected, Comparator.comparing(Friendship::getResponderId));
+  private void compareFriendshipList(List<Friend> actual, List<Friend> expected) {
+    Collections.sort(actual, Comparator.comparing(Friend::getUserId));
+    Collections.sort(expected, Comparator.comparing(Friend::getUserId));
 
     assertThat(actual.size(), equalTo(expected.size()));
 
-    for (int i = 0; i < 3; i++) {
-      Friendship responseFriendship = actual.get(i);
-      Friendship expectedFriendship = expected.get(i);
-      assertThat(responseFriendship.getRequesterId(), equalTo(expectedFriendship.getRequesterId()));
-      assertThat(responseFriendship.getResponderId(), equalTo(expectedFriendship.getResponderId()));
-      assertThat(responseFriendship.isPending(), equalTo(expectedFriendship.isPending()));
+    for (int i = 0; i < actual.size(); i++) {
+      Friend actualFriend = actual.get(i);
+      Friend expectedFriend = actual.get(i);
+      assertThat(actualFriend.getUserId(), equalTo(expectedFriend.getUserId()));
+      assertThat(actualFriend.getUsername(), equalTo(expectedFriend.getUsername()));
+      assertThat(actualFriend.isPending(), equalTo(expectedFriend.isPending()));
     }
   }
 
   private ResultActions sendFriendRequest(User requester, User responder) throws Exception {
     authenticate(requester);
-    return preparePostRequest(String.format("/users/friends/%s", responder.getId()),
-        /*body=*/null);
+    return preparePutRequest(String.format("/friends/%s", responder.getId()),
+        /*body=*/ null);
   }
 
   private ResultActions acceptFriendRequest(User responder, User requester) throws Exception {
-    ResolveFriendRequestBody body = new ResolveFriendRequestBody();
-    body.setAccept(true);
     authenticate(responder);
-    return preparePutRequest(String.format("/users/friends/%s", requester.getId()),
-        mapToJson(body));
+    return preparePutRequest(String.format("/friends/%s/accept", requester.getId()),
+        /*body=*/null);
   }
 
   private ResultActions rejectFriendRequest(User responder, User requester) throws Exception {
-    ResolveFriendRequestBody body = new ResolveFriendRequestBody();
-    body.setAccept(false);
     authenticate(responder);
-    return preparePutRequest(String.format("/users/friends/%s", requester.getId()),
-        mapToJson(body));
+    return preparePutRequest(String.format("/friends/%s/reject", requester.getId()),
+        /*body=*/null);
+  }
+
+  private ResultActions deleteFriend(User requester, User otherUser) throws Exception {
+    authenticate(requester);
+    return prepareDeleteRequest(String.format("/friends/%s", otherUser.getId()));
   }
 
   private void makeFriends(User user1, User user2) throws Exception {
