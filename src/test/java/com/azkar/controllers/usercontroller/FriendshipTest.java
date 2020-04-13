@@ -75,7 +75,7 @@ public class FriendshipTest extends ControllerTestBase {
     sendFriendRequest(user1, user2);
 
     AddFriendResponse expectedResponse = new AddFriendResponse();
-    expectedResponse.setError(new Error(AddFriendResponse.ERROR_FRIENDSHIP_ALREADY_REQUESTED));
+    expectedResponse.setError(new Error(AddFriendResponse.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
 
     sendFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
@@ -115,7 +115,7 @@ public class FriendshipTest extends ControllerTestBase {
   @Test
   public void addFriend_invalidResponder_shouldNotSucceed() throws Exception {
     AddFriendResponse expectedResponse = new AddFriendResponse();
-    expectedResponse.setError(new Error(AddFriendResponse.ERROR_USER_NOT_FOUND));
+    expectedResponse.setError(new Error(AddFriendResponse.USER_NOT_FOUND_ERROR));
 
     sendFriendRequest(user1, unAuthenticatedUser)
         .andExpect(status().isBadRequest())
@@ -171,7 +171,7 @@ public class FriendshipTest extends ControllerTestBase {
   public void acceptFriendRequest_friendshipNotPending_shouldNotSucceed() throws Exception {
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
     expectedResponse
-        .setError(new Error(ResolveFriendRequestResponse.ERROR_NO_FRIEND_REQUEST_EXIST));
+        .setError(new Error(ResolveFriendRequestResponse.NO_FRIEND_REQUEST_EXIST_ERROR));
     acceptFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -191,7 +191,7 @@ public class FriendshipTest extends ControllerTestBase {
 
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
     expectedResponse
-        .setError(new Error(ResolveFriendRequestResponse.ERROR_FRIEND_REQUEST_ALREADY_ACCEPTED));
+        .setError(new Error(ResolveFriendRequestResponse.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
     acceptFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -203,7 +203,7 @@ public class FriendshipTest extends ControllerTestBase {
         .andExpect(content().json(mapToJson(expectedResponse)));
 
     expectedResponse
-        .setError(new Error(ResolveFriendRequestResponse.ERROR_FRIEND_REQUEST_ALREADY_ACCEPTED));
+        .setError(new Error(ResolveFriendRequestResponse.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
     acceptFriendRequest(user2, user1)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -292,7 +292,7 @@ public class FriendshipTest extends ControllerTestBase {
     sendFriendRequest(user1, user2);
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
-    expectedResponse.setError(new Error(DeleteFriendResponse.ERROR_NO_FRIENDSHIP));
+    expectedResponse.setError(new Error(DeleteFriendResponse.NO_FRIENDSHIP_ERROR));
     deleteFriend(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -302,7 +302,7 @@ public class FriendshipTest extends ControllerTestBase {
   @Test
   public void deleteFriend_noFriendRequestExist_shouldNotSucceed() throws Exception {
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
-    expectedResponse.setError(new Error(DeleteFriendResponse.ERROR_NO_FRIENDSHIP));
+    expectedResponse.setError(new Error(DeleteFriendResponse.NO_FRIENDSHIP_ERROR));
 
     deleteFriend(user1, user2)
         .andExpect(status().isUnprocessableEntity())

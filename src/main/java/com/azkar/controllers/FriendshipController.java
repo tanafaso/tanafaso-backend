@@ -50,7 +50,7 @@ public class FriendshipController extends BaseController {
     // Check if the provided id is valid.
     Optional<User> otherUser = userRepo.findById(otherUserId);
     if (!otherUser.isPresent()) {
-      response.setError(new Error(AddFriendResponse.ERROR_USER_NOT_FOUND));
+      response.setError(new Error(AddFriendResponse.USER_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
@@ -58,7 +58,7 @@ public class FriendshipController extends BaseController {
     Friendship otherUserFriendship = friendshipRepo.findByUserId(otherUserId);
     if (otherUserFriendship.getFriends().stream()
         .anyMatch(friend -> friend.getUserId().equals(getCurrentUser().getUserId()))) {
-      response.setError(new Error(AddFriendResponse.ERROR_FRIENDSHIP_ALREADY_REQUESTED));
+      response.setError(new Error(AddFriendResponse.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -107,14 +107,14 @@ public class FriendshipController extends BaseController {
     Optional<Friend> friend = currentUserFriendship.getFriends().stream()
         .filter(f -> f.getUserId().equals(otherUserId)).findAny();
     if (!friend.isPresent()) {
-      response.setError(new Error(ResolveFriendRequestResponse.ERROR_NO_FRIEND_REQUEST_EXIST));
+      response.setError(new Error(ResolveFriendRequestResponse.NO_FRIEND_REQUEST_EXIST_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     // Check if the users are already friends.
     if (!friend.get().isPending()) {
       response
-          .setError(new Error(ResolveFriendRequestResponse.ERROR_FRIEND_REQUEST_ALREADY_ACCEPTED));
+          .setError(new Error(ResolveFriendRequestResponse.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -149,7 +149,7 @@ public class FriendshipController extends BaseController {
     // Check if the users are already friends.
     if (!currentUserFriends.get(friendIndex.intValue()).isPending()) {
       response
-          .setError(new Error(ResolveFriendRequestResponse.ERROR_FRIEND_REQUEST_ALREADY_ACCEPTED));
+          .setError(new Error(ResolveFriendRequestResponse.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -172,7 +172,7 @@ public class FriendshipController extends BaseController {
         findFriendIndexInList(otherUserId, currentUserFriendship.getFriends());
 
     if (currentUserAsFriendIndex == null || otherUserAsFriendIndex == null) {
-      response.setError(new Error(DeleteFriendResponse.ERROR_NO_FRIENDSHIP));
+      response.setError(new Error(DeleteFriendResponse.NO_FRIENDSHIP_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
