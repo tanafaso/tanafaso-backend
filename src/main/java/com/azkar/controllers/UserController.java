@@ -4,7 +4,6 @@ import com.azkar.entities.User;
 import com.azkar.payload.usercontroller.AddUserResponse;
 import com.azkar.payload.usercontroller.GetUserResponse;
 import com.azkar.payload.usercontroller.GetUsersResponse;
-import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +22,6 @@ public class UserController extends BaseController {
 
   @Autowired
   private UserRepo userRepo;
-  @Autowired
-  private FriendshipRepo friendshipRepo;
 
   @GetMapping(path = "/")
   public ResponseEntity<GetUsersResponse> getUsers() {
