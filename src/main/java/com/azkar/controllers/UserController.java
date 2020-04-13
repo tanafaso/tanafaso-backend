@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserController extends BaseController {
 
   @Autowired
@@ -26,14 +26,14 @@ public class UserController extends BaseController {
   @Autowired
   private FriendshipRepo friendshipRepo;
 
-  @GetMapping(path = "/users")
+  @GetMapping(path = "/")
   public ResponseEntity<GetUsersResponse> getUsers() {
     GetUsersResponse response = new GetUsersResponse();
     response.setData(userRepo.findAll());
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping(path = "/user/{id}")
+  @GetMapping(path = "/{id}")
   public ResponseEntity<GetUserResponse> getUser(@PathVariable String id) {
     Optional<User> user = userRepo.findById(id);
     if (!user.isPresent()) {
@@ -44,7 +44,7 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @PostMapping(path = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(path = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddUserResponse> addUser(@RequestBody User user) {
     User newUser = User.builder().name(user.getName()).email(user.getEmail()).build();
     userRepo.save(newUser);

@@ -16,7 +16,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "groups")
 @Builder
 @Getter
-public class Group {
+public class Group extends EntityBase {
 
   @NonNull
   private final GroupCardinality cardinality;
