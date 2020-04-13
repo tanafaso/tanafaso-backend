@@ -1,6 +1,6 @@
 package com.azkar.payload.groupcontroller;
 
-import com.azkar.entities.Group.GroupCardinality;
+import com.azkar.entities.GroupBase.GroupCardinality;
 import lombok.Getter;
 import lombok.Setter;
 

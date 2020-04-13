@@ -23,9 +23,4 @@ public class Group extends GroupBase {
   @Default
   private List<String> challenges = new ArrayList<>();
 
-  public enum GroupCardinality {
-    SINGLE,
-    DOUBLE,
-    MULTI
-  }
 }

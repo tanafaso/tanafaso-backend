@@ -35,7 +35,7 @@ public class Challenge {
   @Default
   private List<String> usersFinished = new ArrayList<>();
   @NonNull
-  private List<Subchallenges> subChallenges;
+  private List<SubChallenges> subChallenges;
   @CreatedDate
   private long createdAt;
   @LastModifiedDate
@@ -44,10 +44,10 @@ public class Challenge {
   @Getter
   @Setter
   @NoArgsConstructor
-  public static class Subchallenges {
+  public static class SubChallenges {
 
     private String zekr;
-    private int originalRepititions;
-    private int leftRepititions;
+    private int originalRepetitions;
+    private int leftRepetitions;
   }
 }

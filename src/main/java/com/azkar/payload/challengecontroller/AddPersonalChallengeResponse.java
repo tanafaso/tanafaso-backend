@@ -5,5 +5,5 @@ import com.azkar.payload.ResponseBase;
 
 public class AddPersonalChallengeResponse extends ResponseBase<Challenge> {
 
-  public static String USER_NOT_LOGGED_IN = "Cannot find logged in user.";
+  public static final String USER_NOT_LOGGED_IN_ERROR = "Cannot find logged in user.";
 }

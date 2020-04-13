@@ -23,4 +23,10 @@ public abstract class GroupBase {
   private Date createdAt;
   @LastModifiedDate
   private Date modifiedAt;
+
+  public enum GroupCardinality {
+    SINGLE,
+    DOUBLE,
+    MULTI
+  }
 }

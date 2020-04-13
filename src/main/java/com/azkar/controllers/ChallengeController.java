@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,13 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path = "/challenges", produces = "application/json")
+@RequestMapping(path = "/challenges", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ChallengeController extends BaseController {
 
   @Autowired
   UserRepo userRepo;
 
-  @PostMapping(path = "/personal", consumes = "application/json")
+  @PostMapping(path = "/personal", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddPersonalChallengeResponse> addPersonalChallenge(
       @RequestBody AddPersonalChallengeRequest request) {
     AddPersonalChallengeResponse response = new AddPersonalChallengeResponse();
@@ -47,7 +48,7 @@ public class ChallengeController extends BaseController {
         .build();
     Optional<User> loggedInUser = userRepo.findById(getCurrentUser().getUserId());
     if (!loggedInUser.isPresent()) {
-      response.setError(new Error(AddPersonalChallengeResponse.USER_NOT_LOGGED_IN));
+      response.setError(new Error(AddPersonalChallengeResponse.USER_NOT_LOGGED_IN_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
     loggedInUser.get().getPersonalGroup().getChallenges().add(challenge);

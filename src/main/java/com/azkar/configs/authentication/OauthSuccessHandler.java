@@ -4,7 +4,7 @@ import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.azkar.entities.Group.GroupCardinality;
+import com.azkar.entities.GroupBase;
 import com.azkar.entities.PersonalGroup;
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
@@ -54,12 +54,6 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
     } else {
       try {
         currentUser = buildNewUser(email, name);
-        PersonalGroup group = PersonalGroup.builder()
-            .adminId(currentUser.getId())
-            .cardinality(GroupCardinality.SINGLE)
-            .name(currentUser.getUsername() + GROUP_SUFFIX)
-            .build();
-        currentUser.setPersonalGroup(group);
         userRepo.save(currentUser);
       } catch (UsernameGenerationException e) {
         httpServletResponse
@@ -83,10 +77,18 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
   }
 
   private User buildNewUser(String email, String name) throws UsernameGenerationException {
+    String username = generateUsername(name.replace(" ", ""));
+    String userId = new ObjectId().toString();
+    PersonalGroup group = PersonalGroup.builder()
+        .adminId(userId)
+        .cardinality(GroupBase.GroupCardinality.SINGLE)
+        .name(username + GROUP_SUFFIX)
+        .build();
+
     return User.builder()
-        .id(new ObjectId().toString())
+        .id(userId)
         .email(email)
-        .username(generateUsername(name.replace(" ", "")))
+        .username(username)
         .name(name)
         .build();
   }

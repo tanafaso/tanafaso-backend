@@ -12,6 +12,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class PersonalGroup extends GroupBase {
 
+  private GroupCardinality cardinality;
   @Default
   private List<Challenge> challenges = new ArrayList<>();
 
