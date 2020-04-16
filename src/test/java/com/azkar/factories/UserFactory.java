@@ -1,7 +1,6 @@
 package com.azkar.factories;
 
 import com.azkar.entities.User;
-import org.bson.types.ObjectId;
 
 public class UserFactory {
 
@@ -10,7 +9,7 @@ public class UserFactory {
   public static User getNewUser() {
     usersRequested++;
     return User.builder()
-        .id(new ObjectId().toString())
+        .id("testUserId" + usersRequested)
         .email("testEmail" + usersRequested)
         .username("testUsername" + usersRequested)
         .name("testName" + usersRequested)

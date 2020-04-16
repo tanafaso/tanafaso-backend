@@ -2,18 +2,31 @@ package com.azkar.controllers;
 
 import com.azkar.configs.authentication.UserPrincipal;
 import com.azkar.entities.Group;
+import com.azkar.entities.User;
+import com.azkar.entities.User.UserGroup;
 import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.groupcontroller.AcceptGroupInvitationResponse;
 import com.azkar.payload.groupcontroller.AddGroupRequest;
 import com.azkar.payload.groupcontroller.AddGroupResponse;
+import com.azkar.payload.groupcontroller.GetGroupsResponse;
+import com.azkar.payload.groupcontroller.InviteToGroupResponse;
+import com.azkar.payload.groupcontroller.LeaveGroupResponse;
+import com.azkar.payload.groupcontroller.RejectGroupInvitationResponse;
 import com.azkar.repos.GroupRepo;
+import com.azkar.repos.UserRepo;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +37,9 @@ public class GroupController extends BaseController {
 
   @Autowired
   private GroupRepo groupRepo;
+
+  @Autowired
+  private UserRepo userRepo;
 
   @PostMapping(path = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
@@ -46,4 +62,183 @@ public class GroupController extends BaseController {
     response.setData(newGroup);
     return ResponseEntity.ok(response);
   }
+
+  @GetMapping
+  public ResponseEntity<GetGroupsResponse> get() {
+    GetGroupsResponse response = new GetGroupsResponse();
+
+    User user = userRepo.findById(getCurrentUser().getUserId()).get();
+    response.setData(user.getUserGroups());
+
+    return ResponseEntity.ok(response);
+  }
+
+  @PutMapping(value = "/{groupId}/invite/{userId}")
+  public ResponseEntity<InviteToGroupResponse> invite(
+      @PathVariable String groupId,
+      @PathVariable(value = "userId") String invitedUserId) {
+    InviteToGroupResponse response = new InviteToGroupResponse();
+
+    User invitingUser = userRepo.findById(getCurrentUser().getUserId()).get();
+    Optional<User> invitedUser = userRepo.findById(invitedUserId);
+    Optional<Group> group = groupRepo.findById(groupId);
+
+    // Check if the invited user id is valid.
+    if (!invitedUser.isPresent()) {
+      response.setError(new Error(InviteToGroupResponse.INVITED_USER_INVALID_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    // Check if the group id is valid.
+    if (!group.isPresent()) {
+      response.setError(new Error(InviteToGroupResponse.GROUP_INVALID_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    // Check if the inviting user is a member of the group.
+    if (!group.get().getUsersIds().stream()
+        .anyMatch(userId -> userId.equals(getCurrentUser().getUserId()))) {
+      response.setError(new Error(InviteToGroupResponse.INVITING_USER_IS_NOT_MEMBER_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    // Check if the invited user is already a member of the group.
+    if (group.get().getUsersIds().stream()
+        .anyMatch(userId -> userId.equals(invitedUser.get().getId()))) {
+      response.setError(new Error(InviteToGroupResponse.INVITED_USER_ALREADY_MEMBER_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    // Check if the inviting user has already invited the invited user to this group.
+    if (invitedUser.get().getUserGroups().stream().anyMatch(
+        userGroup ->
+            (userGroup.getGroupId().equals(groupId) &&
+                userGroup.getInvitingUserId().equals(invitingUser.getId())))) {
+      response.setError(new Error(InviteToGroupResponse.USER_ALREADY_INVITED_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    invitedUser.get().getUserGroups().add(
+        UserGroup.builder()
+            .groupId(groupId)
+            .invitingUserId(invitingUser.getId())
+            .isPending(true)
+            .build());
+    userRepo.save(invitedUser.get());
+    return ResponseEntity.ok(response);
+  }
+
+  @PutMapping(value = "/{groupId}/accept")
+  public ResponseEntity<AcceptGroupInvitationResponse> accept(@PathVariable String groupId) {
+    AcceptGroupInvitationResponse response = new AcceptGroupInvitationResponse();
+
+    User user = userRepo.findById(getCurrentUser().getUserId()).get();
+    List<UserGroup> userGroups = user.getUserGroups();
+    Optional<Group> group = groupRepo.findById(groupId);
+
+    // Check if the group id is valid.
+    if (!group.isPresent()) {
+      response.setError(new Error(AcceptGroupInvitationResponse.GROUP_INVALID_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    // Check if the user is already a member of the group.
+    if (userGroups.stream()
+        .anyMatch(
+            userGroup -> (userGroup.getGroupId().equals(groupId) && !userGroup.isPending()))) {
+      response.setError(new Error(AcceptGroupInvitationResponse.USER_ALREADY_MEMBER_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    // Check if the user is not invited to the group.
+    if (!userGroups.stream()
+        .anyMatch(userGroup -> (userGroup.getGroupId().equals(groupId) && userGroup.isPending()))) {
+      response.setError(new Error(AcceptGroupInvitationResponse.USER_NOT_INVITED_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    // Add the user as a member to this group.
+    group.get().getUsersIds().add(user.getId());
+    groupRepo.save(group.get());
+
+    // Remove all of the invitations of this group to this user.
+    userGroups.removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
+
+    // Add the group to the list of this user groups.
+    userGroups.add(UserGroup.builder()
+        .groupId(groupId)
+        .isPending(false)
+        .build());
+    userRepo.save(user);
+
+    return ResponseEntity.ok(response);
+  }
+
+  @PutMapping(value = "/{groupId}/leave")
+  public ResponseEntity<LeaveGroupResponse> leave(@PathVariable String groupId) {
+    LeaveGroupResponse response = new LeaveGroupResponse();
+
+    User user = userRepo.findById(getCurrentUser().getUserId()).get();
+    List<UserGroup> userGroups = user.getUserGroups();
+    Optional<Group> group = groupRepo.findById(groupId);
+
+    // Check if the group id is valid.
+    if (!group.isPresent()) {
+      response.setError(new Error(LeaveGroupResponse.GROUP_INVALID_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    // Check if the user is not already a member of the group.
+    if (!userGroups.stream()
+        .anyMatch(
+            userGroup -> (userGroup.getGroupId().equals(groupId) && !userGroup.isPending()))) {
+      response.setError(new Error(LeaveGroupResponse.NOT_MEMBER_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    group.get().getUsersIds().removeIf(userId -> userId.equals(user.getId()));
+    groupRepo.save(group.get());
+
+    userGroups.removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
+    userRepo.save(user);
+
+    return ResponseEntity.ok(response);
+  }
+
+  @PutMapping(value = "/{groupId}/reject")
+  public ResponseEntity<RejectGroupInvitationResponse> reject(@PathVariable String groupId) {
+    RejectGroupInvitationResponse response = new RejectGroupInvitationResponse();
+
+    User user = userRepo.findById(getCurrentUser().getUserId()).get();
+    List<UserGroup> userGroups = user.getUserGroups();
+    Optional<Group> group = groupRepo.findById(groupId);
+
+    // Check if the group id is valid.
+    if (!group.isPresent()) {
+      response.setError(new Error(RejectGroupInvitationResponse.GROUP_INVALID_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    // Check if the user is already a member of the group.
+    if (userGroups.stream()
+        .anyMatch(
+            userGroup -> (userGroup.getGroupId().equals(groupId) && !userGroup.isPending()))) {
+      response.setError(new Error(RejectGroupInvitationResponse.USER_ALREADY_MEMBER_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    // Check if the user is not invited to the group.
+    if (!userGroups.stream()
+        .anyMatch(userGroup -> (userGroup.getGroupId().equals(groupId) && userGroup.isPending()))) {
+      response.setError(new Error(RejectGroupInvitationResponse.USER_NOT_INVITED_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    // Remove all of the invitations of this group to this user.
+    userGroups.removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
+    userRepo.save(user);
+
+    return ResponseEntity.ok(response);
+  }
+
 }
