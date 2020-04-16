@@ -62,6 +62,7 @@ public abstract class ControllerTestBase {
 
   protected void addNewUser(User user) {
     userService.addNewUser(user);
+    authenticate(user);
   }
 
   protected void authenticate(User user) {
