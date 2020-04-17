@@ -1,0 +1,6 @@
+app.jwtSecret: secret_test
+
+spring:
+  data.mongodb:
+    auto-index-creation: false
+    uri: mongodb://azkar_test_user:azkar_test_password@localhost:27017/azkar_test
