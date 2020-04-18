@@ -23,7 +23,7 @@ public class UserController extends BaseController {
   @Autowired
   private UserRepo userRepo;
 
-  @GetMapping()
+  @GetMapping
   public ResponseEntity<GetUsersResponse> getUsers() {
     GetUsersResponse response = new GetUsersResponse();
     response.setData(userRepo.findAll());

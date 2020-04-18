@@ -1,4 +1,4 @@
-package com.azkar.payload.challengecontroller;
+package com.azkar.payload.challengecontroller.requests;
 
 import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.payload.RequestBodyBase;

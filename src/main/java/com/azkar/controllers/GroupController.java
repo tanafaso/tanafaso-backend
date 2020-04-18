@@ -24,6 +24,7 @@ public class GroupController extends BaseController {
   private GroupRepo groupRepo;
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  // @TODO(3bza): Validate AddGroupRequest.
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
     AddGroupResponse response = new AddGroupResponse();
     String userId = getCurrentUser().getUserId();

@@ -23,7 +23,7 @@ public class Challenge extends EntityBase {
   @Id
   private String id;
   @NonNull
-  @Indexed
+  @Indexed(name = "groupId_index")
   private String groupId;
   @NonNull
   private String creatingUserId;
@@ -48,6 +48,7 @@ public class Challenge extends EntityBase {
   @Setter
   @NoArgsConstructor
   @AllArgsConstructor
+  @Builder
   public static class SubChallenges {
 
     @NonNull

@@ -26,7 +26,7 @@ public class Group extends EntityBase {
   @NonNull
   private List<String> usersIds;
   @Default
-  private List<String> challenges = new ArrayList<>();
+  private List<String> challengesIds = new ArrayList<>();
   @CreatedDate
   private long createdAt;
   @LastModifiedDate

@@ -2,6 +2,7 @@ package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,8 +12,8 @@ import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.entities.User;
 import com.azkar.factories.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
-import com.azkar.payload.challengecontroller.AddPersonalChallengeRequest;
-import com.azkar.payload.challengecontroller.AddPersonalChallengeResponse;
+import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
+import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
@@ -26,11 +27,13 @@ import org.springframework.test.web.servlet.MvcResult;
 public class PersonalChallengeTest extends ControllerTestBase {
 
   private static final User USER = UserFactory.getNewUser();
-  private static final long PAST_DATE = Instant.now().getEpochSecond() - 3600;
-  private static final long FUTURE_DATE = Instant.now().getEpochSecond() + 3600;
+  private static final String CHALLENGE_MOTIVATION = "test-motivation";
   private static final ImmutableList<SubChallenges> SUB_CHALLENGES = ImmutableList.of(
-      new SubChallenges(
-          /* zekr= */"test-zekr", /* originalRepetitions= */4, /* leftRepetitions= */4));
+      SubChallenges.builder()
+          .zekr("test-zekr")
+          .originalRepetitions(4)
+          .leftRepetitions(4)
+          .build());
   private static final AddPersonalChallengeRequest BASE_ADD_PERSONAL_CHALLENGE_REQUEST =
       AddPersonalChallengeRequest.builder()
           .name("test-challenge")
@@ -48,15 +51,17 @@ public class PersonalChallengeTest extends ControllerTestBase {
   @Test
   public void addPersonalChallenge_normalScenario_shouldSucceed() throws Exception {
     AddPersonalChallengeRequest requestBody = BASE_ADD_PERSONAL_CHALLENGE_REQUEST.toBuilder()
-        .expiryDate(FUTURE_DATE).motivation("test-motivation").build();
+        .expiryDate(Instant.now().getEpochSecond() + 3600)
+        .motivation(CHALLENGE_MOTIVATION).build();
 
     MvcResult result = performPostRequest(USER, "/challenges/personal", mapToJson(requestBody))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andReturn();
 
-    Challenge expectedChallenge = userRepo.findById(USER.getId()).get().getPersonalChallenges()
-        .get(0);
+    User user = userRepo.findById(USER.getId()).get();
+    assertThat(user.getPersonalChallenges().size(), is(1));
+    Challenge expectedChallenge = user.getPersonalChallenges().get(0);
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setData(expectedChallenge);
     String actualResponse = result.getResponse().getContentAsString();
@@ -66,7 +71,8 @@ public class PersonalChallengeTest extends ControllerTestBase {
   @Test
   public void addPersonalChallenge_pastExpiryDate_shouldFail() throws Exception {
     AddPersonalChallengeRequest requestBody = BASE_ADD_PERSONAL_CHALLENGE_REQUEST.toBuilder()
-        .expiryDate(PAST_DATE).motivation("test-motivation").build();
+        .expiryDate(Instant.now().getEpochSecond() - 3600)
+        .motivation(CHALLENGE_MOTIVATION).build();
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setError(new Error(AddPersonalChallengeRequest.PAST_EXPIRY_DATE_ERROR));
 
@@ -77,9 +83,9 @@ public class PersonalChallengeTest extends ControllerTestBase {
   }
 
   @Test
-  public void addPersonalChallenge_missing_shouldFail() throws Exception {
+  public void addPersonalChallenge_missingRequestBodyFields_shouldFail() throws Exception {
     AddPersonalChallengeRequest requestBody = BASE_ADD_PERSONAL_CHALLENGE_REQUEST.toBuilder()
-        .expiryDate(FUTURE_DATE).build();
+        .expiryDate(Instant.now().getEpochSecond() + 3600).build();
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
 
