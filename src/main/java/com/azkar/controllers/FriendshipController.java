@@ -166,6 +166,13 @@ public class FriendshipController extends BaseController {
       @PathVariable(value = "id") String otherUserId) {
     DeleteFriendResponse response = new DeleteFriendResponse();
 
+    // Check if the provided id is valid.
+    Optional<User> otherUser = userRepo.findById(otherUserId);
+    if (!otherUser.isPresent()) {
+      response.setError(new Error(DeleteFriendResponse.USER_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
     Friendship currentUserFriendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
     Friendship otherUserFriendship = friendshipRepo.findByUserId(otherUserId);
 

@@ -306,6 +306,17 @@ public class FriendshipTest extends ControllerTestBase {
   }
 
   @Test
+  public void deleteFriend_invalidUser_shouldSucceed() throws Exception {
+    DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
+    expectedResponse.setError(new Error(DeleteFriendResponse.USER_NOT_FOUND_ERROR));
+
+    deleteFriend(user1, unAuthenticatedUser)
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(mapToJson(expectedResponse)));
+  }
+
+  @Test
   public void deleteFriend_friendRequestIsPending_shouldNotSucceed() throws Exception {
     sendFriendRequest(user1, user2);
 
