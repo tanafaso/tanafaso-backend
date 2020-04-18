@@ -26,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -33,19 +34,18 @@ import org.springframework.test.web.servlet.ResultActions;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 public abstract class ControllerTestBase {
 
   @Autowired
   MockMvc mockMvc;
 
-  // TODO(issue#41): Use different database instance in test environment.
   @Autowired
   UserRepo userRepo;
 
   @Autowired
   MongoTemplate mongoTemplate;
 
-  // TODO(issue#40): Use different jwt secret in test environment.
   @Value("${app.jwtSecret}")
   String jwtSecret;
 
