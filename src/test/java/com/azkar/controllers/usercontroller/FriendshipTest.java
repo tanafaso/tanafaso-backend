@@ -256,9 +256,8 @@ public class FriendshipTest extends ControllerTestBase {
         .build()
     );
 
-    authenticate(user1);
     MvcResult mvcResult =
-        performGetRequest("/friends")
+        performGetRequest(user1, "/friends")
             .andExpect(status().isOk())
             .andReturn();
 
@@ -275,9 +274,8 @@ public class FriendshipTest extends ControllerTestBase {
         .isPending(true)
         .build()
     );
-    authenticate(user5);
     mvcResult =
-        performGetRequest("/friends")
+        performGetRequest(user5, "/friends")
             .andExpect(status().isOk())
             .andReturn();
 
@@ -355,26 +353,22 @@ public class FriendshipTest extends ControllerTestBase {
   }
 
   private ResultActions sendFriendRequest(User requester, User responder) throws Exception {
-    authenticate(requester);
-    return performPutRequest(String.format("/friends/%s", responder.getId()),
+    return performPutRequest(requester, String.format("/friends/%s", responder.getId()),
         /*body=*/ null);
   }
 
   private ResultActions acceptFriendRequest(User responder, User requester) throws Exception {
-    authenticate(responder);
-    return performPutRequest(String.format("/friends/%s/accept", requester.getId()),
+    return performPutRequest(responder, String.format("/friends/%s/accept", requester.getId()),
         /*body=*/null);
   }
 
   private ResultActions rejectFriendRequest(User responder, User requester) throws Exception {
-    authenticate(responder);
-    return performPutRequest(String.format("/friends/%s/reject", requester.getId()),
+    return performPutRequest(responder, String.format("/friends/%s/reject", requester.getId()),
         /*body=*/null);
   }
 
   private ResultActions deleteFriend(User requester, User otherUser) throws Exception {
-    authenticate(requester);
-    return performDeleteRequest(String.format("/friends/%s", otherUser.getId()));
+    return performDeleteRequest(requester, String.format("/friends/%s", otherUser.getId()));
   }
 
   private void makeFriends(User user1, User user2) throws Exception {
