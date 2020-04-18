@@ -75,13 +75,10 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
   }
 
   private User buildNewUser(String email, String name) throws UsernameGenerationException {
-    String username = generateUsername(name.replace(" ", ""));
-    String userId = new ObjectId().toString();
-
     return User.builder()
-        .id(userId)
+        .id(new ObjectId().toString())
         .email(email)
-        .username(username)
+        .username(generateUsername(name.replace(" ", "")))
         .name(name)
         .build();
   }

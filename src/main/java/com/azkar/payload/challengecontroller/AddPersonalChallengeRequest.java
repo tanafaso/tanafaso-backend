@@ -23,7 +23,7 @@ public class AddPersonalChallengeRequest implements RequestBodyBase {
   @Override
   public void validate() throws BadRequestException {
     if (motivation == null || name == null || subChallenges == null) {
-      throw new BadRequestException(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN);
+      throw new BadRequestException(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR);
     }
     if (expiryDate <= Instant.now().getEpochSecond()) {
       throw new BadRequestException(PAST_EXPIRY_DATE_ERROR);
