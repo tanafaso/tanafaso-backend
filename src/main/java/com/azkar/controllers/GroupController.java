@@ -19,13 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/groups", produces = MediaType.APPLICATION_JSON_VALUE)
 public class GroupController extends BaseController {
 
   @Autowired
   private GroupRepo groupRepo;
 
-  @PostMapping(path = "/group", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(path = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
     AddGroupResponse response = new AddGroupResponse();
     UserPrincipal userPrincipal =
@@ -39,7 +39,7 @@ public class GroupController extends BaseController {
         Group.builder()
             .name(req.getName())
             .adminId(userId)
-            .cardinality(req.getCardinality())
+            .isBinary(req.isBinary())
             .usersIds(new ArrayList<>(Arrays.asList(userId)))
             .build();
     groupRepo.save(newGroup);

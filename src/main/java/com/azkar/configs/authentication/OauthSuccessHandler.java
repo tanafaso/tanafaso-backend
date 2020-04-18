@@ -4,8 +4,6 @@ import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.azkar.entities.GroupBase;
-import com.azkar.entities.PersonalGroup;
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
 import java.io.IOException;
@@ -79,11 +77,6 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
   private User buildNewUser(String email, String name) throws UsernameGenerationException {
     String username = generateUsername(name.replace(" ", ""));
     String userId = new ObjectId().toString();
-    PersonalGroup group = PersonalGroup.builder()
-        .adminId(userId)
-        .cardinality(GroupBase.GroupCardinality.SINGLE)
-        .name(username + GROUP_SUFFIX)
-        .build();
 
     return User.builder()
         .id(userId)

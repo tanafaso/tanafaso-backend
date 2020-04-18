@@ -9,7 +9,6 @@ import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,13 +45,9 @@ public class ChallengeController extends BaseController {
         .createdAt(Instant.now().getEpochSecond())
         .modifiedAt(Instant.now().getEpochSecond())
         .build();
-    Optional<User> loggedInUser = userRepo.findById(getCurrentUser().getUserId());
-    if (!loggedInUser.isPresent()) {
-      response.setError(new Error(AddPersonalChallengeResponse.USER_NOT_LOGGED_IN_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
-    loggedInUser.get().getPersonalGroup().getChallenges().add(challenge);
-    userRepo.save(loggedInUser.get());
+    User loggedInUser = userRepo.findById(getCurrentUser().getUserId()).get();
+    loggedInUser.getPersonalChallenges().add(challenge);
+    userRepo.save(loggedInUser);
     response.setData(challenge);
     return ResponseEntity.ok(response);
   }

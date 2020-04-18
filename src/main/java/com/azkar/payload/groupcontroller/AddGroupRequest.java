@@ -1,6 +1,5 @@
 package com.azkar.payload.groupcontroller;
 
-import com.azkar.entities.GroupBase.GroupCardinality;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,5 +8,5 @@ import lombok.Setter;
 public class AddGroupRequest {
 
   String name;
-  GroupCardinality cardinality;
+  boolean isBinary;
 }
