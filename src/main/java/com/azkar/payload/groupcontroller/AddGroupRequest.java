@@ -1,12 +1,12 @@
 package com.azkar.payload.groupcontroller;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
-@Setter
+@AllArgsConstructor
 @Getter
 public class AddGroupRequest {
 
-  String name;
-  boolean isBinary;
+  private String name;
+  private boolean isBinary;
 }

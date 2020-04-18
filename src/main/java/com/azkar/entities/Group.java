@@ -5,7 +5,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -14,12 +13,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "groups")
 @Getter
-@Builder
-@NoArgsConstructor
-public class Group {
+@Builder(toBuilder = true)
+public class Group extends EntityBase {
+
   @Id
   private String id;
-  @NonNull
   private boolean isBinary;
   @NonNull
   private String name;

@@ -5,11 +5,11 @@ import com.azkar.payload.RequestBodyBase;
 import com.azkar.payload.exceptions.BadRequestException;
 import java.time.Instant;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
+@AllArgsConstructor
 public class AddPersonalChallengeRequest implements RequestBodyBase {
 
   private static final String PAST_EXPIRY_DATE_ERROR = "Expiry date is in the past.";
