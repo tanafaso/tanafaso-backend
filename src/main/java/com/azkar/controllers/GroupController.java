@@ -79,17 +79,16 @@ public class GroupController extends BaseController {
       @PathVariable(value = "userId") String invitedUserId) {
     InviteToGroupResponse response = new InviteToGroupResponse();
 
-    User invitingUser = userRepo.findById(getCurrentUser().getUserId()).get();
-    Optional<User> invitedUser = userRepo.findById(invitedUserId);
-    Optional<Group> group = groupRepo.findById(groupId);
 
     // Check if the invited user id is valid.
+    Optional<User> invitedUser = userRepo.findById(invitedUserId);
     if (!invitedUser.isPresent()) {
       response.setError(new Error(InviteToGroupResponse.INVITED_USER_INVALID_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the group id is valid.
+    Optional<Group> group = groupRepo.findById(groupId);
     if (!group.isPresent()) {
       response.setError(new Error(InviteToGroupResponse.GROUP_INVALID_ERROR));
       return ResponseEntity.badRequest().body(response);
@@ -110,10 +109,11 @@ public class GroupController extends BaseController {
     }
 
     // Check if the inviting user has already invited the invited user to this group.
+    User invitingUser = userRepo.findById(getCurrentUser().getUserId()).get();
     if (invitedUser.get().getUserGroups().stream().anyMatch(
         userGroup ->
-            (userGroup.getGroupId().equals(groupId) &&
-                userGroup.getInvitingUserId().equals(invitingUser.getId())))) {
+            (userGroup.getGroupId().equals(groupId)
+                && userGroup.getInvitingUserId().equals(invitingUser.getId())))) {
       response.setError(new Error(InviteToGroupResponse.USER_ALREADY_INVITED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
