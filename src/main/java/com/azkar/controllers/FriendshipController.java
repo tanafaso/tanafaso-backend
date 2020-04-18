@@ -144,19 +144,19 @@ public class FriendshipController extends BaseController {
     Friendship currentUserFriendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
     List<Friend> currentUserFriends = currentUserFriendship.getFriends();
 
-    Integer friendIndex = findFriendIndexInList(otherUserId, currentUserFriends);
-    if (friendIndex == null) {
+    int friendIndex = findFriendIndexInList(otherUserId, currentUserFriends);
+    if (friendIndex == -1) {
       response.setError(new Error(ResolveFriendRequestResponse.NO_FRIEND_REQUEST_EXIST_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
     // Check if the users are already friends.
-    if (!currentUserFriends.get(friendIndex.intValue()).isPending()) {
+    if (!currentUserFriends.get(friendIndex).isPending()) {
       response
           .setError(new Error(ResolveFriendRequestResponse.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
-    currentUserFriends.remove(friendIndex.intValue());
+    currentUserFriends.remove(friendIndex);
     friendshipRepo.save(currentUserFriendship);
     return ResponseEntity.ok(response);
   }
@@ -176,30 +176,30 @@ public class FriendshipController extends BaseController {
     Friendship currentUserFriendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
     Friendship otherUserFriendship = friendshipRepo.findByUserId(otherUserId);
 
-    Integer currentUserAsFriendIndex = findFriendIndexInList(getCurrentUser().getUserId(),
+    int currentUserAsFriendIndex = findFriendIndexInList(getCurrentUser().getUserId(),
         otherUserFriendship.getFriends());
-    Integer otherUserAsFriendIndex =
+    int otherUserAsFriendIndex =
         findFriendIndexInList(otherUserId, currentUserFriendship.getFriends());
 
-    if (currentUserAsFriendIndex == null || otherUserAsFriendIndex == null) {
+    if (currentUserAsFriendIndex == -1 || otherUserAsFriendIndex == -1) {
       response.setError(new Error(DeleteFriendResponse.NO_FRIENDSHIP_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
-    currentUserFriendship.getFriends().remove(otherUserAsFriendIndex.intValue());
-    otherUserFriendship.getFriends().remove(currentUserAsFriendIndex.intValue());
+    currentUserFriendship.getFriends().remove(otherUserAsFriendIndex);
+    otherUserFriendship.getFriends().remove(currentUserAsFriendIndex);
 
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);
     return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
   }
 
-  private Integer findFriendIndexInList(String userId, List<Friend> friends) {
+  private int findFriendIndexInList(String userId, List<Friend> friends) {
     for (int i = 0; i < friends.size(); i++) {
       if (friends.get(i).getUserId().equals(userId)) {
         return i;
       }
     }
-    return null;
+    return -1;
   }
 }
