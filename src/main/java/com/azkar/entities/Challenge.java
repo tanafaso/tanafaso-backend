@@ -3,6 +3,7 @@ package com.azkar.entities;
 import com.mongodb.lang.NonNull;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
@@ -46,8 +47,10 @@ public class Challenge extends EntityBase {
   @Getter
   @Setter
   @NoArgsConstructor
+  @AllArgsConstructor
   public static class SubChallenges {
 
+    @NonNull
     private String zekr;
     private int originalRepetitions;
     private int leftRepetitions;

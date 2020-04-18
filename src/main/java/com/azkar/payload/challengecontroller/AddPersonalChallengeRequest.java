@@ -3,16 +3,20 @@ package com.azkar.payload.challengecontroller;
 import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.payload.RequestBodyBase;
 import com.azkar.payload.exceptions.BadRequestException;
+import com.google.common.annotations.VisibleForTesting;
 import java.time.Instant;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@Builder(toBuilder = true)
 public class AddPersonalChallengeRequest implements RequestBodyBase {
 
-  private static final String PAST_EXPIRY_DATE_ERROR = "Expiry date is in the past.";
+  @VisibleForTesting
+  public static final String PAST_EXPIRY_DATE_ERROR = "Expiry date is in the past.";
 
   private String motivation;
   private String name;
