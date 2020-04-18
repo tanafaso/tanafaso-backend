@@ -145,7 +145,10 @@ public class FriendshipController extends BaseController {
     List<Friend> currentUserFriends = currentUserFriendship.getFriends();
 
     Integer friendIndex = findFriendIndexInList(otherUserId, currentUserFriends);
-
+    if (friendIndex == null) {
+      response.setError(new Error(ResolveFriendRequestResponse.NO_FRIEND_REQUEST_EXIST_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
     // Check if the users are already friends.
     if (!currentUserFriends.get(friendIndex.intValue()).isPending()) {
       response

@@ -185,6 +185,23 @@ public class FriendshipTest extends ControllerTestBase {
   }
 
   @Test
+  public void resolveFriendship_noFriendshipExist_shouldNotSucceed() throws Exception {
+    ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
+    expectedResponse
+        .setError(new Error(ResolveFriendRequestResponse.NO_FRIEND_REQUEST_EXIST_ERROR));
+
+    acceptFriendRequest(user1, user2)
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(mapToJson(expectedResponse)));
+
+    rejectFriendRequest(user2, user1)
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(mapToJson(expectedResponse)));
+  }
+
+  @Test
   public void resolveFriendship_friendshipAlreadyExists_shouldNotSucceed() throws Exception {
     sendFriendRequest(user1, user2);
     acceptFriendRequest(user2, user1);
@@ -214,6 +231,7 @@ public class FriendshipTest extends ControllerTestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
   }
+
 
   @Test
   public void getFriends_normalScenario_shouldSucceed() throws Exception {
