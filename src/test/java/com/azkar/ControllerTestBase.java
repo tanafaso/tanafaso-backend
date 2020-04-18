@@ -1,7 +1,5 @@
 package com.azkar;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -11,6 +9,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
+import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,77 +43,68 @@ public abstract class ControllerTestBase {
   UserRepo userRepo;
 
   @Autowired
+  UserService userService;
+
+  @Autowired
   MongoTemplate mongoTemplate;
 
   @Value("${app.jwtSecret}")
   String jwtSecret;
-
-  private String currentUserToken;
 
   @After
   public final void afterBase() {
     mongoTemplate.getDb().drop();
   }
 
-  protected void authenticate(User user) {
-    try {
-      final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.MINUTES.toMillis(1);
-      currentUserToken =
-          JWT.create()
-              .withSubject(user.getId())
-              .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
-              .sign(Algorithm.HMAC512(jwtSecret));
-      userRepo.save(user);
-    } catch (UnsupportedEncodingException e) {
-      e.printStackTrace();
-    }
+  protected void addNewUser(User user) {
+    userService.addNewUser(user);
   }
 
-  protected ResultActions performGetRequest(String path) throws Exception {
-    assertThat(currentUserToken, notNullValue());
+  private String getAuthenticationToken(User user) throws UnsupportedEncodingException {
+    final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.MINUTES.toMillis(1);
+    return JWT.create()
+        .withSubject(user.getId())
+        .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
+        .sign(Algorithm.HMAC512(jwtSecret));
+  }
 
+  protected ResultActions performGetRequest(User user, String path) throws Exception {
     return mockMvc
         .perform(get(path)
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
   }
 
-  protected ResultActions performPostRequest(String path, String body) throws Exception {
-    assertThat(currentUserToken, notNullValue());
-
+  protected ResultActions performPostRequest(User user, String path, String body) throws Exception {
     if (body == null) {
       return mockMvc
           .perform(post(path)
-              .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
+              .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
     }
     return mockMvc
         .perform(post(path)
             .contentType(MediaType.APPLICATION_JSON)
             .content(body)
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
   }
 
-  protected ResultActions performPutRequest(String path, String body) throws Exception {
-    assertThat(currentUserToken, notNullValue());
-
+  protected ResultActions performPutRequest(User user, String path, String body) throws Exception {
     if (body == null) {
       return mockMvc
           .perform(put(path)
-              .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
+              .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
     }
 
     return mockMvc
         .perform(put(path)
             .contentType(MediaType.APPLICATION_JSON)
             .content(body)
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
   }
 
-  protected ResultActions performDeleteRequest(String path) throws Exception {
-    assertThat(currentUserToken, notNullValue());
-
+  protected ResultActions performDeleteRequest(User user, String path) throws Exception {
     return mockMvc
         .perform(delete(path)
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + currentUserToken));
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
   }
 
   protected String mapToJson(Object obj) throws JsonProcessingException {

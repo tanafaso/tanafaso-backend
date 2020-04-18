@@ -1,4 +1,4 @@
-package com.azkar.configs.authentication;
+package com.azkar.services;
 
 public class UsernameGenerationException extends Exception {
 

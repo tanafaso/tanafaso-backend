@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 public class UserPrincipal implements UserDetails {
 
   private String userId;
+  private String username;
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -17,11 +18,6 @@ public class UserPrincipal implements UserDetails {
 
   @Override
   public String getPassword() {
-    return null;
-  }
-
-  @Override
-  public String getUsername() {
     return null;
   }
 
