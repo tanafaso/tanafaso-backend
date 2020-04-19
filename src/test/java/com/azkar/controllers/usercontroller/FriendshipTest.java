@@ -321,7 +321,7 @@ public class FriendshipTest extends ControllerTestBase {
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     expectedResponse.setError(new Error(DeleteFriendResponse.NO_FRIENDSHIP_ERROR));
     deleteFriend(user1, user2)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
   }
@@ -332,7 +332,7 @@ public class FriendshipTest extends ControllerTestBase {
     expectedResponse.setError(new Error(DeleteFriendResponse.NO_FRIENDSHIP_ERROR));
 
     deleteFriend(user1, user2)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
   }

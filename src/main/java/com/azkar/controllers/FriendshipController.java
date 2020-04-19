@@ -183,7 +183,7 @@ public class FriendshipController extends BaseController {
 
     if (currentUserAsFriendIndex == -1 || otherUserAsFriendIndex == -1) {
       response.setError(new Error(DeleteFriendResponse.NO_FRIENDSHIP_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     currentUserFriendship.getFriends().remove(otherUserAsFriendIndex);
