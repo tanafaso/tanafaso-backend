@@ -8,7 +8,7 @@ import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.groupcontroller.AcceptGroupInvitationResponse;
 import com.azkar.payload.groupcontroller.AddGroupRequest;
 import com.azkar.payload.groupcontroller.AddGroupResponse;
-import com.azkar.payload.groupcontroller.GetGroupsResponse;
+import com.azkar.payload.groupcontroller.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.InviteToGroupResponse;
 import com.azkar.payload.groupcontroller.LeaveGroupResponse;
 import com.azkar.payload.groupcontroller.RejectGroupInvitationResponse;
@@ -64,8 +64,8 @@ public class GroupController extends BaseController {
   }
 
   @GetMapping
-  public ResponseEntity<GetGroupsResponse> get() {
-    GetGroupsResponse response = new GetGroupsResponse();
+  public ResponseEntity<GetUserGroupsResponse> get() {
+    GetUserGroupsResponse response = new GetUserGroupsResponse();
 
     User user = userRepo.findById(getCurrentUser().getUserId()).get();
     response.setData(user.getUserGroups());
@@ -78,7 +78,6 @@ public class GroupController extends BaseController {
       @PathVariable String groupId,
       @PathVariable(value = "userId") String invitedUserId) {
     InviteToGroupResponse response = new InviteToGroupResponse();
-
 
     // Check if the invited user id is valid.
     Optional<User> invitedUser = userRepo.findById(invitedUserId);
@@ -95,15 +94,13 @@ public class GroupController extends BaseController {
     }
 
     // Check if the inviting user is a member of the group.
-    if (!group.get().getUsersIds().stream()
-        .anyMatch(userId -> userId.equals(getCurrentUser().getUserId()))) {
+    if (!isMember(userRepo.findById(getCurrentUser().getUserId()).get(), group.get())) {
       response.setError(new Error(InviteToGroupResponse.INVITING_USER_IS_NOT_MEMBER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     // Check if the invited user is already a member of the group.
-    if (group.get().getUsersIds().stream()
-        .anyMatch(userId -> userId.equals(invitedUser.get().getId()))) {
+    if (isMember(invitedUser.get(), group.get())) {
       response.setError(new Error(InviteToGroupResponse.INVITED_USER_ALREADY_MEMBER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
@@ -143,16 +140,13 @@ public class GroupController extends BaseController {
     }
 
     // Check if the user is already a member of the group.
-    if (userGroups.stream()
-        .anyMatch(
-            userGroup -> (userGroup.getGroupId().equals(groupId) && !userGroup.isPending()))) {
+    if (isMember(user, group.get())) {
       response.setError(new Error(AcceptGroupInvitationResponse.USER_ALREADY_MEMBER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     // Check if the user is not invited to the group.
-    if (!userGroups.stream()
-        .anyMatch(userGroup -> (userGroup.getGroupId().equals(groupId) && userGroup.isPending()))) {
+    if (!isInvited(user, group.get())) {
       response.setError(new Error(AcceptGroupInvitationResponse.USER_NOT_INVITED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
@@ -189,9 +183,7 @@ public class GroupController extends BaseController {
     }
 
     // Check if the user is not already a member of the group.
-    if (!userGroups.stream()
-        .anyMatch(
-            userGroup -> (userGroup.getGroupId().equals(groupId) && !userGroup.isPending()))) {
+    if (!isMember(user, group.get())) {
       response.setError(new Error(LeaveGroupResponse.NOT_MEMBER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
@@ -220,16 +212,13 @@ public class GroupController extends BaseController {
     }
 
     // Check if the user is already a member of the group.
-    if (userGroups.stream()
-        .anyMatch(
-            userGroup -> (userGroup.getGroupId().equals(groupId) && !userGroup.isPending()))) {
+    if (isMember(user, group.get())) {
       response.setError(new Error(RejectGroupInvitationResponse.USER_ALREADY_MEMBER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     // Check if the user is not invited to the group.
-    if (!userGroups.stream()
-        .anyMatch(userGroup -> (userGroup.getGroupId().equals(groupId) && userGroup.isPending()))) {
+    if (!isInvited(user, group.get())) {
       response.setError(new Error(RejectGroupInvitationResponse.USER_NOT_INVITED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
@@ -239,6 +228,15 @@ public class GroupController extends BaseController {
     userRepo.save(user);
 
     return ResponseEntity.ok(response);
+  }
+
+  private boolean isMember(User user, Group group) {
+    return group.getUsersIds().stream().anyMatch(userId -> userId.equals(user.getId()));
+  }
+
+  private boolean isInvited(User user, Group group) {
+    return user.getUserGroups().stream().anyMatch(
+        userGroup -> (userGroup.getGroupId().equals(group.getId()) && userGroup.isPending()));
   }
 
 }

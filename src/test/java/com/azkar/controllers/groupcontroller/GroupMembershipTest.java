@@ -13,7 +13,7 @@ import com.azkar.factories.GroupFactory;
 import com.azkar.factories.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.groupcontroller.AcceptGroupInvitationResponse;
-import com.azkar.payload.groupcontroller.GetGroupsResponse;
+import com.azkar.payload.groupcontroller.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.InviteToGroupResponse;
 import com.azkar.payload.groupcontroller.LeaveGroupResponse;
 import com.azkar.payload.groupcontroller.RejectGroupInvitationResponse;
@@ -436,7 +436,7 @@ public class GroupMembershipTest extends ControllerTestBase {
     // Add user3 to group3.
     addUserToGroup(user3, user2, group3.getId());
 
-    GetGroupsResponse expectedResponse = new GetGroupsResponse();
+    GetUserGroupsResponse expectedResponse = new GetUserGroupsResponse();
     List<UserGroup> expectedUserGroups = new ArrayList();
     expectedUserGroups.add(UserGroup.builder()
         .groupId(group1.getId())
@@ -462,8 +462,7 @@ public class GroupMembershipTest extends ControllerTestBase {
         .andExpect(content().json(mapToJson(expectedResponse)))
         .andReturn();
 
-    GetGroupsResponse actualResponse =
-        mapFromJson(result.getResponse().getContentAsString(), GetGroupsResponse.class);
+    assertThat(result.getResponse().getContentAsString(), is(mapToJson(expectedResponse)));
   }
 
   private ResultActions inviteUserToGroup(User invitingUser, User invitedUser, String groupId)
