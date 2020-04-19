@@ -219,8 +219,6 @@ public class FriendshipTest extends ControllerTestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
 
-    expectedResponse
-        .setError(new Error(ResolveFriendRequestResponse.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
     acceptFriendRequest(user2, user1)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
