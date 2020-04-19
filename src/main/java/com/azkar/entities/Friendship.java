@@ -1,0 +1,50 @@
+package com.azkar.entities;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "friendships")
+@CompoundIndex(name = "user_user", def = "{'requesterId': 1, 'responderId': 1}", unique = true)
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Friendship extends EntityBase {
+
+  @Id
+  private String id;
+  @NotNull
+  @Indexed(name = "user_id_index")
+  private String userId;
+  @Default
+  private List<Friend> friends = new ArrayList<Friend>();
+  @CreatedDate
+  private long createdAt;
+  @LastModifiedDate
+  private long modifiedAt;
+
+  @Builder
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Friend {
+
+    @NotNull
+    private String userId;
+    @NotNull
+    private String username;
+    private boolean isPending;
+  }
+}

@@ -1,6 +1,8 @@
 package com.azkar.services;
 
+import com.azkar.entities.Friendship;
 import com.azkar.entities.User;
+import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -15,6 +17,8 @@ public class UserService {
   private static final int MAX_USERNAME_GENERATION_TRIALS = 200;
   @Autowired
   private UserRepo userRepo;
+  @Autowired
+  private FriendshipRepo friendshipRepo;
 
   public User loadUserById(String id) {
     Optional<User> user = userRepo.findById(id);
@@ -39,6 +43,8 @@ public class UserService {
   */
   public User addNewUser(User user) {
     userRepo.save(user);
+    Friendship friendship = Friendship.builder().userId(user.getId()).build();
+    friendshipRepo.insert(friendship);
     return user;
   }
 
