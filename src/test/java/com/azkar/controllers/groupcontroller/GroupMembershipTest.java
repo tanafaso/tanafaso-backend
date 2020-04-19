@@ -104,12 +104,10 @@ public class GroupMembershipTest extends ControllerTestBase {
   @Test
   public void invite_otherUserAlreadyMember_shouldNotSucceed() throws Exception {
     Group user1Group = GroupFactory.getNewGroup(user1.getId());
-
-    // TODO: change that by making approperiate flow for making the user a group and then
-    //  asserting on the user2 groups.
-    // Make user2 a member of the group
-    user1Group.getUsersIds().add(user2.getId());
     groupRepo.save(user1Group);
+
+    // Add user2 to group.
+    addUserToGroup(user2, user1, user1Group.getId());
 
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
     expectedResponse.setError(new Error(InviteToGroupResponse.INVITED_USER_ALREADY_MEMBER_ERROR));
