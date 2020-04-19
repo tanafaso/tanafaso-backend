@@ -126,7 +126,6 @@ public class GroupController extends BaseController {
     AcceptGroupInvitationResponse response = new AcceptGroupInvitationResponse();
 
     User user = userRepo.findById(getCurrentUser().getUserId()).get();
-    List<UserGroup> userGroups = user.getUserGroups();
     Optional<Group> group = groupRepo.findById(groupId);
 
     // Check if the group id is valid.
@@ -151,6 +150,7 @@ public class GroupController extends BaseController {
     group.get().getUsersIds().add(user.getId());
     groupRepo.save(group.get());
 
+    List<UserGroup> userGroups = user.getUserGroups();
     // Remove all of the invitations of this group to this user.
     userGroups.removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
 
@@ -169,7 +169,6 @@ public class GroupController extends BaseController {
     LeaveGroupResponse response = new LeaveGroupResponse();
 
     User user = userRepo.findById(getCurrentUser().getUserId()).get();
-    List<UserGroup> userGroups = user.getUserGroups();
     Optional<Group> group = groupRepo.findById(groupId);
 
     // Check if the group id is valid.
@@ -187,6 +186,7 @@ public class GroupController extends BaseController {
     group.get().getUsersIds().removeIf(userId -> userId.equals(user.getId()));
     groupRepo.save(group.get());
 
+    List<UserGroup> userGroups = user.getUserGroups();
     userGroups.removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
     userRepo.save(user);
 
@@ -198,7 +198,6 @@ public class GroupController extends BaseController {
     RejectGroupInvitationResponse response = new RejectGroupInvitationResponse();
 
     User user = userRepo.findById(getCurrentUser().getUserId()).get();
-    List<UserGroup> userGroups = user.getUserGroups();
     Optional<Group> group = groupRepo.findById(groupId);
 
     // Check if the group id is valid.
@@ -219,6 +218,7 @@ public class GroupController extends BaseController {
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
+    List<UserGroup> userGroups = user.getUserGroups();
     // Remove all of the invitations of this group to this user.
     userGroups.removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
     userRepo.save(user);
