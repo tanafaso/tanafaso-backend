@@ -23,7 +23,8 @@ public class GroupController extends BaseController {
   @Autowired
   private GroupRepo groupRepo;
 
-  @PostMapping(path = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  // @TODO(3bza): Validate AddGroupRequest.
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
     AddGroupResponse response = new AddGroupResponse();
     String userId = getCurrentUser().getUserId();
@@ -35,7 +36,7 @@ public class GroupController extends BaseController {
         Group.builder()
             .name(req.getName())
             .adminId(userId)
-            .cardinality(req.getCardinality())
+            .isBinary(req.isBinary())
             .usersIds(new ArrayList<>(Arrays.asList(userId)))
             .build();
     groupRepo.save(newGroup);

@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -55,14 +56,13 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
         userService.addNewUser(currentUser);
       } catch (UsernameGenerationException e) {
         httpServletResponse
-            .sendError(SC_INTERNAL_SERVER_ERROR, "Can not generate username for the new user.");
+            .sendError(SC_INTERNAL_SERVER_ERROR, "Cannot generate username for the new user.");
         return;
       }
     }
     String token = generateToken(currentUser);
     httpServletResponse.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
   }
-
 
   private String generateToken(User user) throws UnsupportedEncodingException {
     String token =

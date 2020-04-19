@@ -1,13 +1,14 @@
 package com.azkar.payload.groupcontroller;
 
-import com.azkar.entities.Group.GroupCardinality;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NonNull;
 
-@Setter
+@AllArgsConstructor
 @Getter
 public class AddGroupRequest {
 
-  String name;
-  GroupCardinality cardinality;
+  @NonNull
+  private String name;
+  private boolean isBinary;
 }
