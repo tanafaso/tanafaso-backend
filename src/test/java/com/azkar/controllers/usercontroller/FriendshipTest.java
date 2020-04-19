@@ -65,9 +65,7 @@ public class FriendshipTest extends ControllerTestBase {
     assertThat(user2Friendship.getFriends().size(), is(1));
 
     Friend user2Friend = user2Friendship.getFriends().get(0);
-    assertThat(user2Friend.getUserId(), equalTo(user1.getId()));
-    assertThat(user2Friend.getUsername(), equalTo(user1.getUsername()));
-    assertThat(user2Friend.isPending(), is(true));
+    assertFriendship(user2Friend, user1, /*isPending=*/true);
   }
 
   @Test
@@ -101,14 +99,10 @@ public class FriendshipTest extends ControllerTestBase {
     assertThat(user2Friendship.getFriends().size(), is(1));
 
     Friend user1Friend = user1Friendship.getFriends().get(0);
-    assertThat(user1Friend.getUserId(), equalTo(user2.getId()));
-    assertThat(user1Friend.getUsername(), equalTo(user2.getUsername()));
-    assertThat(user1Friend.isPending(), is(false));
+    assertFriendship(user1Friend, user2, /*isPending=*/false);
 
     Friend user2Friend = user2Friendship.getFriends().get(0);
-    assertThat(user2Friend.getUserId(), equalTo(user1.getId()));
-    assertThat(user2Friend.getUsername(), equalTo(user1.getUsername()));
-    assertThat(user2Friend.isPending(), is(false));
+    assertFriendship(user2Friend, user1, /*isPending=*/false);
   }
 
 
@@ -140,14 +134,10 @@ public class FriendshipTest extends ControllerTestBase {
     assertThat(user2Friendship.getFriends().size(), is(1));
 
     Friend user1Friend = user1Friendship.getFriends().get(0);
-    assertThat(user1Friend.getUserId(), equalTo(user2.getId()));
-    assertThat(user1Friend.getUsername(), equalTo(user2.getUsername()));
-    assertThat(user1Friend.isPending(), is(false));
+    assertFriendship(user1Friend, user2, /*isPending=*/false);
 
     Friend user2Friend = user2Friendship.getFriends().get(0);
-    assertThat(user2Friend.getUserId(), equalTo(user1.getId()));
-    assertThat(user2Friend.getUsername(), equalTo(user1.getUsername()));
-    assertThat(user2Friend.isPending(), is(false));
+    assertFriendship(user2Friend, user1, /*isPending=*/false);
   }
 
   @Test
@@ -372,5 +362,11 @@ public class FriendshipTest extends ControllerTestBase {
   private void makeFriends(User user1, User user2) throws Exception {
     sendFriendRequest(user1, user2);
     acceptFriendRequest(user2, user1);
+  }
+
+  private void assertFriendship(Friend friend, User user, boolean isPending) {
+    assertThat(friend.getUserId(), equalTo(user.getId()));
+    assertThat(friend.getUsername(), equalTo(user.getUsername()));
+    assertThat(friend.isPending(), is(isPending));
   }
 }
