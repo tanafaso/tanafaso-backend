@@ -34,11 +34,7 @@ public class PersonalChallengeTest extends ControllerTestBase {
           .originalRepetitions(4)
           .leftRepetitions(4)
           .build());
-  private static final AddPersonalChallengeRequest BASE_ADD_PERSONAL_CHALLENGE_REQUEST =
-      AddPersonalChallengeRequest.builder()
-          .name("test-challenge")
-          .subChallenges(SUB_CHALLENGES)
-          .build();
+  private static final String CHALLENGE_NAME = "test-challenge";
 
   @Autowired
   UserRepo userRepo;
@@ -50,7 +46,9 @@ public class PersonalChallengeTest extends ControllerTestBase {
 
   @Test
   public void addPersonalChallenge_normalScenario_shouldSucceed() throws Exception {
-    AddPersonalChallengeRequest requestBody = BASE_ADD_PERSONAL_CHALLENGE_REQUEST.toBuilder()
+    AddPersonalChallengeRequest requestBody = AddPersonalChallengeRequest.builder()
+        .name(CHALLENGE_NAME)
+        .subChallenges(SUB_CHALLENGES)
         .expiryDate(Instant.now().getEpochSecond() + 3600)
         .motivation(CHALLENGE_MOTIVATION).build();
 
@@ -70,7 +68,9 @@ public class PersonalChallengeTest extends ControllerTestBase {
 
   @Test
   public void addPersonalChallenge_pastExpiryDate_shouldFail() throws Exception {
-    AddPersonalChallengeRequest requestBody = BASE_ADD_PERSONAL_CHALLENGE_REQUEST.toBuilder()
+    AddPersonalChallengeRequest requestBody = AddPersonalChallengeRequest.builder()
+        .name(CHALLENGE_NAME)
+        .subChallenges(SUB_CHALLENGES)
         .expiryDate(Instant.now().getEpochSecond() - 3600)
         .motivation(CHALLENGE_MOTIVATION).build();
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
@@ -83,8 +83,10 @@ public class PersonalChallengeTest extends ControllerTestBase {
   }
 
   @Test
-  public void addPersonalChallenge_missingRequestBodyFields_shouldFail() throws Exception {
-    AddPersonalChallengeRequest requestBody = BASE_ADD_PERSONAL_CHALLENGE_REQUEST.toBuilder()
+  public void addPersonalChallenge_challengeMissingMotivationField_shouldFail() throws Exception {
+    AddPersonalChallengeRequest requestBody = AddPersonalChallengeRequest.builder()
+        .name(CHALLENGE_NAME)
+        .subChallenges(SUB_CHALLENGES)
         .expiryDate(Instant.now().getEpochSecond() + 3600).build();
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
