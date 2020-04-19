@@ -28,6 +28,7 @@ public class PersonalChallengeTest extends ControllerTestBase {
 
   private static final User USER = UserFactory.getNewUser();
   private static final String CHALLENGE_MOTIVATION = "test-motivation";
+  private static final int DATE_OFFSET_IN_SECONDS = 60 * 60;
   private static final ImmutableList<SubChallenges> SUB_CHALLENGES = ImmutableList.of(
       SubChallenges.builder()
           .zekr("test-zekr")
@@ -49,7 +50,7 @@ public class PersonalChallengeTest extends ControllerTestBase {
     AddPersonalChallengeRequest requestBody = AddPersonalChallengeRequest.builder()
         .name(CHALLENGE_NAME)
         .subChallenges(SUB_CHALLENGES)
-        .expiryDate(Instant.now().getEpochSecond() + 3600)
+        .expiryDate(Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS)
         .motivation(CHALLENGE_MOTIVATION).build();
 
     MvcResult result = performPostRequest(USER, "/challenges/personal", mapToJson(requestBody))
@@ -71,7 +72,7 @@ public class PersonalChallengeTest extends ControllerTestBase {
     AddPersonalChallengeRequest requestBody = AddPersonalChallengeRequest.builder()
         .name(CHALLENGE_NAME)
         .subChallenges(SUB_CHALLENGES)
-        .expiryDate(Instant.now().getEpochSecond() - 3600)
+        .expiryDate(Instant.now().getEpochSecond() - DATE_OFFSET_IN_SECONDS)
         .motivation(CHALLENGE_MOTIVATION).build();
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setError(new Error(AddPersonalChallengeRequest.PAST_EXPIRY_DATE_ERROR));
@@ -87,7 +88,7 @@ public class PersonalChallengeTest extends ControllerTestBase {
     AddPersonalChallengeRequest requestBody = AddPersonalChallengeRequest.builder()
         .name(CHALLENGE_NAME)
         .subChallenges(SUB_CHALLENGES)
-        .expiryDate(Instant.now().getEpochSecond() + 3600).build();
+        .expiryDate(Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS).build();
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
 
