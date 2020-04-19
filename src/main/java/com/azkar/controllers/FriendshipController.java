@@ -102,7 +102,6 @@ public class FriendshipController extends BaseController {
     ResolveFriendRequestResponse response = new ResolveFriendRequestResponse();
 
     // Assert that the current user has a pending friend request from the other user.
-    // Check if the current user already requested friendship with the other user.
     Friendship currentUserFriendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
     Optional<Friend> friend = currentUserFriendship.getFriends().stream()
         .filter(f -> f.getUserId().equals(otherUserId)).findAny();
