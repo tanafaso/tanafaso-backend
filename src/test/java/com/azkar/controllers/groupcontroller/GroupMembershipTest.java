@@ -453,8 +453,7 @@ public class GroupMembershipTest extends ControllerTestBase {
         .build());
 
     expectedResponse.setData(expectedUserGroups);
-    authenticate(user3);
-    MvcResult result = performGetRequest("/groups/")
+    MvcResult result = performGetRequest(user3, "/groups/")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)))
@@ -465,26 +464,23 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   private ResultActions inviteUserToGroup(User invitingUser, User invitedUser, String groupId)
       throws Exception {
-    authenticate(invitingUser);
-    return performPutRequest(String.format("/groups/%s/invite/%s", groupId, invitedUser.getId()),
+    return performPutRequest(invitingUser, String.format("/groups/%s/invite/%s", groupId,
+        invitedUser.getId()),
         /*body=*/ null);
   }
 
   private ResultActions acceptInvitationToGroup(User user, String groupId)
       throws Exception {
-    authenticate(user);
-    return performPutRequest(String.format("/groups/%s/accept/", groupId), /*body=*/ null);
+    return performPutRequest(user, String.format("/groups/%s/accept/", groupId), /*body=*/ null);
   }
 
   private ResultActions rejectInvitationToGroup(User user, String groupId)
       throws Exception {
-    authenticate(user);
-    return performPutRequest(String.format("/groups/%s/reject/", groupId), /*body=*/ null);
+    return performPutRequest(user, String.format("/groups/%s/reject/", groupId), /*body=*/ null);
   }
 
   private ResultActions leaveGroup(User user, String groupId) throws Exception {
-    authenticate(user);
-    return performPutRequest(String.format("/groups/%s/leave/", groupId), /*body=*/ null);
+    return performPutRequest(user, String.format("/groups/%s/leave/", groupId), /*body=*/ null);
   }
 
   private void addUserToGroup(User user, User groupAdmin, String groupId)

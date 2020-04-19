@@ -1,6 +1,5 @@
 package com.azkar.controllers;
 
-import com.azkar.configs.authentication.UserPrincipal;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
@@ -22,7 +21,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,9 +42,7 @@ public class GroupController extends BaseController {
   @PostMapping(path = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
     AddGroupResponse response = new AddGroupResponse();
-    UserPrincipal userPrincipal =
-        (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    String userId = userPrincipal.getUserId();
+    String userId = getCurrentUser().getUserId();
     if (Strings.isNullOrEmpty(req.getName())) {
       response.setError(new Error("Cannot create a group with empty name."));
       return ResponseEntity.badRequest().body(response);

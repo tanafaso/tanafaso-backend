@@ -9,7 +9,7 @@ public class UserFactory {
   public static User getNewUser() {
     usersRequested++;
     return User.builder()
-        .id("testUserId" + usersRequested)
+        .id("testId" + usersRequested)
         .email("testEmail" + usersRequested)
         .username("testUsername" + usersRequested)
         .name("testName" + usersRequested)
