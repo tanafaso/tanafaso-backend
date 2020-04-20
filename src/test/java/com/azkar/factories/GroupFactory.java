@@ -1,7 +1,6 @@
 package com.azkar.factories;
 
 import com.azkar.entities.Group;
-import com.azkar.entities.Group.GroupCardinality;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +18,6 @@ public class GroupFactory {
         .id("group_id" + groupsRequested)
         .adminId(adminId)
         .name("group_name" + groupsRequested)
-        .cardinality(GroupCardinality.MULTI)
         .usersIds(groupUsersIds)
         .build();
 
