@@ -134,6 +134,7 @@ public class GroupMembershipTest extends ControllerTestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
 
+    expectedResponse = new InviteToGroupResponse();
     expectedResponse.setError(new Error(InviteToGroupResponse.USER_ALREADY_INVITED_ERROR));
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
@@ -162,6 +163,7 @@ public class GroupMembershipTest extends ControllerTestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
 
+    expectedResponse = new InviteToGroupResponse();
     inviteUserToGroup(user2, user3, user1Group.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -260,6 +262,8 @@ public class GroupMembershipTest extends ControllerTestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedAcceptGroupInvitationResponse)));
 
+    expectedAcceptGroupInvitationResponse =
+        new AcceptGroupInvitationResponse();
     // user2 accepts group invitation again.
     expectedAcceptGroupInvitationResponse
         .setError(new Error(AcceptGroupInvitationResponse.USER_ALREADY_MEMBER_ERROR));
