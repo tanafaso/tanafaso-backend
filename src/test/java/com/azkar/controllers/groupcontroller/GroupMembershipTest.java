@@ -59,7 +59,7 @@ public class GroupMembershipTest extends ControllerTestBase {
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
@@ -78,7 +78,7 @@ public class GroupMembershipTest extends ControllerTestBase {
     inviteUserToGroup(user1, invalidUser, user1Group.getId())
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
   }
 
   @Test
@@ -90,16 +90,17 @@ public class GroupMembershipTest extends ControllerTestBase {
     inviteUserToGroup(user1, user2, unSavedGroup.getId())
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
     assertThat(user2Groups.size(), is(0));
+    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
+    assertThat(user1GroupInRepo.getUsersIds().size(), is(1));
   }
 
   @Test
   public void invite_otherUserAlreadyMember_shouldNotSucceed() throws Exception {
-    // Add user2 to group.
     addUserToGroup(user2, /*invitingUser=*/user1, user1Group.getId());
 
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
@@ -107,7 +108,7 @@ public class GroupMembershipTest extends ControllerTestBase {
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
   }
 
@@ -118,7 +119,7 @@ public class GroupMembershipTest extends ControllerTestBase {
     inviteUserToGroup(user2, user3, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     User user3InRepo = userRepo.findById(user3.getId()).get();
     List<UserGroup> user3Groups = user3InRepo.getUserGroups();
@@ -131,13 +132,13 @@ public class GroupMembershipTest extends ControllerTestBase {
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     expectedResponse.setError(new Error(InviteToGroupResponse.USER_ALREADY_INVITED_ERROR));
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
@@ -159,12 +160,12 @@ public class GroupMembershipTest extends ControllerTestBase {
     inviteUserToGroup(user1, user3, user1Group.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     inviteUserToGroup(user2, user3, user1Group.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     User user3InRepo = userRepo.findById(user3.getId()).get();
     List<UserGroup> user3Groups = user3InRepo.getUserGroups();
@@ -189,7 +190,7 @@ public class GroupMembershipTest extends ControllerTestBase {
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedInviteToGroupResponse)));
+        .andExpect(content().json(mapToJson(expectedInviteToGroupResponse)));
 
     // user2 accepts invitation.
     AcceptGroupInvitationResponse expectedAcceptGroupInvitationResponse =
@@ -206,6 +207,9 @@ public class GroupMembershipTest extends ControllerTestBase {
     UserGroup user2Group = user2Groups.get(0);
     assertThat(user2Group.getGroupId(), is(user1Group.getId()));
     assertThat(user2Group.isPending(), is(false));
+
+    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
+    assertThat(user1GroupInRepo.getUsersIds().size(), is(2));
   }
 
   @Test
@@ -217,7 +221,7 @@ public class GroupMembershipTest extends ControllerTestBase {
     inviteUserToGroup(user1, user2, unSavedGroup.getId())
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
@@ -246,7 +250,7 @@ public class GroupMembershipTest extends ControllerTestBase {
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedInviteToGroupResponse)));
+        .andExpect(content().json(mapToJson(expectedInviteToGroupResponse)));
 
     // user2 accepts group invitation.
     AcceptGroupInvitationResponse expectedAcceptGroupInvitationResponse =
@@ -280,7 +284,7 @@ public class GroupMembershipTest extends ControllerTestBase {
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedInviteToGroupResponse)));
+        .andExpect(content().json(mapToJson(expectedInviteToGroupResponse)));
 
     // user2 rejects invitation.
     RejectGroupInvitationResponse expectedAcceptGroupInvitationResponse =
@@ -315,10 +319,8 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void reject_alreadyMember_shouldNotSucceed() throws Exception {
-    // Add user2 to the group.
     addUserToGroup(user2, /*invitingUser=*/user1, user1Group.getId());
 
-    // user2 accepts group invitation again.
     RejectGroupInvitationResponse expectedRejectGroupInvitationResponse =
         new RejectGroupInvitationResponse();
     expectedRejectGroupInvitationResponse
@@ -335,11 +337,13 @@ public class GroupMembershipTest extends ControllerTestBase {
     UserGroup user2Group = user2Groups.get(0);
     assertThat(user2Group.getGroupId(), is(user1Group.getId()));
     assertThat(user2Group.isPending(), is(false));
+
+    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
+    assertThat(user1GroupInRepo.getUsersIds().size(), is(2));
   }
 
   @Test
   public void leave_normalScenario_shouldSucceed() throws Exception {
-    // Add user2 to the group.
     addUserToGroup(user2, /*invitingUser=*/user1, user1Group.getId());
 
     LeaveGroupResponse expectedResponse = new LeaveGroupResponse();
@@ -387,13 +391,11 @@ public class GroupMembershipTest extends ControllerTestBase {
     groupRepo.save(group2);
     groupRepo.save(group3);
 
-    // Add user3 to group1.
     addUserToGroup(user3, /*invitingUser=*/user1, group1.getId());
 
     // Invite user3 to group2.
     inviteUserToGroup(user1, user3, group2.getId());
 
-    // Add user3 to group3.
     addUserToGroup(user3, /*invitingUser=*/user2, group3.getId());
 
     GetUserGroupsResponse expectedResponse = new GetUserGroupsResponse();
