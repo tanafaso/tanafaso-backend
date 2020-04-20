@@ -228,6 +228,9 @@ public class GroupMembershipTest extends ControllerTestBase {
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
     assertThat(user2Groups.size(), is(0));
+
+    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
+    assertThat(user1GroupInRepo.getUsersIds().size(), is(1));
   }
 
   @Test
@@ -243,6 +246,9 @@ public class GroupMembershipTest extends ControllerTestBase {
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
     assertThat(user2Groups.size(), is(0));
+
+    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
+    assertThat(user1GroupInRepo.getUsersIds().size(), is(1));
   }
 
   @Test
@@ -279,6 +285,9 @@ public class GroupMembershipTest extends ControllerTestBase {
     UserGroup user2Group = user2Groups.get(0);
     assertThat(user2Group.getGroupId(), is(user1Group.getId()));
     assertThat(user2Group.isPending(), is(false));
+
+    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
+    assertThat(user1GroupInRepo.getUsersIds().size(), is(2));
   }
 
   @Test
@@ -319,6 +328,9 @@ public class GroupMembershipTest extends ControllerTestBase {
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
     assertThat(user2Groups.size(), is(0));
+
+    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
+    assertThat(user1GroupInRepo.getUsersIds().size(), is(1));
   }
 
   @Test
