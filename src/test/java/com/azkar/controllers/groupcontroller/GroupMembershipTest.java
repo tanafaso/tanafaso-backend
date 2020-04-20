@@ -40,6 +40,7 @@ public class GroupMembershipTest extends ControllerTestBase {
   private User user2 = UserFactory.getNewUser();
   private User user3 = UserFactory.getNewUser();
   private User user4 = UserFactory.getNewUser();
+  private Group user1Group = GroupFactory.getNewGroup(user1.getId());
   // A user who have never been authenticated and never added to the database.
   private User invalidUser = UserFactory.getNewUser();
 
@@ -49,13 +50,11 @@ public class GroupMembershipTest extends ControllerTestBase {
     addNewUser(user2);
     addNewUser(user3);
     addNewUser(user4);
+    groupRepo.save(user1Group);
   }
 
   @Test
   public void invite_normalScenario_shouldSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isOk())
@@ -74,9 +73,6 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void invite_invalidOtherUser_shouldNotSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
     expectedResponse.setError(new Error(InviteToGroupResponse.INVITED_USER_INVALID_ERROR));
     inviteUserToGroup(user1, invalidUser, user1Group.getId())
@@ -103,11 +99,8 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void invite_otherUserAlreadyMember_shouldNotSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     // Add user2 to group.
-    addUserToGroup(user2, user1, user1Group.getId());
+    addUserToGroup(user2, /*invitingUser=*/user1, user1Group.getId());
 
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
     expectedResponse.setError(new Error(InviteToGroupResponse.INVITED_USER_ALREADY_MEMBER_ERROR));
@@ -120,9 +113,6 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void invite_invitingUserIsNotMember_shouldNotSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
     expectedResponse.setError(new Error(InviteToGroupResponse.INVITING_USER_IS_NOT_MEMBER_ERROR));
     inviteUserToGroup(user2, user3, user1Group.getId())
@@ -137,9 +127,6 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void invite_invitingUserAlreadyInvitedOtherUser_shouldNotSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isOk())
@@ -164,7 +151,6 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void invite_invitedUserAlreadyInvitedByAnotherUser_shouldSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
     // Make user2 a member of the group.
     user1Group.getUsersIds().add(user2.getId());
     groupRepo.save(user1Group);
@@ -198,9 +184,6 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void accept_normalScenario_shouldSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     // user1 invites user2.
     InviteToGroupResponse expectedInviteToGroupResponse = new InviteToGroupResponse();
     inviteUserToGroup(user1, user2, user1Group.getId())
@@ -243,9 +226,6 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void accept_notInvited_shouldNotSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     AcceptGroupInvitationResponse expectedResponse =
         new AcceptGroupInvitationResponse();
     expectedResponse.setError(new Error(AcceptGroupInvitationResponse.USER_NOT_INVITED_ERROR));
@@ -261,9 +241,6 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void accept_AlreadyMember_shouldNotSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     // user1 invites user2.
     InviteToGroupResponse expectedInviteToGroupResponse = new InviteToGroupResponse();
     inviteUserToGroup(user1, user2, user1Group.getId())
@@ -298,9 +275,6 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void reject_normalScenario_shouldSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     // user1 invites user2.
     InviteToGroupResponse expectedInviteToGroupResponse = new InviteToGroupResponse();
     inviteUserToGroup(user1, user2, user1Group.getId())
@@ -326,9 +300,6 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void reject_notInvited_shouldNotSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     RejectGroupInvitationResponse expectedResponse =
         new RejectGroupInvitationResponse();
     expectedResponse.setError(new Error(RejectGroupInvitationResponse.USER_NOT_INVITED_ERROR));
@@ -344,11 +315,8 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void reject_alreadyMember_shouldNotSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     // Add user2 to the group.
-    addUserToGroup(user2, user1, user1Group.getId());
+    addUserToGroup(user2, /*invitingUser=*/user1, user1Group.getId());
 
     // user2 accepts group invitation again.
     RejectGroupInvitationResponse expectedRejectGroupInvitationResponse =
@@ -371,11 +339,8 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void leave_normalScenario_shouldSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     // Add user2 to the group.
-    addUserToGroup(user2, user1, user1Group.getId());
+    addUserToGroup(user2, /*invitingUser=*/user1, user1Group.getId());
 
     LeaveGroupResponse expectedResponse = new LeaveGroupResponse();
     leaveGroup(user2, user1Group.getId())
@@ -405,9 +370,6 @@ public class GroupMembershipTest extends ControllerTestBase {
 
   @Test
   public void leave_notMember_shouldNoSucceed() throws Exception {
-    Group user1Group = GroupFactory.getNewGroup(user1.getId());
-    groupRepo.save(user1Group);
-
     LeaveGroupResponse expectedResponse = new LeaveGroupResponse();
     expectedResponse.setError(new Error(LeaveGroupResponse.NOT_MEMBER_ERROR));
     leaveGroup(user2, user1Group.getId())
@@ -426,13 +388,13 @@ public class GroupMembershipTest extends ControllerTestBase {
     groupRepo.save(group3);
 
     // Add user3 to group1.
-    addUserToGroup(user3, user1, group1.getId());
+    addUserToGroup(user3, /*invitingUser=*/user1, group1.getId());
 
     // Invite user3 to group2.
     inviteUserToGroup(user1, user3, group2.getId());
 
     // Add user3 to group3.
-    addUserToGroup(user3, user2, group3.getId());
+    addUserToGroup(user3, /*invitingUser=*/user2, group3.getId());
 
     GetUserGroupsResponse expectedResponse = new GetUserGroupsResponse();
     List<UserGroup> expectedUserGroups = new ArrayList();
@@ -483,9 +445,9 @@ public class GroupMembershipTest extends ControllerTestBase {
     return performPutRequest(user, String.format("/groups/%s/leave/", groupId), /*body=*/ null);
   }
 
-  private void addUserToGroup(User user, User groupAdmin, String groupId)
+  private void addUserToGroup(User user, User invitingUser, String groupId)
       throws Exception {
-    inviteUserToGroup(groupAdmin, user, groupId);
+    inviteUserToGroup(invitingUser, user, groupId);
     acceptInvitationToGroup(user, groupId);
   }
 }
