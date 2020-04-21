@@ -27,6 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   static final String BEARER_TOKEN_PREFIX = "Bearer ";
   private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
   @Autowired
   private UserService userService;
 
