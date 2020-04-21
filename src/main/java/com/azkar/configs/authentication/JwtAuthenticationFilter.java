@@ -11,6 +11,8 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -24,7 +26,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   static final String BEARER_TOKEN_PREFIX = "Bearer ";
-
+  private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
   @Autowired
   private UserService userService;
 
@@ -38,7 +40,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       FilterChain filterChain)
       throws ServletException, IOException {
     String token = extractJwtToken(httpServletRequest);
+    logger.info("Authenticating a new request.");
+
     if (token != null) {
+      logger.info(String.format("Token used for authentication is: %s", token));
+
       JWTVerifier verifier = JWT.require(Algorithm.HMAC512(jwtSecret)).build();
       try {
         String userId = verifier.verify(token).getSubject();
@@ -53,7 +59,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           SecurityContextHolder.getContext().setAuthentication(authToken);
         }
       } catch (JWTVerificationException exception) {
-        // invalid token.
+        // TODO(issue#54): Handle cases were authentication token is invalid
+        logger.info("Token used is invalid.");
       }
     }
     filterChain.doFilter(httpServletRequest, httpServletResponse);

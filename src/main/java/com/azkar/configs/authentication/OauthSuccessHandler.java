@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class OauthSuccessHandler implements AuthenticationSuccessHandler {
 
+  private static final Logger logger = LoggerFactory.getLogger(OauthSuccessHandler.class);
   private static final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.DAYS.toMillis(7);
 
   @Autowired
@@ -45,11 +48,16 @@ public class OauthSuccessHandler implements AuthenticationSuccessHandler {
       throws IOException {
     String email = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("email");
     String name = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("name");
+
     Optional<User> optionalUser = userRepo.findByEmail(email);
     User currentUser;
     if (optionalUser.isPresent()) {
+      logger.info(String.format("Successful Oauth for user: %s with email: %s", name, email));
+
       currentUser = optionalUser.get();
     } else {
+      logger.info(String.format("First successful Oauth for user: %s with email: %s", name, email));
+
       try {
         currentUser = userService.buildNewUser(email, name);
         userService.addNewUser(currentUser);
