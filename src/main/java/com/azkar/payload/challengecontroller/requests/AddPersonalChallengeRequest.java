@@ -13,7 +13,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class AddPersonalChallengeRequest implements RequestBodyBase {
+public class AddPersonalChallengeRequest extends RequestBodyBase {
 
   @VisibleForTesting
   public static final String PAST_EXPIRY_DATE_ERROR = "Expiry date is in the past.";
@@ -26,7 +26,7 @@ public class AddPersonalChallengeRequest implements RequestBodyBase {
 
   @Override
   public void validate() throws BadRequestException {
-    if (motivation == null || name == null || subChallenges == null) {
+    if (anyNull(motivation, name, subChallenges)) {
       throw new BadRequestException(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR);
     }
     if (expiryDate <= Instant.now().getEpochSecond()) {
