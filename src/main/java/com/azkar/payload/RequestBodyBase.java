@@ -1,8 +1,14 @@
 package com.azkar.payload;
 
 import com.azkar.payload.exceptions.BadRequestException;
+import java.util.Arrays;
+import java.util.Objects;
 
-public interface RequestBodyBase {
+public abstract class RequestBodyBase {
 
-  void validate() throws BadRequestException;
+  public abstract void validate() throws BadRequestException;
+
+  protected static boolean anyNull(Object... arguments) {
+    return Arrays.stream(arguments).anyMatch(Objects::isNull);
+  }
 }
