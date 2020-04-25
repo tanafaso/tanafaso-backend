@@ -2,3 +2,4 @@
 target/
 azkar.iml
 env.sh
+logs/
