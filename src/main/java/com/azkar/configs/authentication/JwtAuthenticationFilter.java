@@ -60,7 +60,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           SecurityContextHolder.getContext().setAuthentication(authToken);
         }
       } catch (JWTVerificationException exception) {
-        // TODO(issue#54): Handle cases were authentication token is invalid
         logger.info("Token used is invalid.");
       }
     }
