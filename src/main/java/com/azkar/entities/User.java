@@ -1,5 +1,6 @@
 package com.azkar.entities;
 
+import com.azkar.entities.Challenge.SubChallenges;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -7,7 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -30,6 +33,8 @@ public class User extends EntityBase {
   private String name;
   @Default
   private List<UserGroup> userGroups = new ArrayList();
+  @Default
+  private List<UserChallenge> userChallenges = new ArrayList<>();
   @CreatedDate
   private long createdAt;
   @LastModifiedDate
@@ -50,5 +55,17 @@ public class User extends EntityBase {
     private int monthScore = 0;
     @Default
     private int totalScore = 0;
+  }
+
+  @Builder(toBuilder = true)
+  @Getter
+  @AllArgsConstructor
+  public static class UserChallenge {
+
+    @NonNull
+    String challengeId;
+    boolean isAccepted;
+    @NonNull
+    List<SubChallenges> subChallenges;
   }
 }

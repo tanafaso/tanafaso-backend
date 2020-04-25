@@ -1,5 +1,6 @@
 package com.azkar.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mongodb.lang.NonNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,8 +41,10 @@ public class Challenge extends EntityBase {
   @NonNull
   private List<SubChallenges> subChallenges;
   @CreatedDate
+  @JsonIgnore
   private long createdAt;
   @LastModifiedDate
+  @JsonIgnore
   private long modifiedAt;
 
   @Getter

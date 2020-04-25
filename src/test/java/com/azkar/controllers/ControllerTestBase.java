@@ -10,6 +10,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.UserService;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -109,6 +110,7 @@ public abstract class ControllerTestBase {
 
   protected String mapToJson(Object obj) throws JsonProcessingException {
     ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.setSerializationInclusion(Include.NON_NULL);
     return objectMapper.writeValueAsString(obj);
   }
 
