@@ -78,7 +78,6 @@ public class ChallengeController extends BaseController {
     }
     if (!groupRepo.existsById(req.getGroupId())) {
       response.setError(new Error(GROUP_NOT_FOUND_ERROR));
-//      throw new BadRequestException(GROUP_NOT_FOUND_ERROR);
       return ResponseEntity.badRequest().body(response);
     }
     ArrayList<String> usersAccepted = new ArrayList(Arrays.asList(getCurrentUser().getUserId()));

@@ -22,9 +22,6 @@ public class AddChallengeRequest extends RequestBodyBase {
   @VisibleForTesting
   public static String GROUP_NOT_FOUND_ERROR = "The given group is not found.";
 
-  @Autowired
-  GroupRepo groupRepo;
-
   private String motivation;
   private String name;
   private long expiryDate;
@@ -36,7 +33,6 @@ public class AddChallengeRequest extends RequestBodyBase {
     if (anyNull(motivation, name, subChallenges, groupId)) {
       throw new BadRequestException(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR);
     }
-
     if (expiryDate < Instant.now().getEpochSecond()) {
       throw new BadRequestException(PAST_EXPIRY_DATE_ERROR);
     }
