@@ -3,6 +3,7 @@ package com.azkar.controllers;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.azkar.TestBase;
 import com.azkar.entities.User;
 import com.azkar.factories.UserFactory;
 import com.azkar.payload.homecontroller.GetHomeResponse;
@@ -10,7 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
-public class HomeControllerTest extends ControllerTestBase {
+public class HomeControllerTest extends TestBase {
 
   private static User user = UserFactory.getNewUser();
 

@@ -1,4 +1,4 @@
-package com.azkar.controllers;
+package com.azkar;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.azkar.entities.User;
-import com.azkar.repos.UserRepo;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -34,13 +33,10 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public abstract class ControllerTestBase {
+public abstract class TestBase {
 
   @Autowired
   MockMvc mockMvc;
-
-  @Autowired
-  UserRepo userRepo;
 
   @Autowired
   UserService userService;
