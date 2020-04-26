@@ -3,6 +3,7 @@ package com.azkar.controllers;
 import static com.azkar.payload.challengecontroller.requests.AddChallengeRequest.GROUP_NOT_FOUND_ERROR;
 
 import com.azkar.entities.Challenge;
+import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserChallenge;
