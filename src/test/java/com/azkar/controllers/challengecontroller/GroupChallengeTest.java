@@ -63,7 +63,7 @@ public class GroupChallengeTest extends ControllerTestBase {
     userRepo.save(nonGroupMember);
     addUserToGroup(anotherGroupMember, /* invitingUser= */ user1, validGroup.getId());
     long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
-    AddChallengeRequest request = AddChallengeRequest.builder()
+    Challenge challenge = Challenge.builder()
         .name(CHALLENGE_NAME)
         .motivation(CHALLENGE_MOTIVATION)
         .expiryDate(expiryDate)
@@ -71,12 +71,7 @@ public class GroupChallengeTest extends ControllerTestBase {
         .groupId(validGroup.getId())
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
-    expectedResponse.setData(Challenge.builder()
-        .name(request.getName())
-        .motivation(request.getMotivation())
-        .expiryDate(request.getExpiryDate())
-        .subChallenges(request.getSubChallenges())
-        .groupId(request.getGroupId())
+    expectedResponse.setData(challenge.toBuilder()
         .usersAccepted(ImmutableList.of(user1.getId()))
         .creatingUserId(user1.getId())
         .isOngoing(false)
@@ -84,7 +79,7 @@ public class GroupChallengeTest extends ControllerTestBase {
         .build()
     );
 
-    performPostRequest(user1, "/challenges", mapToJson(request))
+    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
         .andExpect(status().isOk())
         .andExpect(content().json(mapToJson(expectedResponse)));
 
@@ -103,7 +98,7 @@ public class GroupChallengeTest extends ControllerTestBase {
   @Test
   public void addChallenge_oneMembersInGroup_shouldSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
-    AddChallengeRequest request = AddChallengeRequest.builder()
+    Challenge challenge = Challenge.builder()
         .name(CHALLENGE_NAME)
         .motivation(CHALLENGE_MOTIVATION)
         .expiryDate(expiryDate)
@@ -111,12 +106,7 @@ public class GroupChallengeTest extends ControllerTestBase {
         .groupId(validGroup.getId())
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
-    expectedResponse.setData(Challenge.builder()
-        .name(request.getName())
-        .motivation(request.getMotivation())
-        .expiryDate(request.getExpiryDate())
-        .subChallenges(request.getSubChallenges())
-        .groupId(request.getGroupId())
+    expectedResponse.setData(challenge.toBuilder()
         .usersAccepted(ImmutableList.of(user1.getId()))
         .creatingUserId(user1.getId())
         .isOngoing(true)
@@ -124,7 +114,7 @@ public class GroupChallengeTest extends ControllerTestBase {
         .build()
     );
 
-    performPostRequest(user1, "/challenges", mapToJson(request))
+    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
         .andExpect(status().isOk())
         .andExpect(content().json(mapToJson(expectedResponse)));
 
@@ -137,7 +127,7 @@ public class GroupChallengeTest extends ControllerTestBase {
   @Test
   public void addChallenge_invalidGroup_shouldNotSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
-    AddChallengeRequest request = AddChallengeRequest.builder()
+    Challenge challenge = Challenge.builder()
         .name(CHALLENGE_NAME)
         .motivation(CHALLENGE_MOTIVATION)
         .expiryDate(expiryDate)
@@ -147,7 +137,7 @@ public class GroupChallengeTest extends ControllerTestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setError(new Error(AddChallengeRequest.GROUP_NOT_FOUND_ERROR));
 
-    performPostRequest(user1, "/challenges", mapToJson(request))
+    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
         .andExpect(status().isBadRequest())
         .andExpect(content().json(mapToJson(expectedResponse)));
 
@@ -158,7 +148,7 @@ public class GroupChallengeTest extends ControllerTestBase {
   @Test
   public void addChallenge_missingMotivationField_shouldNotSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
-    AddChallengeRequest request = AddChallengeRequest.builder()
+    Challenge challenge = Challenge.builder()
         .name(CHALLENGE_NAME)
         .expiryDate(expiryDate)
         .subChallenges(ImmutableList.of(SUB_CHALLENGE))
@@ -167,7 +157,7 @@ public class GroupChallengeTest extends ControllerTestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
 
-    performPostRequest(user1, "/challenges", mapToJson(request))
+    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
         .andExpect(status().isBadRequest())
         .andExpect(content().json(mapToJson(expectedResponse)));
 
@@ -182,7 +172,7 @@ public class GroupChallengeTest extends ControllerTestBase {
   @Test
   public void addChallenge_pastExpiryDate_shouldNotSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() - EXPIRY_DATE_OFFSET;
-    AddChallengeRequest request = AddChallengeRequest.builder()
+    Challenge challenge = Challenge.builder()
         .name(CHALLENGE_NAME)
         .motivation(CHALLENGE_MOTIVATION)
         .expiryDate(expiryDate)
@@ -192,7 +182,7 @@ public class GroupChallengeTest extends ControllerTestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setError(new Error(AddChallengeRequest.PAST_EXPIRY_DATE_ERROR));
 
-    performPostRequest(user1, "/challenges", mapToJson(request))
+    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
         .andExpect(status().isBadRequest())
         .andExpect(content().json(mapToJson(expectedResponse)));
 
