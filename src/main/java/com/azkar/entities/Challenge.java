@@ -1,5 +1,6 @@
 package com.azkar.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mongodb.lang.NonNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,8 +16,11 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Builder
+@Builder(toBuilder = true)
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Setter
 @Document(collection = "challenges")
 public class Challenge extends EntityBase {
 
@@ -39,8 +43,10 @@ public class Challenge extends EntityBase {
   private List<String> usersFinished = new ArrayList<>();
   @NonNull
   private List<SubChallenges> subChallenges;
+  @JsonIgnore
   @CreatedDate
   private long createdAt;
+  @JsonIgnore
   @LastModifiedDate
   private long modifiedAt;
 
