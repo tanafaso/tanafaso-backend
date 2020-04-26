@@ -58,9 +58,9 @@ public class GroupChallengeTest extends ControllerTestBase {
   @Test
   public void addChallenge_multipleMembersInGroup_shouldSucceed() throws Exception {
     User anotherGroupMember = UserFactory.getNewUser();
-    userRepo.save(anotherGroupMember);
+    addNewUser(anotherGroupMember);
     User nonGroupMember = UserFactory.getNewUser();
-    userRepo.save(nonGroupMember);
+    addNewUser(nonGroupMember);
     addUserToGroup(anotherGroupMember, /* invitingUser= */ user1, validGroup.getId());
     long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
     Challenge challenge = Challenge.builder()
@@ -96,7 +96,7 @@ public class GroupChallengeTest extends ControllerTestBase {
   }
 
   @Test
-  public void addChallenge_oneMembersInGroup_shouldSucceed() throws Exception {
+  public void addChallenge_oneMemberInGroup_shouldSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
     Challenge challenge = Challenge.builder()
         .name(CHALLENGE_NAME)
@@ -122,6 +122,28 @@ public class GroupChallengeTest extends ControllerTestBase {
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(userChallenges.size(), is(1));
     assertThat(groupChallenges.size(), is(1));
+  }
+
+  @Test
+  public void addChallenge_zeroSubChallengeRepetitions_shouldNotSucceed() throws Exception {
+    long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
+    SubChallenges zeroRepetitionSubChallenge = SubChallenges.builder().zekr("zekr").build();
+    Challenge challenge = Challenge.builder()
+        .name(CHALLENGE_NAME)
+        .motivation(CHALLENGE_MOTIVATION)
+        .expiryDate(expiryDate)
+        .subChallenges(ImmutableList.of(zeroRepetitionSubChallenge))
+        .groupId(validGroup.getId())
+        .build();
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setError(new Error(AddChallengeRequest.MALFORMED_SUB_CHALLENGES_ERROR));
+
+    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(mapToJson(expectedResponse)));
+
+    List<UserChallenge> userChallenges = userRepo.findById(user1.getId()).get().getUserChallenges();
+    assertTrue("UserChallenges list is not empty.", userChallenges.isEmpty());
   }
 
   @Test

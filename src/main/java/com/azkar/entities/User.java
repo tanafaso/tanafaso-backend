@@ -35,7 +35,7 @@ public class User extends EntityBase {
   @Default
   private List<UserGroup> userGroups = new ArrayList();
   @Default
-  private List<UserChallenge> userChallenges = new ArrayList<>();
+  private List<UserChallenge> userChallenges = new ArrayList();
   @JsonIgnore
   @CreatedDate
   private long createdAt;
