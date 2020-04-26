@@ -3,7 +3,6 @@ package com.azkar.controllers;
 import static com.azkar.payload.challengecontroller.requests.AddChallengeRequest.GROUP_NOT_FOUND_ERROR;
 
 import com.azkar.entities.Challenge;
-import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserChallenge;
@@ -111,23 +110,19 @@ public class ChallengeController extends BaseController {
     groupRepo.save(group);
 
     Iterable<User> affectedUsers = userRepo.findAllById(groupUsersIds);
-    affectedUsers.forEach(user -> addChallengeToUser(user,
-        req.getChallenge().getSubChallenges(),
-        challenge.getId()));
+    affectedUsers.forEach(user -> addChallengeToUser(user, challenge));
     userRepo.saveAll(affectedUsers);
 
     response.setData(challenge);
     return ResponseEntity.ok(response);
   }
 
-  private void addChallengeToUser(
-      User user,
-      List<SubChallenges> subChallenges,
-      String challengeId) {
+  private void addChallengeToUser(User user, Challenge challenge) {
     UserChallenge userChallenge = UserChallenge.builder()
-        .challengeId(challengeId)
+        .challengeId(challenge.getId())
         .isAccepted(user.getId().equals(getCurrentUser().getUserId()))
-        .subChallenges(subChallenges)
+        .subChallenges(challenge.getSubChallenges())
+        .isOngoing(challenge.isOngoing())
         .build();
     user.getUserChallenges().add(userChallenge);
   }
@@ -163,4 +158,5 @@ public class ChallengeController extends BaseController {
         .userStatus(userChallenge)
         .challengeInfo(challengeInfo.get())
         .build();
+  }
 }

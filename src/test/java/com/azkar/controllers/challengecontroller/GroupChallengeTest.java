@@ -1,6 +1,7 @@
 package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -17,6 +18,7 @@ import com.azkar.factories.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
@@ -193,6 +195,52 @@ public class GroupChallengeTest extends ControllerTestBase {
         groupChallenges.isEmpty());
   }
 
+  @Test
+  public void getChallenges_normalScenario_shouldSucceed() throws Exception {
+    String ongoingChallengeName = "ongoing_challenge";
+    String proposedChallengeName = "proposed_challenge";
+    User groupMember = UserFactory.getNewUser();
+    User nonGroupMember = UserFactory.getNewUser();
+    userRepo.save(groupMember);
+    userRepo.save(nonGroupMember);
+    addValidChallenge(user1, ongoingChallengeName, validGroup.getId());
+    addUserToGroup(groupMember, /* invitingUser= */ user1, validGroup.getId());
+    addValidChallenge(groupMember, proposedChallengeName, validGroup.getId());
+
+    GetChallengesResponse user1OngoingChallenges = getUserChallenges(user1, /* isOngoing= */true);
+    GetChallengesResponse user1ProposedChallenges = getUserChallenges(user1, /* isOngoing= */false);
+    GetChallengesResponse groupMemberOngoingChallenges = getUserChallenges(
+        groupMember, /* isOngoing= */true);
+    GetChallengesResponse groupMemberProposedChallenges = getUserChallenges(
+        groupMember, /* isOngoing= */false);
+    GetChallengesResponse nonGroupMemberOngoingChallenges = getUserChallenges(
+        nonGroupMember, /* isOngoing= */true);
+    GetChallengesResponse nonGroupMemberProposedChallenges = getUserChallenges(
+        nonGroupMember, /* isOngoing= */false);
+
+    assertThat(user1OngoingChallenges.getData().size(), is(1));
+    assertThat(user1ProposedChallenges.getData().size(), is(1));
+    assertThat(user1OngoingChallenges.getData().get(0).getChallengeInfo().getName(),
+        equalTo(ongoingChallengeName));
+    assertThat(user1ProposedChallenges.getData().get(0).getChallengeInfo().getName(),
+        equalTo(proposedChallengeName));
+    // TODO(issue#62): groupMemberOngoingChallenges should have size 1 when the issue is solved.
+    assertThat(groupMemberOngoingChallenges.getData().size(), is(0));
+    assertThat(groupMemberProposedChallenges.getData().size(), is(1));
+    assertThat(groupMemberProposedChallenges.getData().get(0).getChallengeInfo().getName(),
+        equalTo(proposedChallengeName));
+    assertThat(nonGroupMemberOngoingChallenges.getData().size(), is(0));
+    assertThat(nonGroupMemberProposedChallenges.getData().size(), is(0));
+  }
+
+  private GetChallengesResponse getUserChallenges(User user, boolean isOngoing) throws Exception {
+    String responseJson = performGetRequest(user,
+        "/challenges/" + (isOngoing ? "ongoing" : "proposed"))
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString();
+    return mapFromJson(responseJson, GetChallengesResponse.class);
+  }
+
   private void addUserToGroup(User user, User invitingUser, String groupId)
       throws Exception {
     inviteUserToGroup(invitingUser, user, groupId);
@@ -209,5 +257,19 @@ public class GroupChallengeTest extends ControllerTestBase {
   private ResultActions acceptInvitationToGroup(User user, String groupId)
       throws Exception {
     return performPutRequest(user, String.format("/groups/%s/accept/", groupId), /*body=*/ null);
+  }
+
+  private ResultActions addValidChallenge(User creatingUser, String challengeName, String groupId)
+      throws Exception {
+    long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
+    Challenge challenge = Challenge.builder()
+        .name(challengeName)
+        .motivation(CHALLENGE_MOTIVATION)
+        .expiryDate(expiryDate)
+        .subChallenges(ImmutableList.of(SUB_CHALLENGE))
+        .groupId(groupId)
+        .build();
+    return performPostRequest(creatingUser, "/challenges",
+        mapToJson(new AddChallengeRequest(challenge)));
   }
 }

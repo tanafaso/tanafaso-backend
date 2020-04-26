@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -62,7 +63,9 @@ public class User extends EntityBase {
 
   @Builder(toBuilder = true)
   @Getter
+  @NoArgsConstructor
   @AllArgsConstructor
+  @Setter
   public static class UserChallenge {
 
     @NonNull
