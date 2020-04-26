@@ -6,7 +6,7 @@ import static org.springframework.test.util.AssertionErrors.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.azkar.controllers.ControllerTestBase;
+import com.azkar.TestBase;
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.entities.Group;
@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 
-public class GroupChallengeTest extends ControllerTestBase {
+public class GroupChallengeTest extends TestBase {
 
   private final static String CHALLENGE_NAME = "challenge_name";
   private final static String CHALLENGE_MOTIVATION = "challenge_motivation";
