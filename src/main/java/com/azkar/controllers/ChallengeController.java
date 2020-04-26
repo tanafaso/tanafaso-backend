@@ -11,6 +11,8 @@ import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
+import com.azkar.payload.challengecontroller.responses.utils.UserReturnedChallenge;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.GroupRepo;
@@ -19,17 +21,25 @@ import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerErrorException;
 
 @RestController
 @RequestMapping(path = "/challenges", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ChallengeController extends BaseController {
+
+  private static final String DANGLING_USER_CHALLENGE_LINK_ERROR =
+      "Challenge found in User entity without corresponding challenge entity.";
 
   @Autowired
   UserRepo userRepo;
@@ -107,5 +117,38 @@ public class ChallengeController extends BaseController {
 
     response.setData(challenge);
     return ResponseEntity.ok(response);
+  }
+
+  @GetMapping(path = "/ongoing")
+  public ResponseEntity<GetChallengesResponse> getOngoingChallenges() {
+    return getChallenges(/* isOngoing= */ true);
+  }
+
+  @GetMapping(path = "/proposed")
+  public ResponseEntity<GetChallengesResponse> getProposedChallenges() {
+    return getChallenges(/* isOngoing= */ false);
+  }
+
+  private ResponseEntity<GetChallengesResponse> getChallenges(boolean isOngoing) {
+    GetChallengesResponse response = new GetChallengesResponse();
+    List<UserReturnedChallenge> challengeIds = userRepo.findById(getCurrentUser().getUserId()).get()
+        .getUserChallenges().stream()
+        .filter(userChallenge -> userChallenge.isOngoing() == isOngoing)
+        .map(this::getUserReturnedChallenge)
+        .collect(Collectors.toList());
+    response.setData(challengeIds);
+    return ResponseEntity.ok(response);
+  }
+
+  private UserReturnedChallenge getUserReturnedChallenge(UserChallenge userChallenge) {
+    Optional<Challenge> challengeInfo = challengeRepo.findById(userChallenge.getChallengeId());
+    if (!challengeInfo.isPresent()) {
+      throw new ServerErrorException(DANGLING_USER_CHALLENGE_LINK_ERROR,
+          new Throwable(DANGLING_USER_CHALLENGE_LINK_ERROR));
+    }
+    return UserReturnedChallenge.builder()
+        .userStatus(userChallenge)
+        .challengeInfo(challengeInfo.get())
+        .build();
   }
 }

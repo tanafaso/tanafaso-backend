@@ -65,6 +65,7 @@ public class User extends EntityBase {
     @NonNull
     String challengeId;
     boolean isAccepted;
+    boolean isOngoing;
     @NonNull
     List<SubChallenges> subChallenges;
   }
