@@ -60,9 +60,11 @@ public class GroupChallengeTest extends ControllerTestBase {
 
   @Test
   public void addChallenge_multipleMembersInGroup_shouldSucceed() throws Exception {
-    User anotherUser = UserFactory.getNewUser();
-    userRepo.save(anotherUser);
-    addUserToGroup(anotherUser, /* invitingUser= */ user1, validGroup.getId());
+    User anotherGroupMember = UserFactory.getNewUser();
+    userRepo.save(anotherGroupMember);
+    User nonGroupMember = UserFactory.getNewUser();
+    userRepo.save(nonGroupMember);
+    addUserToGroup(anotherGroupMember, /* invitingUser= */ user1, validGroup.getId());
     long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
     AddChallengeRequest request = AddChallengeRequest.builder()
         .name(CHALLENGE_NAME)
@@ -90,9 +92,15 @@ public class GroupChallengeTest extends ControllerTestBase {
         .andExpect(content().json(mapToJson(expectedResponse)));
 
     List<UserChallenge> userChallenges = userRepo.findById(user1.getId()).get().getUserChallenges();
-    List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(userChallenges.size(), is(1));
+    List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(groupChallenges.size(), is(1));
+    User updatedUser1 = userRepo.findById(user1.getId()).get();
+    User updatedAnotherGroupMember = userRepo.findById(anotherGroupMember.getId()).get();
+    User updatedNonGroupMember = userRepo.findById(nonGroupMember.getId()).get();
+    assertThat(updatedUser1.getUserChallenges().size(), is(1));
+    assertThat(updatedAnotherGroupMember.getUserChallenges().size(), is(1));
+    assertThat(updatedNonGroupMember.getUserChallenges().size(), is(0));
   }
 
   @Test
