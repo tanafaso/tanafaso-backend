@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -80,12 +81,14 @@ public class ChallengeController extends BaseController {
       response.setError(new Error(GROUP_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
+    List<String> groupUsers = groupRepo.findById(req.getGroupId()).get().getUsersIds();
     ArrayList<String> usersAccepted = new ArrayList(Arrays.asList(getCurrentUser().getUserId()));
     Challenge challenge = Challenge.builder()
         .name(req.getName())
         .groupId(req.getGroupId())
         .creatingUserId(getCurrentUser().getUserId())
         .motivation(req.getMotivation())
+        .isOngoing(groupUsers.size() == 1)
         .expiryDate(req.getExpiryDate())
         .usersAccepted(usersAccepted)
         .subChallenges(req.getSubChallenges())

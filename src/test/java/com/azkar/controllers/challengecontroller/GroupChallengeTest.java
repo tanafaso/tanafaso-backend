@@ -27,6 +27,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.ResultActions;
 
 public class GroupChallengeTest extends ControllerTestBase {
 
@@ -58,7 +59,10 @@ public class GroupChallengeTest extends ControllerTestBase {
   }
 
   @Test
-  public void addChallenge_normalScenario_shouldSucceed() throws Exception {
+  public void addChallenge_multipleMembersInGroup_shouldSucceed() throws Exception {
+    User anotherUser = UserFactory.getNewUser();
+    userRepo.save(anotherUser);
+    addUserToGroup(anotherUser, /* invitingUser= */ user1, validGroup.getId());
     long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
     AddChallengeRequest request = AddChallengeRequest.builder()
         .name(CHALLENGE_NAME)
@@ -77,6 +81,40 @@ public class GroupChallengeTest extends ControllerTestBase {
         .usersAccepted(ImmutableList.of(user1.getId()))
         .creatingUserId(user1.getId())
         .isOngoing(false)
+        .usersFinished(new ArrayList<>())
+        .build()
+    );
+
+    performPostRequest(user1, "/challenges", mapToJson(request))
+        .andExpect(status().isOk())
+        .andExpect(content().json(mapToJson(expectedResponse)));
+
+    List<UserChallenge> userChallenges = userRepo.findById(user1.getId()).get().getUserChallenges();
+    List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
+    assertThat(userChallenges.size(), is(1));
+    assertThat(groupChallenges.size(), is(1));
+  }
+
+  @Test
+  public void addChallenge_oneMembersInGroup_shouldSucceed() throws Exception {
+    long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
+    AddChallengeRequest request = AddChallengeRequest.builder()
+        .name(CHALLENGE_NAME)
+        .motivation(CHALLENGE_MOTIVATION)
+        .expiryDate(expiryDate)
+        .subChallenges(ImmutableList.of(SUB_CHALLENGE))
+        .groupId(validGroup.getId())
+        .build();
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setData(Challenge.builder()
+        .name(request.getName())
+        .motivation(request.getMotivation())
+        .expiryDate(request.getExpiryDate())
+        .subChallenges(request.getSubChallenges())
+        .groupId(request.getGroupId())
+        .usersAccepted(ImmutableList.of(user1.getId()))
+        .creatingUserId(user1.getId())
+        .isOngoing(true)
         .usersFinished(new ArrayList<>())
         .build()
     );
@@ -158,5 +196,23 @@ public class GroupChallengeTest extends ControllerTestBase {
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertTrue("GroupChallenges list is expected to be empty but it is not.",
         groupChallenges.isEmpty());
+  }
+
+  private void addUserToGroup(User user, User invitingUser, String groupId)
+      throws Exception {
+    inviteUserToGroup(invitingUser, user, groupId);
+    acceptInvitationToGroup(user, groupId);
+  }
+
+  private ResultActions inviteUserToGroup(User invitingUser, User invitedUser, String groupId)
+      throws Exception {
+    return performPutRequest(invitingUser, String.format("/groups/%s/invite/%s", groupId,
+        invitedUser.getId()),
+        /*body=*/ null);
+  }
+
+  private ResultActions acceptInvitationToGroup(User user, String groupId)
+      throws Exception {
+    return performPutRequest(user, String.format("/groups/%s/accept/", groupId), /*body=*/ null);
   }
 }
