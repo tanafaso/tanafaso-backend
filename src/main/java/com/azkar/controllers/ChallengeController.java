@@ -101,7 +101,8 @@ public class ChallengeController extends BaseController {
     groupRepo.save(group);
 
     Iterable<User> affectedUsers = userRepo.findAllById(groupUsersIds);
-    affectedUsers.forEach(user -> addChallengeToUser(user, req.getSubChallenges(), challenge.getId()));
+    affectedUsers.forEach(
+        user -> addChallengeToUser(user, req.getSubChallenges(), challenge.getId()));
     userRepo.saveAll(affectedUsers);
 
     response.setData(challenge);

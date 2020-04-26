@@ -45,17 +45,14 @@ public class GroupChallengeTest extends ControllerTestBase {
   @Autowired
   UserRepo userRepo;
 
-  private User user1;
-  private Group validGroup;
-  private Group invalidGroup;
+  private User user1 = UserFactory.getNewUser();
+  private Group validGroup = GroupFactory.getNewGroup(user1.getId());
+  private Group invalidGroup = GroupFactory.getNewGroup(user1.getId());
 
   @Before
   public void before() {
-    user1 = UserFactory.getNewUser();
     addNewUser(user1);
-    validGroup = GroupFactory.getNewGroup(user1.getId());
     groupRepo.save(validGroup);
-    invalidGroup = GroupFactory.getNewGroup(user1.getId());
   }
 
   @Test
