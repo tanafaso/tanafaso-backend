@@ -215,6 +215,7 @@ public class GroupChallengeTest extends TestBase {
         groupChallenges.isEmpty());
   }
 
+  // TODO: Reuse existing functions in GroupMembershipTest.
   private void addUserToGroup(User user, User invitingUser, String groupId)
       throws Exception {
     inviteUserToGroup(invitingUser, user, groupId);
