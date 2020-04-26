@@ -68,10 +68,15 @@ public class User extends EntityBase {
   @Setter
   public static class UserChallenge {
 
+    @JsonIgnore
     @NonNull
     String challengeId;
     boolean isAccepted;
+    @JsonIgnore
     boolean isOngoing;
+    @JsonIgnore
+    @NonNull
+    String groupId;
     @NonNull
     List<SubChallenges> subChallenges;
   }

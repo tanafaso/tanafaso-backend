@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -123,6 +124,7 @@ public class ChallengeController extends BaseController {
         .isAccepted(user.getId().equals(getCurrentUser().getUserId()))
         .subChallenges(challenge.getSubChallenges())
         .isOngoing(challenge.isOngoing())
+        .groupId(challenge.getGroupId())
         .build();
     user.getUserChallenges().add(userChallenge);
   }
@@ -137,11 +139,38 @@ public class ChallengeController extends BaseController {
     return getChallenges(/* isOngoing= */ false);
   }
 
+  @GetMapping(path = "/groups/{groupId}/ongoing")
+  public ResponseEntity<GetChallengesResponse> getGroupOngoingChallenges(
+      @PathVariable(value = "groupId") String groupId) {
+    if (groupRepo.existsById(groupId)) {
+      return getChallenges(/* isOngoing= */ true, groupId);
+    }
+    GetChallengesResponse response = new GetChallengesResponse();
+    response.setError(new Error(GROUP_NOT_FOUND_ERROR));
+    return ResponseEntity.unprocessableEntity().body(response);
+  }
+
+  @GetMapping(path = "/groups/{groupId}/proposed")
+  public ResponseEntity<GetChallengesResponse> getGroupProposedChallenges(
+      @PathVariable(value = "groupId") String groupId) {
+    if (groupRepo.existsById(groupId)) {
+      return getChallenges(/* isOngoing= */ false, groupId);
+    }
+    GetChallengesResponse response = new GetChallengesResponse();
+    response.setError(new Error(GROUP_NOT_FOUND_ERROR));
+    return ResponseEntity.unprocessableEntity().body(response);
+  }
+
   private ResponseEntity<GetChallengesResponse> getChallenges(boolean isOngoing) {
+    return getChallenges(isOngoing, /* groupId= */ null);
+  }
+
+  private ResponseEntity<GetChallengesResponse> getChallenges(boolean isOngoing, String groupId) {
     GetChallengesResponse response = new GetChallengesResponse();
     List<UserReturnedChallenge> challengeIds = userRepo.findById(getCurrentUser().getUserId()).get()
         .getUserChallenges().stream()
-        .filter(userChallenge -> userChallenge.isOngoing() == isOngoing)
+        .filter(userChallenge -> userChallenge.isOngoing() == isOngoing &&
+            (groupId == null || groupId.equals(userChallenge.getGroupId())))
         .map(this::getUserReturnedChallenge)
         .collect(Collectors.toList());
     response.setData(challengeIds);

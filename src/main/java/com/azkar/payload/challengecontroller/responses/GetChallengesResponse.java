@@ -5,4 +5,7 @@ import com.azkar.payload.challengecontroller.responses.utils.UserReturnedChallen
 import java.util.List;
 
 public class GetChallengesResponse extends ResponseBase<List<UserReturnedChallenge>> {
+
+  public static final String GROUP_NOT_FOUND_ERROR = "Group not found.";
+
 }
