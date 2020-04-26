@@ -18,6 +18,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Builder
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Setter
 @Document(collection = "challenges")
 public class Challenge extends EntityBase {
 

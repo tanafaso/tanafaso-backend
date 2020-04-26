@@ -1,5 +1,6 @@
 package com.azkar.payload.challengecontroller.requests;
 
+import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.payload.RequestBodyBase;
 import com.azkar.payload.exceptions.BadRequestException;
@@ -20,17 +21,14 @@ public class AddChallengeRequest extends RequestBodyBase {
   @VisibleForTesting
   public static final String GROUP_NOT_FOUND_ERROR = "The given group is not found.";
 
-  private String motivation;
-  private String name;
-  private long expiryDate;
-  private List<SubChallenges> subChallenges;
-  private String groupId;
+//  private List<SubChallenges> subChallenges;
+  private Challenge challenge;
 
   @Override
   public void validate() throws BadRequestException {
-    checkNotNull(motivation, name, subChallenges, groupId);
-    if (expiryDate < Instant.now().getEpochSecond()) {
-      throw new BadRequestException(PAST_EXPIRY_DATE_ERROR);
-    }
+//    checkNotNull(motivation, name, subChallenges, groupId);
+//    if (expiryDate < Instant.now().getEpochSecond()) {
+//      throw new BadRequestException(PAST_EXPIRY_DATE_ERROR);
+//    }
   }
 }
