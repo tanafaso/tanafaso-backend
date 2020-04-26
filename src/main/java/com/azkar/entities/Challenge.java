@@ -40,11 +40,11 @@ public class Challenge extends EntityBase {
   private List<String> usersFinished = new ArrayList<>();
   @NonNull
   private List<SubChallenges> subChallenges;
+  @JsonIgnore
   @CreatedDate
-  @JsonIgnore
   private long createdAt;
-  @LastModifiedDate
   @JsonIgnore
+  @LastModifiedDate
   private long modifiedAt;
 
   @Getter

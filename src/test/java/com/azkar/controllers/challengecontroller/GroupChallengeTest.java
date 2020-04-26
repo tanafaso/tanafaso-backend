@@ -2,6 +2,7 @@ package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.util.AssertionErrors.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -29,8 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class GroupChallengeTest extends ControllerTestBase {
 
-  private final static String CHALLENGE_NAME = "challenge-name";
-  private final static String CHALLENGE_MOTIVATION = "challenge-motivation";
+  private final static String CHALLENGE_NAME = "challenge_name";
+  private final static String CHALLENGE_MOTIVATION = "challenge_motivation";
   private final static long EXPIRY_DATE_OFFSET = 60 * 60;
   private final static SubChallenges SUB_CHALLENGE = SubChallenges.builder()
       .zekr("zekr")
@@ -66,8 +67,8 @@ public class GroupChallengeTest extends ControllerTestBase {
         .subChallenges(ImmutableList.of(SUB_CHALLENGE))
         .groupId(validGroup.getId())
         .build();
-    AddChallengeResponse successResponse = new AddChallengeResponse();
-    successResponse.setData(Challenge.builder()
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setData(Challenge.builder()
         .name(request.getName())
         .motivation(request.getMotivation())
         .expiryDate(request.getExpiryDate())
@@ -82,7 +83,7 @@ public class GroupChallengeTest extends ControllerTestBase {
 
     performPostRequest(user1, "/challenges", mapToJson(request))
         .andExpect(status().isOk())
-        .andExpect(content().json(mapToJson(successResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     List<UserChallenge> userChallenges = userRepo.findById(user1.getId()).get().getUserChallenges();
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
@@ -91,7 +92,7 @@ public class GroupChallengeTest extends ControllerTestBase {
   }
 
   @Test
-  public void addChallenge_invalidGroup_shouldFail() throws Exception {
+  public void addChallenge_invalidGroup_shouldNotSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
     AddChallengeRequest request = AddChallengeRequest.builder()
         .name(CHALLENGE_NAME)
@@ -100,19 +101,19 @@ public class GroupChallengeTest extends ControllerTestBase {
         .subChallenges(ImmutableList.of(SUB_CHALLENGE))
         .groupId(invalidGroup.getId())
         .build();
-    AddChallengeResponse failureResponse = new AddChallengeResponse();
-    failureResponse.setError(new Error(AddChallengeRequest.GROUP_NOT_FOUND_ERROR));
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setError(new Error(AddChallengeRequest.GROUP_NOT_FOUND_ERROR));
 
     performPostRequest(user1, "/challenges", mapToJson(request))
         .andExpect(status().isBadRequest())
-        .andExpect(content().json(mapToJson(failureResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     List<UserChallenge> userChallenges = userRepo.findById(user1.getId()).get().getUserChallenges();
-    assertThat(userChallenges.size(), is(0));
+    assertTrue("UserChallenges list is not empty.", userChallenges.isEmpty());
   }
 
   @Test
-  public void addChallenge_missingMotivationField_shouldFail() throws Exception {
+  public void addChallenge_missingMotivationField_shouldNotSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
     AddChallengeRequest request = AddChallengeRequest.builder()
         .name(CHALLENGE_NAME)
@@ -120,19 +121,23 @@ public class GroupChallengeTest extends ControllerTestBase {
         .subChallenges(ImmutableList.of(SUB_CHALLENGE))
         .groupId(validGroup.getId())
         .build();
-    AddChallengeResponse failureResponse = new AddChallengeResponse();
-    failureResponse.setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
 
     performPostRequest(user1, "/challenges", mapToJson(request))
         .andExpect(status().isBadRequest())
-        .andExpect(content().json(mapToJson(failureResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     List<UserChallenge> userChallenges = userRepo.findById(user1.getId()).get().getUserChallenges();
-    assertThat(userChallenges.size(), is(0));
+    assertTrue("UserChallenges list is expected to be empty but it is not.",
+        userChallenges.isEmpty());
+    List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
+    assertTrue("GroupChallenges list is expected to be empty but it is not.",
+        groupChallenges.isEmpty());
   }
 
   @Test
-  public void addChallenge_pastExpiryDate_shouldFail() throws Exception {
+  public void addChallenge_pastExpiryDate_shouldNotSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() - EXPIRY_DATE_OFFSET;
     AddChallengeRequest request = AddChallengeRequest.builder()
         .name(CHALLENGE_NAME)
@@ -141,14 +146,17 @@ public class GroupChallengeTest extends ControllerTestBase {
         .subChallenges(ImmutableList.of(SUB_CHALLENGE))
         .groupId(validGroup.getId())
         .build();
-    AddChallengeResponse failureResponse = new AddChallengeResponse();
-    failureResponse.setError(new Error(AddChallengeRequest.PAST_EXPIRY_DATE_ERROR));
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setError(new Error(AddChallengeRequest.PAST_EXPIRY_DATE_ERROR));
 
     performPostRequest(user1, "/challenges", mapToJson(request))
         .andExpect(status().isBadRequest())
-        .andExpect(content().json(mapToJson(failureResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
 
     List<UserChallenge> userChallenges = userRepo.findById(user1.getId()).get().getUserChallenges();
-    assertThat(userChallenges.size(), is(0));
+    assertTrue("UserChallenges list is not empty.", userChallenges.isEmpty());
+    List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
+    assertTrue("GroupChallenges list is expected to be empty but it is not.",
+        groupChallenges.isEmpty());
   }
 }
