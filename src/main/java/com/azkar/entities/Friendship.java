@@ -1,5 +1,6 @@
 package com.azkar.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -30,8 +31,10 @@ public class Friendship extends EntityBase {
   private String userId;
   @Default
   private List<Friend> friends = new ArrayList<Friend>();
+  @JsonIgnore
   @CreatedDate
   private long createdAt;
+  @JsonIgnore
   @LastModifiedDate
   private long modifiedAt;
 

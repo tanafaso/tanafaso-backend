@@ -1,5 +1,6 @@
 package com.azkar.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
@@ -27,8 +28,10 @@ public class Group extends EntityBase {
   private List<String> usersIds;
   @Default
   private List<String> challengesIds = new ArrayList<>();
+  @JsonIgnore
   @CreatedDate
   private long createdAt;
+  @JsonIgnore
   @LastModifiedDate
   private long modifiedAt;
 }

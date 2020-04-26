@@ -6,9 +6,11 @@ import java.util.Objects;
 
 public abstract class RequestBodyBase {
 
-  public abstract void validate() throws BadRequestException;
-
-  protected static boolean anyNull(Object... arguments) {
-    return Arrays.stream(arguments).anyMatch(Objects::isNull);
+  protected static void checkNotNull(Object... arguments) throws BadRequestException {
+    if (Arrays.stream(arguments).anyMatch(Objects::isNull)) {
+      throw new BadRequestException(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR);
+    }
   }
+
+  public abstract void validate() throws BadRequestException;
 }

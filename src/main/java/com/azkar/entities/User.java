@@ -1,6 +1,7 @@
 package com.azkar.entities;
 
 import com.azkar.entities.Challenge.SubChallenges;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -35,8 +36,10 @@ public class User extends EntityBase {
   private List<UserGroup> userGroups = new ArrayList();
   @Default
   private List<UserChallenge> userChallenges = new ArrayList<>();
+  @JsonIgnore
   @CreatedDate
   private long createdAt;
+  @JsonIgnore
   @LastModifiedDate
   private long updatedAt;
 

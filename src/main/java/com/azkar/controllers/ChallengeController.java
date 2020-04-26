@@ -3,6 +3,7 @@ package com.azkar.controllers;
 import static com.azkar.payload.challengecontroller.requests.AddChallengeRequest.GROUP_NOT_FOUND_ERROR;
 
 import com.azkar.entities.Challenge;
+import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserChallenge;
@@ -90,12 +91,14 @@ public class ChallengeController extends BaseController {
       response.setError(new Error(GROUP_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
+    List<String> groupUsersIds = groupRepo.findById(req.getGroupId()).get().getUsersIds();
     ArrayList<String> usersAccepted = new ArrayList(Arrays.asList(getCurrentUser().getUserId()));
     Challenge challenge = Challenge.builder()
         .name(req.getName())
         .groupId(req.getGroupId())
         .creatingUserId(getCurrentUser().getUserId())
         .motivation(req.getMotivation())
+        .isOngoing(groupUsersIds.size() == 1)
         .expiryDate(req.getExpiryDate())
         .usersAccepted(usersAccepted)
         .subChallenges(req.getSubChallenges())
@@ -106,17 +109,25 @@ public class ChallengeController extends BaseController {
     group.getChallengesIds().add(challenge.getId());
     groupRepo.save(group);
 
-    User.UserChallenge userChallenge = UserChallenge.builder()
-        .challengeId(challenge.getId())
-        .isAccepted(true)
-        .subChallenges(req.getSubChallenges())
-        .build();
-    User user = userRepo.findById(getCurrentUser().getUserId()).get();
-    user.getUserChallenges().add(userChallenge);
-    userRepo.save(user);
+    Iterable<User> affectedUsers = userRepo.findAllById(groupUsersIds);
+    affectedUsers.forEach(
+        user -> addChallengeToUser(user, req.getSubChallenges(), challenge.getId()));
+    userRepo.saveAll(affectedUsers);
 
     response.setData(challenge);
     return ResponseEntity.ok(response);
+  }
+
+  private void addChallengeToUser(
+      User user,
+      List<SubChallenges> subChallenges,
+      String challengeId) {
+    UserChallenge userChallenge = UserChallenge.builder()
+        .challengeId(challengeId)
+        .isAccepted(user.getId().equals(getCurrentUser().getUserId()))
+        .subChallenges(subChallenges)
+        .build();
+    user.getUserChallenges().add(userChallenge);
   }
 
   @GetMapping(path = "/ongoing")
@@ -150,5 +161,4 @@ public class ChallengeController extends BaseController {
         .userStatus(userChallenge)
         .challengeInfo(challengeInfo.get())
         .build();
-  }
 }
