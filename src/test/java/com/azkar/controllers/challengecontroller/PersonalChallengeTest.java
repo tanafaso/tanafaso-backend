@@ -6,7 +6,7 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.azkar.controllers.ControllerTestBase;
+import com.azkar.TestBase;
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.entities.User;
@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-public class PersonalChallengeTest extends ControllerTestBase {
+public class PersonalChallengeTest extends TestBase {
 
   private static final User USER = UserFactory.getNewUser();
   private static final String CHALLENGE_MOTIVATION = "test-motivation";

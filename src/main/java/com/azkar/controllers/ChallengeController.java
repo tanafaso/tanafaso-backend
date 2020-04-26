@@ -86,28 +86,22 @@ public class ChallengeController extends BaseController {
       response.setError(new Error(e.getMessage()));
       return ResponseEntity.badRequest().body(response);
     }
-    if (!groupRepo.existsById(req.getChallenge().getGroupId())) {
+    Optional<Group> group = groupRepo.findById(req.getChallenge().getGroupId());
+    if (!group.isPresent()) {
       response.setError(new Error(GROUP_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
-    List<String> groupUsersIds = groupRepo.findById(req.getChallenge().getGroupId()).get()
-        .getUsersIds();
+    List<String> groupUsersIds = group.get().getUsersIds();
     ArrayList<String> usersAccepted = new ArrayList(Arrays.asList(getCurrentUser().getUserId()));
-    Challenge challenge = Challenge.builder()
-        .name(req.getChallenge().getName())
-        .groupId(req.getChallenge().getGroupId())
+    Challenge challenge = req.getChallenge().toBuilder()
         .creatingUserId(getCurrentUser().getUserId())
-        .motivation(req.getChallenge().getMotivation())
         .isOngoing(groupUsersIds.size() == 1)
-        .expiryDate(req.getChallenge().getExpiryDate())
         .usersAccepted(usersAccepted)
-        .subChallenges(req.getChallenge().getSubChallenges())
         .build();
     challengeRepo.save(challenge);
 
-    Group group = groupRepo.findById(req.getChallenge().getGroupId()).get();
-    group.getChallengesIds().add(challenge.getId());
-    groupRepo.save(group);
+    group.get().getChallengesIds().add(challenge.getId());
+    groupRepo.save(group.get());
 
     Iterable<User> affectedUsers = userRepo.findAllById(groupUsersIds);
     affectedUsers.forEach(user -> addChallengeToUser(user, challenge));
