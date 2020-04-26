@@ -82,7 +82,8 @@ public class ChallengeController extends BaseController {
       response.setError(new Error(GROUP_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
-    List<String> groupUsersIds = groupRepo.findById(req.getChallenge().getGroupId()).get().getUsersIds();
+    List<String> groupUsersIds = groupRepo.findById(req.getChallenge().getGroupId()).get()
+        .getUsersIds();
     ArrayList<String> usersAccepted = new ArrayList(Arrays.asList(getCurrentUser().getUserId()));
     Challenge challenge = Challenge.builder()
         .name(req.getChallenge().getName())
@@ -101,8 +102,9 @@ public class ChallengeController extends BaseController {
     groupRepo.save(group);
 
     Iterable<User> affectedUsers = userRepo.findAllById(groupUsersIds);
-    affectedUsers.forEach(
-        user -> addChallengeToUser(user, req.getChallenge().getSubChallenges(), challenge.getId()));
+    affectedUsers.forEach(user -> addChallengeToUser(user,
+        req.getChallenge().getSubChallenges(),
+        challenge.getId()));
     userRepo.saveAll(affectedUsers);
 
     response.setData(challenge);
