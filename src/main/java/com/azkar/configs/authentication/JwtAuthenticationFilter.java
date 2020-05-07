@@ -5,6 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.azkar.entities.User;
+import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
 import java.io.IOException;
 import javax.servlet.FilterChain;
@@ -25,14 +26,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  static final String BEARER_TOKEN_PREFIX = "Bearer ";
   private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
   @Autowired
   private UserService userService;
 
-  @Value("${app.jwtSecret}")
-  private String jwtSecret;
+  @Autowired
+  JwtService jwtService;
 
   @Override
   protected void doFilterInternal(
@@ -40,15 +40,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       HttpServletResponse httpServletResponse,
       FilterChain filterChain)
       throws ServletException, IOException {
-    String token = extractJwtToken(httpServletRequest);
+    String token = jwtService.extractJwtToken(httpServletRequest);
     logger.info("Authenticating a new request.");
 
     if (token != null) {
       logger.info(String.format("Token used for authentication is: %s", token));
 
-      JWTVerifier verifier = JWT.require(Algorithm.HMAC512(jwtSecret)).build();
       try {
-        String userId = verifier.verify(token).getSubject();
+        String userId = jwtService.getVerifier().verify(token).getSubject();
         User currentUser = userService.loadUserById(userId);
         if (currentUser != null) {
           UserPrincipal userPrincipal = new UserPrincipal();
@@ -66,11 +65,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     filterChain.doFilter(httpServletRequest, httpServletResponse);
   }
 
-  private String extractJwtToken(HttpServletRequest httpServletRequest) {
-    String token = httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION);
-    if (token != null && token.startsWith(BEARER_TOKEN_PREFIX)) {
-      return token.replace(BEARER_TOKEN_PREFIX, "");
-    }
-    return null;
-  }
 }

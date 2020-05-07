@@ -28,6 +28,6 @@ public class HomeControllerTest extends TestBase {
     performGetRequest(user, "/")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(mapToJson(expectedResponse)));
+        .andExpect(content().json(mapToJson(expectedResponse)));
   }
 }
