@@ -30,8 +30,8 @@ import org.springframework.web.client.RestTemplate;
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class AuthenticationController extends BaseController {
 
-  public final static String LOGIN_WITH_FACEBOOK_PATH = "/login/facebook";
-  public final static String CONNECT_FACEBOOK_PATH = "/connect/facebook";
+  public static final String LOGIN_WITH_FACEBOOK_PATH = "/login/facebook";
+  public static final String CONNECT_FACEBOOK_PATH = "/connect/facebook";
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
   @Autowired
   UserRepo userRepo;
@@ -162,10 +162,10 @@ public class AuthenticationController extends BaseController {
   }
 
   private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationBody body) {
-    String facebook_graph_api_url =
+    String facebookGraphApiUril =
         "https://graph.facebook.com/v7.0/me?fields=id,name,email&access_token=" + body.getToken();
     FacebookBasicProfileResponse facebookResponse = restTemplate.getForObject(
-        facebook_graph_api_url,
+        facebookGraphApiUril,
         FacebookBasicProfileResponse.class);
 
     if (facebookResponse.id == null || !facebookResponse.id.equals(body.getUserId())) {
