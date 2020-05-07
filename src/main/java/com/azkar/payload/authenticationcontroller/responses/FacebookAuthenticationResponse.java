@@ -9,4 +9,6 @@ public class FacebookAuthenticationResponse extends ResponseBase {
   public static final String AUTHENTICATION_WITH_FACEBOOK_ERROR =
       "Something wrong happened while authenticating with facebook, please try again.";
 
+  public static final String SOMEONE_ELSE_ALREADY_CONNECTED_ERROR =
+      "Someone else already connected using this account.";
 }

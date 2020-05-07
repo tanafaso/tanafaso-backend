@@ -73,7 +73,7 @@ public class User extends EntityBase {
     List<SubChallenges> subChallenges;
   }
 
-  @Builder(toBuilder = true)
+  @Builder
   @Data
   @AllArgsConstructor
   public static class UserFacebookData {
