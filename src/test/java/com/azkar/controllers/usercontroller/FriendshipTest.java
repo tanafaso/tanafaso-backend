@@ -245,7 +245,7 @@ public class FriendshipTest extends TestBase {
     );
 
     MvcResult mvcResult =
-        performGetRequest(user1, "/friends")
+        performGetRequest(user1, "/friends", /*body=*/null)
             .andExpect(status().isOk())
             .andReturn();
 
@@ -263,7 +263,7 @@ public class FriendshipTest extends TestBase {
         .build()
     );
     mvcResult =
-        performGetRequest(user5, "/friends")
+        performGetRequest(user5, "/friends", /*body=*/null)
             .andExpect(status().isOk())
             .andReturn();
 

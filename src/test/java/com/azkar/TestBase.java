@@ -28,7 +28,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -65,43 +67,38 @@ public abstract class TestBase {
         .sign(Algorithm.HMAC512(jwtSecret));
   }
 
-  protected ResultActions performGetRequest(User user, String path) throws Exception {
-    return mockMvc
-        .perform(get(path)
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
+  protected ResultActions performGetRequest(User user, String path, String body) throws Exception {
+    return mockMvc.perform(addRequestBodyAndToken(get(path), user, body));
   }
 
   protected ResultActions performPostRequest(User user, String path, String body) throws Exception {
-    if (body == null) {
-      return mockMvc
-          .perform(post(path)
-              .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
-    }
-    return mockMvc
-        .perform(post(path)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(body)
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
+    return mockMvc.perform(addRequestBodyAndToken(post(path), user, body));
   }
 
   protected ResultActions performPutRequest(User user, String path, String body) throws Exception {
-    if (body == null) {
-      return mockMvc
-          .perform(put(path)
-              .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
-    }
-
-    return mockMvc
-        .perform(put(path)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(body)
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
+    return mockMvc.perform(addRequestBodyAndToken(put(path), user, body));
   }
 
   protected ResultActions performDeleteRequest(User user, String path) throws Exception {
     return mockMvc
         .perform(delete(path)
             .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
+  }
+
+  private RequestBuilder addRequestBodyAndToken(
+      MockHttpServletRequestBuilder requestBuilder,
+      User user,
+      String body) throws UnsupportedEncodingException {
+    if (user != null) {
+      requestBuilder.header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user));
+    }
+
+    if (body != null) {
+      requestBuilder.contentType(MediaType.APPLICATION_JSON);
+      requestBuilder.content(body);
+    }
+
+    return requestBuilder;
   }
 
   protected String mapToJson(Object obj) throws JsonProcessingException {

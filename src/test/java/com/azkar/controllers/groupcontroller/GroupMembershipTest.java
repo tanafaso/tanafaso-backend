@@ -433,7 +433,7 @@ public class GroupMembershipTest extends TestBase {
         .build());
 
     expectedResponse.setData(expectedUserGroups);
-    MvcResult result = performGetRequest(user3, "/groups/")
+    MvcResult result = performGetRequest(user3, "/groups/", /*body=*/null)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)))
