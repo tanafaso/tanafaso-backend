@@ -2,6 +2,7 @@ package com.azkar.configs;
 
 import com.azkar.configs.authentication.JwtAuthenticationFilter;
 import com.azkar.configs.authentication.OauthSuccessHandler;
+import com.azkar.controllers.AuthenticationController;
 import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +27,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.authorizeRequests()
-        .anyRequest()
+        .antMatchers(AuthenticationController.LOGIN_WITH_FACEBOOK_PATH)
+        .permitAll()
+        .antMatchers("/**")
         .authenticated()
         .and()
         .oauth2Login()

@@ -32,6 +32,7 @@ public class User extends EntityBase {
   private List<Challenge> personalChallenges = new ArrayList<>();
   private String username;
   private String name;
+  private UserFacebookData userFacebookData;
   @Default
   private List<UserGroup> userGroups = new ArrayList();
   @Default
@@ -70,5 +71,17 @@ public class User extends EntityBase {
     boolean isAccepted;
     @NonNull
     List<SubChallenges> subChallenges;
+  }
+
+  @Builder
+  @Data
+  @AllArgsConstructor
+  public static class UserFacebookData {
+
+    @Indexed(name = "user_facebook_data_index", unique = true)
+    String userId;
+    String accessToken;
+    String email;
+    String name;
   }
 }
