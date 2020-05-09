@@ -49,12 +49,15 @@ public class AuthenticationController extends BaseController {
   }
 
   /**
+   * <p>
    * This mapping is used in two cases: 1- A new user is authenticating with facebook. 2- An
    * existing user is authenticating with facebook because their JWT token is expired or or they
    * don't have it in their session.
-   *
+   * </p>
+   * <p>
    * This request is expected to called by a non-logged in user so the security context
    * authentication is expected to be not set.
+   * </p>
    */
   @GetMapping(value = LOGIN_WITH_FACEBOOK_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> loginWithFacebook(
