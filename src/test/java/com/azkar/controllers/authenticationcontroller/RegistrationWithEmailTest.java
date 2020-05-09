@@ -16,12 +16,16 @@ import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.ResultActions;
 
 public class RegistrationWithEmailTest extends TestBase {
 
   @Autowired
   RegistrationEmailConfirmationStateRepo registrationEmailConfirmationStateRepo;
+
+  @Autowired
+  PasswordEncoder passwordEncoder;
 
   @Test
   public void registerWithEmail_normalScenario_shouldAddStateEntryForBodyParams() throws Exception {
@@ -44,7 +48,8 @@ public class RegistrationWithEmailTest extends TestBase {
         registrationEmailConfirmationStateRepo.findAll().get(0);
     assertThat(state.getName(), is(body.getName()));
     assertThat(state.getEmail(), is(body.getEmail()));
-    assertThat(state.getPassword(), is(body.getPassword()));
+    assertThat("Password is hashed and saved",
+        passwordEncoder.matches(body.getPassword(), state.getPassword()));
   }
 
   @Test
