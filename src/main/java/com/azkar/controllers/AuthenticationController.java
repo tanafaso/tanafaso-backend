@@ -31,7 +31,6 @@ import org.springframework.web.client.RestTemplate;
 public class AuthenticationController extends BaseController {
 
   public static final String LOGIN_WITH_FACEBOOK_PATH = "/login/facebook";
-  public static final String CONNECT_FACEBOOK_PATH = "/connect/facebook";
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
   @Autowired
   UserRepo userRepo;
@@ -49,16 +48,15 @@ public class AuthenticationController extends BaseController {
     restTemplate = restTemplateBuilder.build();
   }
 
-  /*
-     This mapping is used in two cases:
-     1- A new user is authenticating with facebook.
-     2- An existing user is authenticating with facebook because their JWT token is expired or
-        or they don't have it in their session.
-
-     This request is expected to called by a non-logged in user so the security context
-     authentication is expected to be not set.
-  */
-  @GetMapping(value = LOGIN_WITH_FACEBOOK_PATH)
+  /**
+   * This mapping is used in two cases: 1- A new user is authenticating with facebook. 2- An
+   * existing user is authenticating with facebook because their JWT token is expired or or they
+   * don't have it in their session.
+   *
+   * This request is expected to called by a non-logged in user so the security context
+   * authentication is expected to be not set.
+   */
+  @GetMapping(value = LOGIN_WITH_FACEBOOK_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> loginWithFacebook(
       @RequestBody FacebookAuthenticationBody requestBody) {
     requestBody.validate();
@@ -66,9 +64,9 @@ public class AuthenticationController extends BaseController {
 
     if (!(SecurityContextHolder.getContext()
         .getAuthentication() instanceof AnonymousAuthenticationToken)) {
-      logger.error(
-          "Did not expect a logged in user as this request will not pass through filters.");
-      throw new RuntimeException();
+      response
+          .setError(new Error(FacebookAuthenticationResponse.USER_ALREADY_LOGGED_IN));
+      return ResponseEntity.unprocessableEntity().body(response);
     }
 
     FacebookBasicProfileResponse facebookResponse = assertUserFacebookData(requestBody);
@@ -107,15 +105,13 @@ public class AuthenticationController extends BaseController {
   }
 
 
-  /*
-   This mapping should only be used in case of a logged in user who wants to connect their
-   account with facebook. Note, that maybe they have already connected an account; in that case
-   the new facebook information will override the old one.
-
-     This request is expected to called by a logged in user so the security context
-     authentication is expected to be set.
-  */
-  @GetMapping(value = CONNECT_FACEBOOK_PATH)
+  /**
+   * This mapping should only be used in case of a logged in user who wants to connect their account
+   * with facebook. Note, that maybe they have already connected an account; in that case the new
+   * facebook information will override the old one. This request is expected to called by a logged
+   * in user so the security context authentication is expected to be set.
+   */
+  @GetMapping(value = "/connect/facebook", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> connectFacebook(
       @RequestBody FacebookAuthenticationBody requestBody) {
     requestBody.validate();
@@ -133,8 +129,8 @@ public class AuthenticationController extends BaseController {
         userRepo.findByUserFacebookData_userId(facebookResponse.getId())
             .orElse(userRepo.findById(getCurrentUser().getUserId()).get());
     if (!user.getId().equals(getCurrentUser().getUserId())) {
-      logger.warn("Someone is trying to connect his facebook account to an account other than the"
-          + " one which the facebook account is already connected to.");
+      logger.warn("The user is attempting to connect a facebook account already connected to "
+          + "another account.");
       response
           .setError(new Error(FacebookAuthenticationResponse.SOMEONE_ELSE_ALREADY_CONNECTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
@@ -148,17 +144,7 @@ public class AuthenticationController extends BaseController {
     user.setUserFacebookData(userFacebookData);
     userRepo.save(user);
 
-    try {
-      HttpHeaders httpHeaders = new HttpHeaders();
-      httpHeaders.setBearerAuth(jwtService.generateToken(user));
-      ResponseEntity<FacebookAuthenticationResponse> responseEntity =
-          new ResponseEntity<>(httpHeaders, HttpStatus.OK);
-      return responseEntity;
-    } catch (UnsupportedEncodingException e) {
-      response
-          .setError(new Error(FacebookAuthenticationResponse.AUTHENTICATION_WITH_FACEBOOK_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
-    }
+    return ResponseEntity.ok(response);
   }
 
   private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationBody body) {
@@ -168,7 +154,7 @@ public class AuthenticationController extends BaseController {
         facebookGraphApiUril,
         FacebookBasicProfileResponse.class);
 
-    if (facebookResponse.id == null || !facebookResponse.id.equals(body.getUserId())) {
+    if (facebookResponse.id == null || !facebookResponse.id.equals(body.getFacebookUserId())) {
       return null;
     }
 

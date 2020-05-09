@@ -8,9 +8,9 @@ import lombok.Data;
 public class FacebookAuthenticationBody extends RequestBodyBase {
 
   private String token;
-  private String userId;
+  private String facebookUserId;
 
   @Override public void validate() throws BadRequestException {
-    checkNotNull(token, userId);
+    checkNotNull(token, facebookUserId);
   }
 }
