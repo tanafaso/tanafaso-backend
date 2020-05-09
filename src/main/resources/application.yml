@@ -9,7 +9,7 @@ server:
   port: ${SERVER_PORT}
 
 mail:
-  host: ${MAIL_HOST}
+  host: ${MAIL_HOSt}
   port: ${MAIL_PORT}
   username: ${MAIL_USERNAME}
   password: ${MAIL_PASSWORD}
