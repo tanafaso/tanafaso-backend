@@ -29,7 +29,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.authorizeRequests()
-        .antMatchers(AuthenticationController.REGISTER_WITH_EMAIL_PATH)
+        .antMatchers(
+            AuthenticationController.REGISTER_WITH_EMAIL_PATH,
+            AuthenticationController.LOGIN_WITH_FACEBOOK_PATH)
+        .permitAll()
+        .antMatchers()
         .permitAll()
         .antMatchers("/**")
         .authenticated()
