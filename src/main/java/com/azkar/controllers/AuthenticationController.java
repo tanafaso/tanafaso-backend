@@ -8,7 +8,6 @@ import com.azkar.payload.authenticationcontroller.responses.FacebookAuthenticati
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
-import java.io.UnsupportedEncodingException;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +82,7 @@ public class AuthenticationController extends BaseController {
     String jwtToken;
     try {
       User user =
-          userRepo.findByUserFacebookData_userId(facebookResponse.getId()) // Case 2
+          userRepo.findByUserFacebookData_UserId(facebookResponse.getId()) // Case 2
               .orElse(userService.buildNewUser(facebookResponse.email, // Case 1
                   facebookResponse.name));
       UserFacebookData userFacebookData = UserFacebookData.builder()
@@ -129,7 +128,7 @@ public class AuthenticationController extends BaseController {
     }
 
     User user =
-        userRepo.findByUserFacebookData_userId(facebookResponse.getId())
+        userRepo.findByUserFacebookData_UserId(facebookResponse.getId())
             .orElse(userRepo.findById(getCurrentUser().getUserId()).get());
     if (!user.getId().equals(getCurrentUser().getUserId())) {
       logger.warn("The user is attempting to connect a facebook account already connected to "
