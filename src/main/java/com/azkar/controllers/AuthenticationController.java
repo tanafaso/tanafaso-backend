@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +35,9 @@ public class AuthenticationController extends BaseController {
 
   @Autowired
   private JavaMailSender javaMailSender;
+
+  @Autowired
+  PasswordEncoder passwordEncoder;
 
   @GetMapping(value = REGISTER_WITH_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<EmailRegistrationResponse> registerWithEmail(
@@ -66,10 +70,9 @@ public class AuthenticationController extends BaseController {
     registrationPinRepo.save(
         RegistrationEmailConfirmationState.builder()
             .email(body.getEmail())
-            .password(body.getPassword())
+            .password(passwordEncoder.encode(body.getPassword()))
             .pin(pin)
             .name(body.getName()).build());
-
     return ResponseEntity.ok(response);
   }
 
