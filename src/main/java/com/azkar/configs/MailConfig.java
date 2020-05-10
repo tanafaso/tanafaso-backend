@@ -10,16 +10,16 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 @Configuration
 public class MailConfig {
 
-  @Value("${mail.host}")
+  @Value("${MAIL_HOST}")
   private String mailHost;
 
-  @Value("${mail.port}")
+  @Value("${MAIL_PORT}")
   private int mailPort;
 
-  @Value("${mail.username}")
+  @Value("${MAIL_USERNAME}")
   private String mailUsername;
 
-  @Value("${mail.password}")
+  @Value("${MAIL_PASSWORD}")
   private String mailPassword;
 
   @Bean

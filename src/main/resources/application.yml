@@ -8,12 +8,6 @@ logging.level.org.springframework:
 server:
   port: ${SERVER_PORT}
 
-mail:
-  host: ${MAIL_HOSt}
-  port: ${MAIL_PORT}
-  username: ${MAIL_USERNAME}
-  password: ${MAIL_PASSWORD}
-
 spring:
   data.mongodb:
     auto-index-creation: false
