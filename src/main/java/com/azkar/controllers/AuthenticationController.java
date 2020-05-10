@@ -19,7 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -58,7 +58,7 @@ public class AuthenticationController extends BaseController {
    * authentication is expected to be not set.
    * </p>
    */
-  @GetMapping(value = LOGIN_WITH_FACEBOOK_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = LOGIN_WITH_FACEBOOK_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> loginWithFacebook(
       @RequestBody FacebookAuthenticationBody requestBody) {
     requestBody.validate();
@@ -113,7 +113,7 @@ public class AuthenticationController extends BaseController {
    * facebook information will override the old one. This request is expected to called by a logged
    * in user so the security context authentication is expected to be set.
    */
-  @GetMapping(value = "/connect/facebook", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "/connect/facebook", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> connectFacebook(
       @RequestBody FacebookAuthenticationBody requestBody) {
     requestBody.validate();
