@@ -20,6 +20,7 @@ jobs:
         MAIL_PORT: ${{ secrets.MAIL_PORT }}
         MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
         MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
