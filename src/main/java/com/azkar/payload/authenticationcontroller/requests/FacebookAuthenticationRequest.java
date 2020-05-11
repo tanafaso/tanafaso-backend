@@ -5,7 +5,7 @@ import com.azkar.payload.exceptions.BadRequestException;
 import lombok.Data;
 
 @Data
-public class FacebookAuthenticationBody extends RequestBodyBase {
+public class FacebookAuthenticationRequest extends RequestBodyBase {
 
   private String token;
   private String facebookUserId;
