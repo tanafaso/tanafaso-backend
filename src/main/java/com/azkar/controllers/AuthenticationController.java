@@ -102,7 +102,7 @@ public class AuthenticationController extends BaseController {
     HttpHeaders httpHeaders = new HttpHeaders();
     httpHeaders.setBearerAuth(jwtToken);
     ResponseEntity<FacebookAuthenticationResponse> responseEntity =
-        new ResponseEntity<>(httpHeaders, HttpStatus.OK);
+        new ResponseEntity<>(response, httpHeaders, HttpStatus.OK);
     return responseEntity;
   }
 
