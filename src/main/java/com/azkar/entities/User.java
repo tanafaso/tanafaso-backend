@@ -36,7 +36,7 @@ public class User extends EntityBase {
   @Default
   private List<UserGroup> userGroups = new ArrayList();
   @Default
-  private List<UserChallenge> userChallenges = new ArrayList();
+  private List<UserChallengeStatus> userChallengeStatuses = new ArrayList();
   @JsonIgnore
   @CreatedDate
   private long createdAt;
@@ -66,7 +66,7 @@ public class User extends EntityBase {
   @NoArgsConstructor
   @AllArgsConstructor
   @Setter
-  public static class UserChallenge {
+  public static class UserChallengeStatus {
 
     @NonNull
     String challengeId;

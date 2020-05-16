@@ -3,17 +3,16 @@ package com.azkar.controllers;
 import static com.azkar.payload.challengecontroller.requests.AddChallengeRequest.GROUP_NOT_FOUND_ERROR;
 
 import com.azkar.entities.Challenge;
-import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
-import com.azkar.entities.User.UserChallenge;
+import com.azkar.entities.User.UserChallengeStatus;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
-import com.azkar.payload.challengecontroller.responses.utils.UserReturnedChallenge;
+import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserReturnedChallenge;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.GroupRepo;
@@ -25,6 +24,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,7 @@ import org.springframework.web.server.ServerErrorException;
 @RequestMapping(path = "/challenges", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ChallengeController extends BaseController {
 
+  private static final Logger logger = LoggerFactory.getLogger(ChallengeController.class);
   private static final String DANGLING_USER_CHALLENGE_LINK_ERROR =
       "Challenge found in User entity without corresponding challenge entity.";
 
@@ -113,13 +115,13 @@ public class ChallengeController extends BaseController {
   }
 
   private void addChallengeToUser(User user, Challenge challenge) {
-    UserChallenge userChallenge = UserChallenge.builder()
+    UserChallengeStatus userChallengeStatus = UserChallengeStatus.builder()
         .challengeId(challenge.getId())
         .isAccepted(user.getId().equals(getCurrentUser().getUserId()))
         .subChallenges(challenge.getSubChallenges())
         .isOngoing(challenge.isOngoing())
         .build();
-    user.getUserChallenges().add(userChallenge);
+    user.getUserChallengeStatuses().add(userChallengeStatus);
   }
 
   @GetMapping(path = "/ongoing")
@@ -134,23 +136,28 @@ public class ChallengeController extends BaseController {
 
   private ResponseEntity<GetChallengesResponse> getChallenges(boolean isOngoing) {
     GetChallengesResponse response = new GetChallengesResponse();
-    List<UserReturnedChallenge> challengeIds = userRepo.findById(getCurrentUser().getUserId()).get()
-        .getUserChallenges().stream()
-        .filter(userChallenge -> userChallenge.isOngoing() == isOngoing)
+    List<UserReturnedChallenge> userReturnedChallenges = userRepo
+        .findById(getCurrentUser().getUserId()).get()
+        .getUserChallengeStatuses().stream()
+        .filter(userChallengeStatus -> userChallengeStatus.isOngoing() == isOngoing)
         .map(this::getUserReturnedChallenge)
         .collect(Collectors.toList());
-    response.setData(challengeIds);
+    response.setData(userReturnedChallenges);
     return ResponseEntity.ok(response);
   }
 
-  private UserReturnedChallenge getUserReturnedChallenge(UserChallenge userChallenge) {
-    Optional<Challenge> challengeInfo = challengeRepo.findById(userChallenge.getChallengeId());
+  private UserReturnedChallenge getUserReturnedChallenge(UserChallengeStatus userChallengeStatus) {
+    Optional<Challenge> challengeInfo = challengeRepo
+        .findById(userChallengeStatus.getChallengeId());
     if (!challengeInfo.isPresent()) {
+      logger
+          .error("Challenge {} found in User {} entity and without corresponding challenge entity.",
+              userChallengeStatus.getChallengeId(), getCurrentUser().getUserId());
       throw new ServerErrorException(DANGLING_USER_CHALLENGE_LINK_ERROR,
           new Throwable(DANGLING_USER_CHALLENGE_LINK_ERROR));
     }
     return UserReturnedChallenge.builder()
-        .userStatus(userChallenge)
+        .userChallengeStatus(userChallengeStatus)
         .challengeInfo(challengeInfo.get())
         .build();
   }
