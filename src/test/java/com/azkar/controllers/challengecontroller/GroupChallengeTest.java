@@ -201,8 +201,8 @@ public class GroupChallengeTest extends TestBase {
   public void getChallenges_normalScenario_shouldSucceed() throws Exception {
     User groupMember = UserFactory.getNewUser();
     User nonGroupMember = UserFactory.getNewUser();
-    userRepo.save(groupMember);
-    userRepo.save(nonGroupMember);
+    addNewUser(groupMember);
+    addNewUser(nonGroupMember);
     addNewValidChallenge(user1, ONGOING_CHALLENGE_NAME_PREFIX, validGroup.getId());
     addUserToGroup(groupMember, /* invitingUser= */ user1, validGroup.getId());
     addNewValidChallenge(groupMember, PROPOSED_CHALLENGE_NAME_PREFIX, validGroup.getId());
