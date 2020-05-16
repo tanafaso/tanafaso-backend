@@ -69,7 +69,8 @@ public class GroupChallengeTest extends TestBase {
         .build()
     );
 
-    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
+    performPostRequest(user1, "/challenges", /* body= */
+        mapToJson(new AddChallengeRequest(challenge)))
         .andExpect(status().isOk())
         .andExpect(content().json(mapToJson(expectedResponse)));
 
@@ -82,6 +83,7 @@ public class GroupChallengeTest extends TestBase {
     User updatedAnotherGroupMember = userRepo.findById(anotherGroupMember.getId()).get();
     User updatedNonGroupMember = userRepo.findById(nonGroupMember.getId()).get();
     assertThat(updatedUser1.getUserChallengeStatuses().size(), is(1));
+    assertThat(updatedUser1.getUserChallengeStatuses().get(0).isOngoing(), is(false));
     assertThat(updatedAnotherGroupMember.getUserChallengeStatuses().size(), is(1));
     assertThat(updatedNonGroupMember.getUserChallengeStatuses().size(), is(0));
   }
@@ -106,6 +108,7 @@ public class GroupChallengeTest extends TestBase {
         .getUserChallengeStatuses();
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(userChallengeStatuses.size(), is(1));
+    assertThat(userChallengeStatuses.get(0).isOngoing(), is(true));
     assertThat(groupChallenges.size(), is(1));
   }
 

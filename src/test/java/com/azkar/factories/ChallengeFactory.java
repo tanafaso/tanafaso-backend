@@ -33,19 +33,4 @@ public class ChallengeFactory {
         .groupId(groupId)
         .build();
   }
-
-  public static Challenge getNewDatabaseChallenge(String namePrefix, long expiryDate,
-      String groupId) {
-    Challenge challenge = Challenge.builder()
-        .name(namePrefix + CHALLENGE_NAME_BASE)
-        .motivation(CHALLENGE_MOTIVATION)
-        .expiryDate(expiryDate)
-        .subChallenges(ImmutableList.of(SUB_CHALLENGE))
-        .groupId(groupId)
-        .build();
-
-    return challenge;
-  }
-
-
 }
