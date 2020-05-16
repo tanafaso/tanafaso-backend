@@ -20,15 +20,25 @@ public class AddChallengeRequest extends RequestBodyBase {
   public static final String PAST_EXPIRY_DATE_ERROR = "Expiry date is in the past.";
   @VisibleForTesting
   public static final String GROUP_NOT_FOUND_ERROR = "The given group is not found.";
+  @VisibleForTesting
+  public static final String MALFORMED_SUB_CHALLENGES_ERROR =
+      "Sub challenges repetitions must be greater than 0.";
 
   private Challenge challenge;
 
   @Override
   public void validate() throws BadRequestException {
-    checkNotNull(challenge.getMotivation(), challenge.getName(), challenge.getSubChallenges(),
+    checkNotNull(challenge.getMotivation(),
+        challenge.getName(),
+        challenge.getSubChallenges(),
         challenge.getGroupId());
     if (challenge.getExpiryDate() < Instant.now().getEpochSecond()) {
       throw new BadRequestException(PAST_EXPIRY_DATE_ERROR);
     }
+    challenge.getSubChallenges().forEach(subChallenges -> {
+      if (subChallenges.getLeftRepetitions() <= 0) {
+        throw new BadRequestException(MALFORMED_SUB_CHALLENGES_ERROR);
+      }
+    });
   }
 }
