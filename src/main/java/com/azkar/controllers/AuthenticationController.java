@@ -3,7 +3,7 @@ package com.azkar.controllers;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserFacebookData;
 import com.azkar.payload.ResponseBase.Error;
-import com.azkar.payload.authenticationcontroller.requests.FacebookAuthenticationBody;
+import com.azkar.payload.authenticationcontroller.requests.FacebookAuthenticationRequest;
 import com.azkar.payload.authenticationcontroller.responses.FacebookAuthenticationResponse;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
@@ -60,7 +60,7 @@ public class AuthenticationController extends BaseController {
    */
   @PutMapping(value = LOGIN_WITH_FACEBOOK_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> loginWithFacebook(
-      @RequestBody FacebookAuthenticationBody requestBody) {
+      @RequestBody FacebookAuthenticationRequest requestBody) {
     requestBody.validate();
     FacebookAuthenticationResponse response = new FacebookAuthenticationResponse();
 
@@ -115,7 +115,7 @@ public class AuthenticationController extends BaseController {
    */
   @PutMapping(value = "/connect/facebook", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> connectFacebook(
-      @RequestBody FacebookAuthenticationBody requestBody) {
+      @RequestBody FacebookAuthenticationRequest requestBody) {
     requestBody.validate();
     FacebookAuthenticationResponse response = new FacebookAuthenticationResponse();
 
@@ -149,7 +149,7 @@ public class AuthenticationController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationBody body) {
+  private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationRequest body) {
     String facebookGraphApiUril =
         "https://graph.facebook.com/v7.0/me?fields=id,name,email&access_token=" + body.getToken();
     FacebookBasicProfileResponse facebookResponse = restTemplate.getForObject(
