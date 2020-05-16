@@ -20,6 +20,8 @@ public class GetChallengesResponse extends ResponseBase<List<UserReturnedChallen
   @Getter
   public static class UserReturnedChallenge {
 
+    // NOTE: challengeInfo.id and userChallengeStatus.challengeId must be equal
+    // as they represent the same challenge.
     Challenge challengeInfo;
     UserChallengeStatus userChallengeStatus;
   }
