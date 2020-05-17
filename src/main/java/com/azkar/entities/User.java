@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -36,7 +37,7 @@ public class User extends EntityBase {
   @Default
   private List<UserGroup> userGroups = new ArrayList();
   @Default
-  private List<UserChallenge> userChallenges = new ArrayList();
+  private List<UserChallengeStatus> userChallengeStatuses = new ArrayList();
   @JsonIgnore
   @CreatedDate
   private long createdAt;
@@ -63,12 +64,15 @@ public class User extends EntityBase {
 
   @Builder(toBuilder = true)
   @Getter
+  @NoArgsConstructor
   @AllArgsConstructor
-  public static class UserChallenge {
+  @Setter
+  public static class UserChallengeStatus {
 
     @NonNull
     String challengeId;
     boolean isAccepted;
+    boolean isOngoing;
     @NonNull
     List<SubChallenges> subChallenges;
   }

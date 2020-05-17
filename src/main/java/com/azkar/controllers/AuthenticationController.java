@@ -9,7 +9,7 @@ import com.azkar.entities.User;
 import com.azkar.entities.User.UserFacebookData;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
-import com.azkar.payload.authenticationcontroller.requests.FacebookAuthenticationBody;
+import com.azkar.payload.authenticationcontroller.requests.FacebookAuthenticationRequest;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
 import com.azkar.payload.authenticationcontroller.responses.FacebookAuthenticationResponse;
 import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
@@ -32,6 +32,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -123,9 +124,9 @@ public class AuthenticationController extends BaseController {
    * authentication is expected to be not set.
    * </p>
    */
-  @GetMapping(value = LOGIN_WITH_FACEBOOK_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = LOGIN_WITH_FACEBOOK_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> loginWithFacebook(
-      @RequestBody FacebookAuthenticationBody requestBody) {
+      @RequestBody FacebookAuthenticationRequest requestBody) {
     requestBody.validate();
     FacebookAuthenticationResponse response = new FacebookAuthenticationResponse();
 
@@ -167,7 +168,7 @@ public class AuthenticationController extends BaseController {
     HttpHeaders httpHeaders = new HttpHeaders();
     httpHeaders.setBearerAuth(jwtToken);
     ResponseEntity<FacebookAuthenticationResponse> responseEntity =
-        new ResponseEntity<>(httpHeaders, HttpStatus.OK);
+        new ResponseEntity<>(response, httpHeaders, HttpStatus.OK);
     return responseEntity;
   }
 
@@ -178,9 +179,9 @@ public class AuthenticationController extends BaseController {
    * facebook information will override the old one. This request is expected to called by a logged
    * in user so the security context authentication is expected to be set.
    */
-  @GetMapping(value = "/connect/facebook", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = "/connect/facebook", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> connectFacebook(
-      @RequestBody FacebookAuthenticationBody requestBody) {
+      @RequestBody FacebookAuthenticationRequest requestBody) {
     requestBody.validate();
     FacebookAuthenticationResponse response = new FacebookAuthenticationResponse();
 
@@ -214,7 +215,7 @@ public class AuthenticationController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationBody body) {
+  private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationRequest body) {
     String facebookGraphApiUril =
         "https://graph.facebook.com/v7.0/me?fields=id,name,email&access_token=" + body.getToken();
     FacebookBasicProfileResponse facebookResponse = restTemplate.getForObject(
