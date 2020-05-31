@@ -31,6 +31,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     http.authorizeRequests()
         .antMatchers(
             AuthenticationController.REGISTER_WITH_EMAIL_PATH,
+            AuthenticationController.VERIFY_EMAIL_PATH,
             AuthenticationController.LOGIN_WITH_FACEBOOK_PATH)
         .permitAll()
         .antMatchers()
