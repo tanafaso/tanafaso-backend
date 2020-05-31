@@ -9,13 +9,16 @@ import com.azkar.entities.User;
 import com.azkar.entities.User.UserFacebookData;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
+import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.FacebookAuthenticationRequest;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
+import com.azkar.payload.authenticationcontroller.responses.EmailVerificationResponse;
 import com.azkar.payload.authenticationcontroller.responses.FacebookAuthenticationResponse;
 import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
+import java.util.Optional;
 import java.util.Random;
 import lombok.Data;
 import org.slf4j.Logger;
@@ -44,6 +47,7 @@ public class AuthenticationController extends BaseController {
 
   public static final String LOGIN_WITH_FACEBOOK_PATH = "/login/facebook";
   public static final String REGISTER_WITH_EMAIL_PATH = "/register/email";
+  public static final String VERIFY_EMAIL_PATH = "/verify/email";
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
@@ -104,6 +108,38 @@ public class AuthenticationController extends BaseController {
             .password(passwordEncoder.encode(body.getPassword()))
             .pin(pin)
             .name(body.getName()).build());
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping(value = VERIFY_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<EmailVerificationResponse> verifyEmail(
+      @RequestBody EmailVerificationRequestBody body) {
+    EmailVerificationResponse response = new EmailVerificationResponse();
+    body.validate();
+
+    if (userRepo.existsByEmail(body.getEmail())) {
+      response.setError(new Error(EmailVerificationResponse.EMAIL_ALREADY_VERIFIED_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    Optional<RegistrationEmailConfirmationState> registrationEmailConfirmationState =
+        registrationPinRepo.findByEmail(body.getEmail());
+    if (!registrationEmailConfirmationState.isPresent() || !registrationEmailConfirmationState.get()
+        .getPin()
+        .equals(body.getPin())) {
+      response.setError(new Error(EmailVerificationResponse.VERIFICATION_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    userService.addNewUser(
+        User.builder()
+            .name(registrationEmailConfirmationState.get().getName())
+            .email(registrationEmailConfirmationState.get().getEmail())
+            .encodedPassword(registrationEmailConfirmationState.get().getPassword())
+            .build()
+    );
+    registrationPinRepo.delete(registrationEmailConfirmationState.get());
+
     return ResponseEntity.ok(response);
   }
 
