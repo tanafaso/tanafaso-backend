@@ -22,8 +22,7 @@ public class RegistrationEmailConfirmationState extends EntityBase {
   private String email;
   @NonNull
   private String password;
-  @NonNull
-  private Integer pin;
+  private int pin;
   @NonNull
   private String name;
 

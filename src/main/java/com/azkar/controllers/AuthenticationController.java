@@ -124,9 +124,8 @@ public class AuthenticationController extends BaseController {
 
     Optional<RegistrationEmailConfirmationState> registrationEmailConfirmationState =
         registrationPinRepo.findByEmail(body.getEmail());
-    if (!registrationEmailConfirmationState.isPresent() || !registrationEmailConfirmationState.get()
-        .getPin()
-        .equals(body.getPin())) {
+    if (!registrationEmailConfirmationState.isPresent() ||
+        registrationEmailConfirmationState.get().getPin() != body.getPin().intValue()) {
       response.setError(new Error(EmailVerificationResponse.VERIFICATION_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
