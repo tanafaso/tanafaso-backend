@@ -360,14 +360,14 @@ public class RegistrationWithEmailTest extends TestBase {
   }
 
   private ResultActions registerWithEmail(String body) throws Exception {
-    return performGetRequest(
+    return performPutRequest(
         /*user=*/null,
         AuthenticationController.REGISTER_WITH_EMAIL_PATH,
         body);
   }
 
   private ResultActions verifyEmail(String body) throws Exception {
-    return performGetRequest(
+    return performPutRequest(
         /*user=*/null,
         AuthenticationController.VERIFY_EMAIL_PATH,
         body);

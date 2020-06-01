@@ -34,7 +34,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -71,7 +70,7 @@ public class AuthenticationController extends BaseController {
     restTemplate = restTemplateBuilder.build();
   }
 
-  @GetMapping(value = REGISTER_WITH_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = REGISTER_WITH_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<EmailRegistrationResponse> registerWithEmail(
       @RequestBody EmailRegistrationRequestBody body) {
     EmailRegistrationResponse response = new EmailRegistrationResponse();
@@ -111,7 +110,7 @@ public class AuthenticationController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping(value = VERIFY_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = VERIFY_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<EmailVerificationResponse> verifyEmail(
       @RequestBody EmailVerificationRequestBody body) {
     EmailVerificationResponse response = new EmailVerificationResponse();
