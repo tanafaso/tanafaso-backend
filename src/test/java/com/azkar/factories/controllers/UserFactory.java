@@ -1,4 +1,4 @@
-package com.azkar.factories;
+package com.azkar.factories.controllers;
 
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserFacebookData;

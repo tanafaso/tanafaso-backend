@@ -10,7 +10,8 @@ import com.azkar.TestBase;
 import com.azkar.controllers.AuthenticationController;
 import com.azkar.entities.RegistrationEmailConfirmationState;
 import com.azkar.entities.User;
-import com.azkar.factories.UserFactory;
+import com.azkar.factories.controllers.UserFactory;
+import com.azkar.factories.payload.requests.EmailRegistrationRequestBodyFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
@@ -38,11 +39,8 @@ public class RegistrationWithEmailTest extends TestBase {
 
   @Test
   public void registerWithEmail_normalScenario_shouldAddStateEntryForBodyParams() throws Exception {
-    EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email("test_email@test.com")
-        .name("test_name")
-        .password("test_password")
-        .build();
+    EmailRegistrationRequestBody body =
+        EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
 
@@ -64,11 +62,8 @@ public class RegistrationWithEmailTest extends TestBase {
   @Test
   public void registerWithEmail_normalScenario_shouldAddStateEntryWithSixDigitsPin()
       throws Exception {
-    EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email("test_email@test.com")
-        .name("test_name")
-        .password("test_password")
-        .build();
+    EmailRegistrationRequestBody body =
+        EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
 
@@ -87,11 +82,9 @@ public class RegistrationWithEmailTest extends TestBase {
   @Test
   public void registerWithEmail_emailMissingAtSign_shouldNotSucceed() throws Exception {
     final String emailWithoutAtSign = "test_emailtest.com";
-    EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email(emailWithoutAtSign)
-        .name("test_name")
-        .password("test_password")
-        .build();
+    EmailRegistrationRequestBody body =
+        EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
+    body.setEmail(emailWithoutAtSign);
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse.setError(new Error(EmailRegistrationRequestBody.EMAIL_NOT_VALID_ERROR));
@@ -106,11 +99,9 @@ public class RegistrationWithEmailTest extends TestBase {
   @Test
   public void registerWithEmail_emailMissingDotSymbol_shouldNotSucceed() throws Exception {
     String emailWithoutDot = "test_email@testcom";
-    EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email(emailWithoutDot)
-        .name("test_name")
-        .password("test_password")
-        .build();
+    EmailRegistrationRequestBody body =
+        EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
+    body.setEmail(emailWithoutDot);
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse.setError(new Error(EmailRegistrationRequestBody.EMAIL_NOT_VALID_ERROR));
@@ -125,11 +116,9 @@ public class RegistrationWithEmailTest extends TestBase {
   @Test
   public void registerWithEmail_passwordTooShort_shouldNotSucceed() throws Exception {
     String shortPassword = "abcdefg";
-    EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email("test_email@test.com")
-        .name("test_name")
-        .password(shortPassword)
-        .build();
+    EmailRegistrationRequestBody body =
+        EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
+    body.setPassword(shortPassword);
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
@@ -144,11 +133,9 @@ public class RegistrationWithEmailTest extends TestBase {
 
   @Test
   public void registerWithEmail_nameEmpty_shouldNotSucceed() throws Exception {
-    EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email("test_email@test.com")
-        .name("")
-        .password("abcdefge")
-        .build();
+    EmailRegistrationRequestBody body =
+        EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
+    body.setName("");
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
@@ -163,17 +150,15 @@ public class RegistrationWithEmailTest extends TestBase {
 
   @Test
   public void registerWithEmail_nameNotProvided_shouldNotSucceed() throws Exception {
-    EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email("test_email@test.com")
-//        .name("test_name")
-        .password("test_password")
-        .build();
+    EmailRegistrationRequestBody bodyMissingNameField =
+        EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
+    bodyMissingNameField.setName(null);
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
         .setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
-    registerWithEmail(mapToJson(body))
+    registerWithEmail(mapToJson(bodyMissingNameField))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
@@ -183,11 +168,8 @@ public class RegistrationWithEmailTest extends TestBase {
   @Test
   public void registerWithEmail_emailConfirmationSentAndStillPending_shouldNotSucceed()
       throws Exception {
-    EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email("test_email@test.com")
-        .name("test_name")
-        .password("test_password")
-        .build();
+    EmailRegistrationRequestBody body =
+        EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
 
     EmailRegistrationResponse expectedResponse1 = new EmailRegistrationResponse();
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
@@ -214,11 +196,9 @@ public class RegistrationWithEmailTest extends TestBase {
     User user = UserFactory.getNewUser();
     addNewUser(user);
 
-    EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email(user.getEmail())
-        .name("example_name")
-        .password("example_password")
-        .build();
+    EmailRegistrationRequestBody body =
+        EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
+    body.setEmail(user.getEmail());
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse.setError(new Error(EmailRegistrationResponse.USER_ALREADY_REGISTERED_ERROR));
 
@@ -238,11 +218,9 @@ public class RegistrationWithEmailTest extends TestBase {
     User registeredWithFacebookUser = UserFactory.getUserRegisteredWithFacebook();
     addNewUser(registeredWithFacebookUser);
 
-    EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email(registeredWithFacebookUser.getUserFacebookData().getEmail())
-        .name("example_name")
-        .password("example_password")
-        .build();
+    EmailRegistrationRequestBody body =
+        EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
+    body.setEmail(registeredWithFacebookUser.getUserFacebookData().getEmail());
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
         .setError(new Error(EmailRegistrationResponse.USER_ALREADY_REGISTERED_WITH_FACEBOOK));
