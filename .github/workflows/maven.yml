@@ -16,6 +16,10 @@ jobs:
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         MONGODB_URI: ${{ secrets.MONGODB_URI }}
         SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        MAIL_HOST: ${{ secrets.MAIL_HOST }}
+        MAIL_PORT: ${{ secrets.MAIL_PORT }}
+        MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+        MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
 
     steps:
     - uses: actions/checkout@v2

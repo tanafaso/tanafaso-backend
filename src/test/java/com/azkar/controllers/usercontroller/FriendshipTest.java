@@ -10,7 +10,7 @@ import com.azkar.TestBase;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.User;
-import com.azkar.factories.UserFactory;
+import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.usercontroller.AddFriendResponse;
 import com.azkar.payload.usercontroller.DeleteFriendResponse;
@@ -262,10 +262,9 @@ public class FriendshipTest extends TestBase {
         .isPending(true)
         .build()
     );
-    mvcResult =
-        performGetRequest(user5, "/friends")
-            .andExpect(status().isOk())
-            .andReturn();
+    mvcResult = performGetRequest(user5, "/friends")
+        .andExpect(status().isOk())
+        .andReturn();
 
     GetFriendsResponse getUser5FriendsResponse =
         mapFromJson(mvcResult.getResponse().getContentAsString(), GetFriendsResponse.class);
