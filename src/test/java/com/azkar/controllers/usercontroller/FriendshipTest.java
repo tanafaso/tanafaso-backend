@@ -245,7 +245,7 @@ public class FriendshipTest extends TestBase {
     );
 
     MvcResult mvcResult =
-        performGetRequest(user1, "/friends", /*body=*/null)
+        performGetRequest(user1, "/friends")
             .andExpect(status().isOk())
             .andReturn();
 
@@ -262,10 +262,9 @@ public class FriendshipTest extends TestBase {
         .isPending(true)
         .build()
     );
-    mvcResult =
-        performGetRequest(user5, "/friends", /*body=*/null)
-            .andExpect(status().isOk())
-            .andReturn();
+    mvcResult = performGetRequest(user5, "/friends")
+        .andExpect(status().isOk())
+        .andReturn();
 
     GetFriendsResponse getUser5FriendsResponse =
         mapFromJson(mvcResult.getResponse().getContentAsString(), GetFriendsResponse.class);

@@ -67,6 +67,10 @@ public abstract class TestBase {
         .sign(Algorithm.HMAC512(jwtSecret));
   }
 
+  protected ResultActions performGetRequest(User user, String path) throws Exception {
+    return performGetRequest(user, path, /*body=*/null);
+  }
+
   protected ResultActions performGetRequest(User user, String path, String body) throws Exception {
     return mockMvc.perform(addRequestBodyAndToken(get(path), user, body));
   }
@@ -80,9 +84,7 @@ public abstract class TestBase {
   }
 
   protected ResultActions performDeleteRequest(User user, String path) throws Exception {
-    return mockMvc
-        .perform(delete(path)
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user)));
+    return mockMvc.perform(addRequestBodyAndToken(delete(path), user, /*body=*/null));
   }
 
   private RequestBuilder addRequestBodyAndToken(

@@ -94,13 +94,7 @@ public class AuthenticationController extends BaseController {
 
     int pin = generatePin();
 
-    // TODO(issue#73): Beautify email confirmation body.
-    SimpleMailMessage message = new SimpleMailMessage();
-    message.setFrom("azkar_email_name@azkaremaildomain.com");
-    message.setSubject("A7la mesa 3aleeek, Azkar email confirmation");
-    message.setText("The pin is: " + pin);
-    message.setTo(body.getEmail());
-    javaMailSender.send(message);
+    sendVerificationEmail(body.getEmail(), pin);
 
     registrationPinRepo.save(
         RegistrationEmailConfirmationState.builder()
@@ -140,12 +134,6 @@ public class AuthenticationController extends BaseController {
     registrationPinRepo.delete(registrationEmailConfirmationState.get());
 
     return ResponseEntity.ok(response);
-  }
-
-  private int generatePin() {
-    int min = 1000_00;
-    int max = 1000_000 - 1;
-    return new Random(System.currentTimeMillis()).nextInt(max - min) + min;
   }
 
   /**
@@ -248,6 +236,22 @@ public class AuthenticationController extends BaseController {
     userRepo.save(user);
 
     return ResponseEntity.ok(response);
+  }
+
+  private void sendVerificationEmail(String email, int pin) {
+    // TODO(issue#73): Beautify email confirmation body.
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setFrom("azkar_email_name@azkaremaildomain.com");
+    message.setSubject("A7la mesa 3aleeek, Azkar email confirmation");
+    message.setText("The pin is: " + pin);
+    message.setTo(email);
+    javaMailSender.send(message);
+  }
+
+  private int generatePin() {
+    final int min = 100_000;
+    final int max = 1000_000 - 1;
+    return new Random(System.currentTimeMillis()).nextInt(max - min) + min;
   }
 
   private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationRequest body) {

@@ -244,7 +244,7 @@ public class GroupChallengeTest extends TestBase {
 
   private GetChallengesResponse getUserChallenges(User user, boolean isOngoing) throws Exception {
     String responseJson = performGetRequest(user,
-        "/challenges/" + (isOngoing ? "ongoing" : "proposed"), /*body=*/null)
+        "/challenges/" + (isOngoing ? "ongoing" : "proposed"))
         .andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString();
     return mapFromJson(responseJson, GetChallengesResponse.class);

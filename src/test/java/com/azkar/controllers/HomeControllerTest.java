@@ -25,7 +25,7 @@ public class HomeControllerTest extends TestBase {
     GetHomeResponse expectedResponse = new GetHomeResponse();
     expectedResponse.setData(user);
 
-    performGetRequest(user, "/", /*body=*/null)
+    performGetRequest(user, "/")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().string(mapToJson(expectedResponse)));
