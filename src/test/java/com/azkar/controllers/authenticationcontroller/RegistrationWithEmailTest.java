@@ -85,9 +85,10 @@ public class RegistrationWithEmailTest extends TestBase {
   }
 
   @Test
-  public void registerWithEmail_emailNotValid1_shouldNotSucceed() throws Exception {
+  public void registerWithEmail_emailMissingAtSign_shouldNotSucceed() throws Exception {
+    final String emailWithoutAtSign = "test_emailtest.com";
     EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email("test_emailtest.com") // missing '@'
+        .email(emailWithoutAtSign)
         .name("test_name")
         .password("test_password")
         .build();
@@ -103,9 +104,10 @@ public class RegistrationWithEmailTest extends TestBase {
   }
 
   @Test
-  public void registerWithEmail_emailNotValid2_shouldNotSucceed() throws Exception {
+  public void registerWithEmail_emailMissingDotSymbol_shouldNotSucceed() throws Exception {
+    String emailWithoutDot = "test_email@testcom";
     EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
-        .email("test_email@testcom") // missing '.'
+        .email(emailWithoutDot)
         .name("test_name")
         .password("test_password")
         .build();
@@ -121,11 +123,12 @@ public class RegistrationWithEmailTest extends TestBase {
   }
 
   @Test
-  public void registerWithEmail_passwordNotValid_shouldNotSucceed() throws Exception {
+  public void registerWithEmail_passwordTooShort_shouldNotSucceed() throws Exception {
+    String shortPassword = "abcdefg";
     EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
         .email("test_email@test.com")
         .name("test_name")
-        .password("abcdefg") // less than 8 characters
+        .password(shortPassword)
         .build();
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
@@ -159,7 +162,7 @@ public class RegistrationWithEmailTest extends TestBase {
   }
 
   @Test
-  public void registerWithEmail_valueNotProvided_shouldNotSucceed() throws Exception {
+  public void registerWithEmail_nameNotProvided_shouldNotSucceed() throws Exception {
     EmailRegistrationRequestBody body = EmailRegistrationRequestBody.builder()
         .email("test_email@test.com")
 //        .name("test_name")
