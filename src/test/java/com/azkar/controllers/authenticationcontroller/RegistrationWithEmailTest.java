@@ -20,6 +20,7 @@ import com.azkar.payload.authenticationcontroller.responses.EmailVerificationRes
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
+import com.google.common.collect.Iterators;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -50,9 +51,8 @@ public class RegistrationWithEmailTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
 
-    assertThat(registrationEmailConfirmationStateRepo.count(), is(1L));
     RegistrationEmailConfirmationState state =
-        registrationEmailConfirmationStateRepo.findAll().get(0);
+        Iterators.getOnlyElement(registrationEmailConfirmationStateRepo.findAll().iterator());
     assertThat(state.getName(), is(body.getName()));
     assertThat(state.getEmail(), is(body.getEmail()));
     assertThat("Password is hashed and saved",
@@ -73,9 +73,8 @@ public class RegistrationWithEmailTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
 
-    assertThat(registrationEmailConfirmationStateRepo.count(), is(1L));
-    RegistrationEmailConfirmationState state =
-        registrationEmailConfirmationStateRepo.findAll().get(0);
+    RegistrationEmailConfirmationState state = Iterators
+        .getOnlyElement(registrationEmailConfirmationStateRepo.findAll().iterator());
     assertThat((state.getPin() + "").length(), is(6));
   }
 
@@ -239,7 +238,7 @@ public class RegistrationWithEmailTest extends TestBase {
   public void verifyEmail_normalScenario_shouldSucceed() throws Exception {
     final String email = "example_email@example_domain.com";
     final int pin = 123456;
-    mockSendingEmailVerificationPin(email, pin);
+    insertEmailVerificationPinInDatabase(email, pin);
 
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(1L));
     assertThat(userRepo.count(), equalTo(0L));
@@ -262,7 +261,7 @@ public class RegistrationWithEmailTest extends TestBase {
   public void verifyEmail_userAlreadyVerified_shouldNotSucceed() throws Exception {
     final String email = "example_email@example_domain.com";
     final int pin = 123456;
-    mockSendingEmailVerificationPin(email, pin);
+    insertEmailVerificationPinInDatabase(email, pin);
 
     EmailVerificationRequestBody body = EmailVerificationRequestBody.builder()
         .email(email)
@@ -287,7 +286,7 @@ public class RegistrationWithEmailTest extends TestBase {
     final String correctEmail = "example_email1@example_domain.com";
     final String wrongEmail = "example_email2@example_domain.com";
     final int pin = 123456;
-    mockSendingEmailVerificationPin(correctEmail, pin);
+    insertEmailVerificationPinInDatabase(correctEmail, pin);
 
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(1L));
     assertThat(userRepo.count(), equalTo(0L));
@@ -311,7 +310,7 @@ public class RegistrationWithEmailTest extends TestBase {
     final String email = "example_email1@example_domain.com";
     final int correctPin = 123456;
     final int wrongPin = 111111;
-    mockSendingEmailVerificationPin(email, correctPin);
+    insertEmailVerificationPinInDatabase(email, correctPin);
 
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(1L));
     assertThat(userRepo.count(), equalTo(0L));
@@ -330,7 +329,7 @@ public class RegistrationWithEmailTest extends TestBase {
     assertThat(userRepo.count(), equalTo(0L));
   }
 
-  private void mockSendingEmailVerificationPin(String email, int pin) {
+  private void insertEmailVerificationPinInDatabase(String email, int pin) {
     registrationEmailConfirmationStateRepo.insert(
         RegistrationEmailConfirmationState.builder()
             .name("example_name")
