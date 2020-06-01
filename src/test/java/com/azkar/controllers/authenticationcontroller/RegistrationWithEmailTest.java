@@ -10,7 +10,7 @@ import com.azkar.TestBase;
 import com.azkar.controllers.AuthenticationController;
 import com.azkar.entities.RegistrationEmailConfirmationState;
 import com.azkar.entities.User;
-import com.azkar.factories.controllers.UserFactory;
+import com.azkar.factories.entities.UserFactory;
 import com.azkar.factories.payload.requests.EmailRegistrationRequestBodyFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;

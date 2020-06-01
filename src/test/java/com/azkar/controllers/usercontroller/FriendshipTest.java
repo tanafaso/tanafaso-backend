@@ -10,7 +10,7 @@ import com.azkar.TestBase;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.User;
-import com.azkar.factories.controllers.UserFactory;
+import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.usercontroller.AddFriendResponse;
 import com.azkar.payload.usercontroller.DeleteFriendResponse;

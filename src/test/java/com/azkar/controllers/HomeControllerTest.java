@@ -5,7 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.azkar.TestBase;
 import com.azkar.entities.User;
-import com.azkar.factories.controllers.UserFactory;
+import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.homecontroller.GetHomeResponse;
 import org.junit.Before;
 import org.junit.Test;

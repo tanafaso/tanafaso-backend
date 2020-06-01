@@ -1,4 +1,4 @@
-package com.azkar.factories.controllers;
+package com.azkar.factories.entities;
 
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenges;

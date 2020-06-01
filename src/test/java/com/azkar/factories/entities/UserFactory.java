@@ -1,4 +1,4 @@
-package com.azkar.factories.controllers;
+package com.azkar.factories.entities;
 
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserFacebookData;
@@ -20,9 +20,9 @@ public class UserFactory {
   public static User getUserRegisteredWithFacebook() {
     usersRequested++;
     UserFacebookData userFacebookData = UserFacebookData.builder()
-        .email("testEmail" + usersRequested + "@example_domain.com")
+        .email("testFacebookEmail" + usersRequested + "@example_domain.com")
         .userId("testFacebookId" + usersRequested)
-        .name("testName" + usersRequested)
+        .name("testFacebookName" + usersRequested)
         .build();
 
     return User.builder()
