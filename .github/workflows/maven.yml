@@ -16,13 +16,13 @@ jobs:
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         MONGODB_URI: ${{ secrets.MONGODB_URI }}
         SERVER_PORT: ${{ secrets.SERVER_PORT }}
-        FACEBOOK_CLIENT_ID: ${{ FACEBOOK_CLIENT_ID }}
-        FACEBOOK_CLIENT_SECRET: ${{ FACEBOOK_CLIENT_SECRET }}
-        MAIL_HOST: ${{ MAIL_HOST }}
-        MAIL_USERNAME: ${{ MAIL_USERNAME }}
-        MAIL_PASSWORD: ${{ MAIL_PASSWORD }}
-        MAIL_PORT: ${{ MAIL_PORT }}
-        LOGS_PATH: ${{ LOGS_PATH }}  
+        FACEBOOK_CLIENT_ID: ${{ secrets.FACEBOOK_CLIENT_ID }}
+        FACEBOOK_CLIENT_SECRET: ${{ secrets.FACEBOOK_CLIENT_SECRET }}
+        MAIL_HOST: ${{ secrets.MAIL_HOST }}
+        MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+        MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+        MAIL_PORT: ${{ secrets.MAIL_PORT }}
+        LOGS_PATH: ${{ secrets.LOGS_PATH }}  
 
     steps:
     - uses: actions/checkout@v2
