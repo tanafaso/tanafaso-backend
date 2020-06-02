@@ -438,8 +438,6 @@ public class GroupMembershipTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)))
         .andReturn();
-
-    assertThat(result.getResponse().getContentAsString(), is(mapToJson(expectedResponse)));
   }
 
   private ResultActions inviteUserToGroup(User invitingUser, User invitedUser, String groupId)
