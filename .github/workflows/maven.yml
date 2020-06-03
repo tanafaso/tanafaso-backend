@@ -30,6 +30,7 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Build with Maven
+    - name: Run MongoDb in a container
       run:  docker run --name mongo -d -p 27017:27017 mongo
+    - name: Build with Maven
       run: ./mvnw -B package --file pom.xml
