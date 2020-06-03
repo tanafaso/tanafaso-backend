@@ -31,4 +31,5 @@ jobs:
       with:
         java-version: 1.8
     - name: Build with Maven
+      run:  docker run --name mongo -d -p 27017:27017 mongo
       run: ./mvnw -B package --file pom.xml
