@@ -39,20 +39,27 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 public abstract class TestBase {
 
   @Autowired
-  MockMvc mockMvc;
+  private MockMvc mockMvc;
 
   @Autowired
-  UserService userService;
+  private UserService userService;
 
   @Autowired
-  MongoTemplate mongoTemplate;
+  private MongoTemplate mongoTemplate;
 
   @Value("${app.jwtSecret}")
-  String jwtSecret;
+  private String jwtSecret;
+
+  // If this token is set, it will be sent with requests instead of creating a new JWTs.
+  private String forcedJwtToken;
 
   @After
   public final void afterBase() {
     mongoTemplate.getDb().drop();
+  }
+
+  protected void setForcedJwtToken(String forcedJwtToken) {
+    this.forcedJwtToken = forcedJwtToken;
   }
 
   protected void addNewUser(User user) {
@@ -60,6 +67,10 @@ public abstract class TestBase {
   }
 
   private String getAuthenticationToken(User user) throws UnsupportedEncodingException {
+    if (forcedJwtToken != null) {
+      return forcedJwtToken;
+    }
+
     final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.MINUTES.toMillis(1);
     return JWT.create()
         .withSubject(user.getId())
@@ -77,6 +88,10 @@ public abstract class TestBase {
 
   protected ResultActions performPostRequest(User user, String path, String body) throws Exception {
     return mockMvc.perform(addRequestBodyAndToken(post(path), user, body));
+  }
+
+  protected ResultActions performPutRequest(String path, String body) throws Exception {
+    return mockMvc.perform(addRequestBodyAndToken(put(path), /*user=*/null, body));
   }
 
   protected ResultActions performPutRequest(User user, String path, String body) throws Exception {

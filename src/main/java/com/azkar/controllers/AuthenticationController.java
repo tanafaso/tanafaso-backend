@@ -256,11 +256,21 @@ public class AuthenticationController extends BaseController {
   private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationRequest body) {
     String facebookGraphApiUril =
         "https://graph.facebook.com/v7.0/me?fields=id,name,email&access_token=" + body.getToken();
-    FacebookBasicProfileResponse facebookResponse = restTemplate.getForObject(
-        facebookGraphApiUril,
-        FacebookBasicProfileResponse.class);
 
-    if (facebookResponse.id == null || !facebookResponse.id.equals(body.getFacebookUserId())) {
+    FacebookBasicProfileResponse facebookResponse = null;
+
+    // This try catch block is needed because facebook returns different errors for different
+    // cases and the API should handle all of them similarly for the moment.
+    try {
+      facebookResponse = restTemplate.getForObject(
+          facebookGraphApiUril,
+          FacebookBasicProfileResponse.class);
+    } catch (Exception e) {
+    }
+
+    if (facebookResponse == null ||
+        facebookResponse.id == null ||
+        !facebookResponse.id.equals(body.getFacebookUserId())) {
       return null;
     }
 
