@@ -1,7 +1,7 @@
 package com.azkar.configs;
 
 import com.azkar.configs.authentication.JwtAuthenticationFilter;
-import com.azkar.configs.authentication.OauthSuccessHandler;
+import com.azkar.configs.authentication.OAuthSuccessHandler;
 import com.azkar.controllers.AuthenticationController;
 import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   JwtAuthenticationFilter jwtAuthenticationFilter;
 
   @Autowired
-  OauthSuccessHandler oauthSuccessHandler;
+  OAuthSuccessHandler oauthSuccessHandler;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
