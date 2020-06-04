@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.azkar.entities.User;
+import com.azkar.factories.entities.UserFactory;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -64,6 +65,12 @@ public abstract class TestBase {
 
   protected void addNewUser(User user) {
     userService.addNewUser(user);
+  }
+
+  protected User getLoggedInUser() {
+    User user = UserFactory.getNewUser();
+    addNewUser(user);
+    return user;
   }
 
   private String getAuthenticationToken(User user) throws UnsupportedEncodingException {
