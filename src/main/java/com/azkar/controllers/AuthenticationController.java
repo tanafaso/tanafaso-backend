@@ -266,11 +266,11 @@ public class AuthenticationController extends BaseController {
           facebookGraphApiUril,
           FacebookBasicProfileResponse.class);
     } catch (Exception e) {
+      logger.info("Facebook graph API returned error on user credentials validation.");
     }
 
-    if (facebookResponse == null ||
-        facebookResponse.id == null ||
-        !facebookResponse.id.equals(body.getFacebookUserId())) {
+    if (facebookResponse == null || facebookResponse.id == null
+        || !facebookResponse.id.equals(body.getFacebookUserId())) {
       return null;
     }
 
