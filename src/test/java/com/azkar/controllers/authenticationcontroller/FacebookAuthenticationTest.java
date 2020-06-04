@@ -252,25 +252,6 @@ public class FacebookAuthenticationTest extends TestBase {
     assertThat(userRepo.count(), is(0L));
   }
 
-/*
-  @Test
-  public void connectFacebook_noLoggedInUser_shouldBeRedirected() throws Exception {
-    FacebookAuthenticationRequest request = FacebookAuthenticationRequest.builder()
-        .token(testUserFacebookTokenAccount1)
-        .facebookUserId(testUserFacebookIdAccount1)
-        .build();
-
-    // TODO(omar): Add expected response here after standardizing responses for unauthenticated
-    //  users.
-    performPutRequest("/connect/facebook",
-        mapToJson(request))
-        .andExpect(status().is3xxRedirection())
-        .andReturn();
-
-    assertThat(userRepo.count(), is(0L));
-  }
-*/
-
   private void loginWithFacebookSucceeded() throws Exception {
     FacebookAuthenticationRequest request = FacebookAuthenticationRequest.builder()
         .token(testUserFacebookTokenAccount1)
