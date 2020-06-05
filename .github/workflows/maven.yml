@@ -8,27 +8,29 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-        DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-        DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-        DATABASE_USER: ${{ secrets.DATABASE_USER }}
-        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        MONGODB_URI: ${{ secrets.MONGODB_URI }}
-        SERVER_PORT: ${{ secrets.SERVER_PORT }}
-        FACEBOOK_CLIENT_ID: ${{ secrets.FACEBOOK_CLIENT_ID }}
-        FACEBOOK_CLIENT_SECRET: ${{ secrets.FACEBOOK_CLIENT_SECRET }}
-        MAIL_HOST: ${{ secrets.MAIL_HOST }}
-        MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
-        MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
-        MAIL_PORT: ${{ secrets.MAIL_PORT }}
-        LOGS_PATH: ${{ secrets.LOGS_PATH }}  
+      DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      DATABASE_USER: ${{ secrets.DATABASE_USER }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      SERVER_PORT: ${{ secrets.SERVER_PORT }}
+      FACEBOOK_CLIENT_ID: ${{ secrets.FACEBOOK_CLIENT_ID }}
+      FACEBOOK_CLIENT_SECRET: ${{ secrets.FACEBOOK_CLIENT_SECRET }}
+      MAIL_HOST: ${{ secrets.MAIL_HOST }}
+      MAIL_PORT: ${{ secrets.MAIL_PORT }}
+      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+      LOGS_PATH: ${{ secrets.LOGS_PATH }}
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
-      with:
-        java-version: 1.8
-    - name: Build with Maven
-      run: ./mvnw -B package --file pom.xml
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Run MongoDb in a container
+        run:  docker run --name mongo -d -p 27017:27017 mongo
+      - name: Build with Maven
+        run: ./mvnw -B package --file pom.xml
