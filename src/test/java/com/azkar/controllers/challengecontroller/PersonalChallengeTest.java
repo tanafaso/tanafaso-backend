@@ -49,7 +49,7 @@ public class PersonalChallengeTest extends TestBase {
   }
 
   @Test
-  // TODO(3bza): Remove this ignore after making sure this test passes.
+  // TODO(issue#85): Remove this ignore after making sure this test passes.
   @Ignore
   public void addPersonalChallenge_normalScenario_shouldSucceed() throws Exception {
     AddPersonalChallengeRequest requestBody = AddPersonalChallengeRequest.builder()
