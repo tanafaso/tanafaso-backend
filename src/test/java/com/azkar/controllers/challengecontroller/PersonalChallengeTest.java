@@ -72,7 +72,7 @@ public class PersonalChallengeTest extends TestBase {
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setData(expectedChallenge);
     String actualResponseJson = result.getResponse().getContentAsString();
-    JSONAssert.assertEquals(mapToJson(expectedResponse), actualResponseJson, /*strict=*/ false);
+    JSONAssert.assertEquals(mapToJson(expectedResponse), actualResponseJson, /* strict= */ false);
   }
 
   @Test
