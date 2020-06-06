@@ -1,7 +1,6 @@
 package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -19,13 +18,11 @@ import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.experimental.results.ResultMatchers;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultMatcher;
 
 public class PersonalChallengeTest extends TestBase {
 
@@ -49,13 +46,12 @@ public class PersonalChallengeTest extends TestBase {
   }
 
   @Test
-  // TODO(issue#85): Remove this ignore after making sure this test passes.
-  @Ignore
   public void addPersonalChallenge_normalScenario_shouldSucceed() throws Exception {
+    long expiryDate = Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS;
     AddPersonalChallengeRequest requestBody = AddPersonalChallengeRequest.builder()
         .name(CHALLENGE_NAME)
         .subChallenges(SUB_CHALLENGES)
-        .expiryDate(Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS)
+        .expiryDate(expiryDate)
         .motivation(CHALLENGE_MOTIVATION).build();
 
     MvcResult result = performPostRequest(USER, "/challenges/personal", mapToJson(requestBody))
@@ -63,13 +59,20 @@ public class PersonalChallengeTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andReturn();
 
-    User user = userRepo.findById(USER.getId()).get();
-    assertThat(user.getPersonalChallenges().size(), is(1));
-    Challenge expectedChallenge = user.getPersonalChallenges().get(0);
+    assertThat(userRepo.findById(USER.getId()).get().getPersonalChallenges().size(), is(1));
+    Challenge expectedChallenge = Challenge.builder()
+        .name(CHALLENGE_NAME)
+        .subChallenges(SUB_CHALLENGES)
+        .expiryDate(expiryDate)
+        .motivation(CHALLENGE_MOTIVATION)
+        .isOngoing(true)
+        .creatingUserId(USER.getId())
+        .usersAccepted(ImmutableList.of(USER.getId()))
+        .build();
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setData(expectedChallenge);
-    String actualResponse = result.getResponse().getContentAsString();
-    assertThat(actualResponse, equalTo(content().json(mapToJson(expectedResponse))));
+    String actualResponseJson = result.getResponse().getContentAsString();
+    JSONAssert.assertEquals(mapToJson(expectedResponse), actualResponseJson, /* strict= */ false);
   }
 
   @Test
