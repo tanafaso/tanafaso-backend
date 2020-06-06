@@ -68,6 +68,7 @@ public class ChallengeController extends BaseController {
         .expiryDate(request.getExpiryDate())
         .subChallenges(request.getSubChallenges())
         .usersAccepted(ImmutableList.of(getCurrentUser().getUserId()))
+        .isOngoing(true)
         .creatingUserId(getCurrentUser().getUserId())
         .createdAt(Instant.now().getEpochSecond())
         .modifiedAt(Instant.now().getEpochSecond())
