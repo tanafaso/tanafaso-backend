@@ -1,8 +1,10 @@
 package com.azkar.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -13,6 +15,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "registration_with_email_confirmation_states")
 @Builder
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RegistrationEmailConfirmationState extends EntityBase {
 
   @Id
@@ -20,6 +24,7 @@ public class RegistrationEmailConfirmationState extends EntityBase {
   @NonNull
   @Indexed(name = "email_index", unique = true)
   private String email;
+  @JsonIgnore
   @NonNull
   private String password;
   private int pin;

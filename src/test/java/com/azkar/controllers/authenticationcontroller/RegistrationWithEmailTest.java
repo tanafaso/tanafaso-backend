@@ -3,6 +3,7 @@ package com.azkar.controllers.authenticationcontroller;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,6 +26,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 public class RegistrationWithEmailTest extends TestBase {
@@ -43,13 +45,10 @@ public class RegistrationWithEmailTest extends TestBase {
     EmailRegistrationRequestBody body =
         EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
 
-    EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
-
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(mapToJson(body))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
     RegistrationEmailConfirmationState state =
         Iterators.getOnlyElement(registrationEmailConfirmationStateRepo.findAll().iterator());
@@ -60,18 +59,40 @@ public class RegistrationWithEmailTest extends TestBase {
   }
 
   @Test
+  public void registerWithEmail_normalScenario_shouldIncludeStateInResponse() throws Exception {
+    EmailRegistrationRequestBody body =
+        EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
+
+    assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
+    MvcResult result = registerWithEmail(mapToJson(body))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
+
+    EmailRegistrationResponse response =
+        mapFromJson(result.getResponse().getContentAsString(),
+            EmailRegistrationResponse.class);
+    assertThat(response.getError(), is(nullValue()));
+
+    RegistrationEmailConfirmationState state =
+        Iterators.getOnlyElement(registrationEmailConfirmationStateRepo.findAll().iterator());
+    RegistrationEmailConfirmationState responseState = response.getData();
+    assertThat(responseState.getPin(), equalTo(state.getPin()));
+    assertThat(responseState.getEmail(), equalTo(state.getEmail()));
+    assertThat(responseState.getName(), equalTo(state.getName()));
+    assertThat(responseState.getPassword(), is(nullValue()));
+  }
+
+  @Test
   public void registerWithEmail_normalScenario_shouldAddStateEntryWithSixDigitsPin()
       throws Exception {
     EmailRegistrationRequestBody body =
         EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
 
-    EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
-
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(mapToJson(body))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
     RegistrationEmailConfirmationState state = Iterators
         .getOnlyElement(registrationEmailConfirmationStateRepo.findAll().iterator());
@@ -170,12 +191,10 @@ public class RegistrationWithEmailTest extends TestBase {
     EmailRegistrationRequestBody body =
         EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
 
-    EmailRegistrationResponse expectedResponse1 = new EmailRegistrationResponse();
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(mapToJson(body))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse1)));
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(1L));
 
     EmailRegistrationResponse expectedResponse2 = new EmailRegistrationResponse();
@@ -340,7 +359,7 @@ public class RegistrationWithEmailTest extends TestBase {
   }
 
   private ResultActions registerWithEmail(String body) throws Exception {
-    return performPutRequest(
+    return performPostRequest(
         /*user=*/null,
         AuthenticationController.REGISTER_WITH_EMAIL_PATH,
         body);
