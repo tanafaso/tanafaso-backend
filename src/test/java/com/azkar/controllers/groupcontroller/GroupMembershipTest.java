@@ -9,8 +9,8 @@ import com.azkar.TestBase;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
-import com.azkar.factories.GroupFactory;
-import com.azkar.factories.UserFactory;
+import com.azkar.factories.entities.GroupFactory;
+import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.groupcontroller.AcceptGroupInvitationResponse;
 import com.azkar.payload.groupcontroller.GetUserGroupsResponse;
@@ -433,13 +433,11 @@ public class GroupMembershipTest extends TestBase {
         .build());
 
     expectedResponse.setData(expectedUserGroups);
-    MvcResult result = performGetRequest(user3, "/groups/")
+    performGetRequest(user3, "/groups/")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)))
         .andReturn();
-
-    assertThat(result.getResponse().getContentAsString(), is(mapToJson(expectedResponse)));
   }
 
   private ResultActions inviteUserToGroup(User invitingUser, User invitedUser, String groupId)

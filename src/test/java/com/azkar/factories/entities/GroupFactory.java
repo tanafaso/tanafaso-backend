@@ -1,4 +1,4 @@
-package com.azkar.factories;
+package com.azkar.factories.entities;
 
 import com.azkar.entities.Group;
 import java.util.ArrayList;

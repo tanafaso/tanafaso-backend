@@ -21,9 +21,9 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 @Component
-public class OauthSuccessHandler implements AuthenticationSuccessHandler {
+public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
 
-  private static final Logger logger = LoggerFactory.getLogger(OauthSuccessHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(OAuthSuccessHandler.class);
 
   @Autowired
   UserRepo userRepo;

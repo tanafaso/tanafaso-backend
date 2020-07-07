@@ -26,8 +26,8 @@ public class User extends EntityBase {
 
   @Id
   private String id;
-  @Indexed(name = "email_index", unique = true)
   private String email;
+  private String encodedPassword;
   @Indexed(name = "username_index", unique = true)
   @Default
   private List<Challenge> personalChallenges = new ArrayList<>();
