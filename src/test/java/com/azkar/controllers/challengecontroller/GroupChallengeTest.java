@@ -2,6 +2,7 @@ package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -24,6 +25,7 @@ import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,13 +45,15 @@ public class GroupChallengeTest extends TestBase {
   UserRepo userRepo;
 
   private User user1 = UserFactory.getNewUser();
-  private Group validGroup = GroupFactory.getNewGroup(user1.getId());
+  private Group validGroup1 = GroupFactory.getNewGroup(user1.getId());
+  private Group validGroup2 = GroupFactory.getNewGroup(user1.getId());
   private Group invalidGroup = GroupFactory.getNewGroup(user1.getId());
 
   @Before
   public void before() {
     addNewUser(user1);
-    groupRepo.save(validGroup);
+    groupRepo.save(validGroup1);
+    groupRepo.save(validGroup2);
   }
 
   @Test
@@ -58,8 +62,8 @@ public class GroupChallengeTest extends TestBase {
     addNewUser(anotherGroupMember);
     User nonGroupMember = UserFactory.getNewUser();
     addNewUser(nonGroupMember);
-    addUserToGroup(anotherGroupMember, /* invitingUser= */ user1, validGroup.getId());
-    Challenge challenge = ChallengeFactory.getNewChallenge(validGroup.getId());
+    addUserToGroup(anotherGroupMember, /* invitingUser= */ user1, validGroup1.getId());
+    Challenge challenge = ChallengeFactory.getNewChallenge(validGroup1.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setData(challenge.toBuilder()
         .usersAccepted(ImmutableList.of(user1.getId()))
@@ -77,7 +81,7 @@ public class GroupChallengeTest extends TestBase {
     List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
         .getUserChallengeStatuses();
     assertThat(userChallengeStatuses.size(), is(1));
-    List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
+    List<String> groupChallenges = groupRepo.findById(validGroup1.getId()).get().getChallengesIds();
     assertThat(groupChallenges.size(), is(1));
     User updatedUser1 = userRepo.findById(user1.getId()).get();
     User updatedAnotherGroupMember = userRepo.findById(anotherGroupMember.getId()).get();
@@ -90,7 +94,7 @@ public class GroupChallengeTest extends TestBase {
 
   @Test
   public void addChallenge_oneMemberInGroup_shouldSucceed() throws Exception {
-    Challenge challenge = ChallengeFactory.getNewChallenge(validGroup.getId());
+    Challenge challenge = ChallengeFactory.getNewChallenge(validGroup1.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setData(challenge.toBuilder()
         .usersAccepted(ImmutableList.of(user1.getId()))
@@ -106,7 +110,7 @@ public class GroupChallengeTest extends TestBase {
 
     List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
         .getUserChallengeStatuses();
-    List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
+    List<String> groupChallenges = groupRepo.findById(validGroup1.getId()).get().getChallengesIds();
     assertThat(userChallengeStatuses.size(), is(1));
     assertThat(userChallengeStatuses.get(0).isOngoing(), is(true));
     assertThat(groupChallenges.size(), is(1));
@@ -121,7 +125,7 @@ public class GroupChallengeTest extends TestBase {
         .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
         .expiryDate(expiryDate)
         .subChallenges(ImmutableList.of(zeroRepetitionSubChallenge))
-        .groupId(validGroup.getId())
+        .groupId(validGroup1.getId())
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setError(new Error(AddChallengeRequest.MALFORMED_SUB_CHALLENGES_ERROR));
@@ -139,7 +143,7 @@ public class GroupChallengeTest extends TestBase {
   public void addChallenge_invalidGroup_shouldNotSucceed() throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(invalidGroup.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
-    expectedResponse.setError(new Error(AddChallengeRequest.GROUP_NOT_FOUND_ERROR));
+    expectedResponse.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
 
     performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
         .andExpect(status().isBadRequest())
@@ -157,7 +161,7 @@ public class GroupChallengeTest extends TestBase {
         .name(ChallengeFactory.CHALLENGE_NAME_BASE)
         .expiryDate(expiryDate)
         .subChallenges(ImmutableList.of(ChallengeFactory.SUB_CHALLENGE))
-        .groupId(validGroup.getId())
+        .groupId(validGroup1.getId())
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
@@ -170,7 +174,7 @@ public class GroupChallengeTest extends TestBase {
         .getUserChallengeStatuses();
     assertTrue("UserChallenges list is expected to be empty but it is not.",
         userChallengeStatuses.isEmpty());
-    List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
+    List<String> groupChallenges = groupRepo.findById(validGroup1.getId()).get().getChallengesIds();
     assertTrue("GroupChallenges list is expected to be empty but it is not.",
         groupChallenges.isEmpty());
   }
@@ -183,7 +187,7 @@ public class GroupChallengeTest extends TestBase {
         .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
         .expiryDate(pastExpiryDate)
         .subChallenges(ImmutableList.of(ChallengeFactory.SUB_CHALLENGE))
-        .groupId(validGroup.getId())
+        .groupId(validGroup1.getId())
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setError(new Error(AddChallengeRequest.PAST_EXPIRY_DATE_ERROR));
@@ -195,7 +199,7 @@ public class GroupChallengeTest extends TestBase {
     List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
         .getUserChallengeStatuses();
     assertTrue("UserChallenges list is not empty.", userChallengeStatuses.isEmpty());
-    List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
+    List<String> groupChallenges = groupRepo.findById(validGroup1.getId()).get().getChallengesIds();
     assertTrue("GroupChallenges list is expected to be empty but it is not.",
         groupChallenges.isEmpty());
   }
@@ -206,9 +210,9 @@ public class GroupChallengeTest extends TestBase {
     User nonGroupMember = UserFactory.getNewUser();
     addNewUser(groupMember);
     addNewUser(nonGroupMember);
-    addNewValidChallenge(user1, ONGOING_CHALLENGE_NAME_PREFIX, validGroup.getId());
-    addUserToGroup(groupMember, /* invitingUser= */ user1, validGroup.getId());
-    addNewValidChallenge(groupMember, PROPOSED_CHALLENGE_NAME_PREFIX, validGroup.getId());
+    addNewValidChallenge(user1, ONGOING_CHALLENGE_NAME_PREFIX, validGroup1.getId());
+    addUserToGroup(groupMember, /* invitingUser= */ user1, validGroup1.getId());
+    addNewValidChallenge(groupMember, PROPOSED_CHALLENGE_NAME_PREFIX, validGroup1.getId());
 
     GetChallengesResponse user1OngoingChallenges = getUserOngoingChallenges(user1);
     GetChallengesResponse user1ProposedChallenges = getUserProposedChallenges(user1);
@@ -232,6 +236,75 @@ public class GroupChallengeTest extends TestBase {
         startsWith(PROPOSED_CHALLENGE_NAME_PREFIX));
     assertThat(nonGroupMemberOngoingChallenges.getData().size(), is(0));
     assertThat(nonGroupMemberProposedChallenges.getData().size(), is(0));
+  }
+
+
+  @Test
+  public void getGroupChallenges_invalidGroup_shouldFail() throws Exception {
+    GetChallengesResponse expectedResponse = new GetChallengesResponse();
+    expectedResponse.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
+
+    performGetRequest(user1,
+        String.format("/challenges/groups/%s/ongoing/", invalidGroup.getId()))
+            .andExpect(status().isUnprocessableEntity())
+        .andExpect(content().json(mapToJson(expectedResponse)));
+
+    performGetRequest(user1,
+        String.format("/challenges/groups/%s/proposed/", invalidGroup.getId()))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(content().json(mapToJson(expectedResponse)));
+  }
+
+  @Test
+  public void getGroupChallenges_oneOngoingChallenge_shouldSucceed() throws Exception {
+    // TODO(3bza): A hacky way to add ongoing challenge is to insert a challenge in group
+    //  with only one member. This should be changed when accept challenge functionality is added.
+    addNewValidChallenge(user1, ONGOING_CHALLENGE_NAME_PREFIX, validGroup1.getId());
+
+    User groupMember = createNewGroupMember(validGroup1);
+    addNewValidChallenge(groupMember, PROPOSED_CHALLENGE_NAME_PREFIX, validGroup1.getId());
+
+    GetChallengesResponse group1OngoingChallenges = getGroupOngoingChallenges(user1,
+        validGroup1.getId());
+    GetChallengesResponse group1ProposedChallenges = getGroupProposedChallenges(user1,
+        validGroup1.getId());
+
+    assertThat(
+        Iterables.getOnlyElement(group1OngoingChallenges.getData()).getChallengeInfo().getName(),
+        startsWith(ONGOING_CHALLENGE_NAME_PREFIX));
+    assertThat(
+        Iterables.getOnlyElement(group1ProposedChallenges.getData()).getChallengeInfo().getName(),
+        startsWith(PROPOSED_CHALLENGE_NAME_PREFIX));
+  }
+
+
+  private User createNewGroupMember(Group group) throws Exception {
+    User newGroupMember = UserFactory.getNewUser();
+    addNewUser(newGroupMember);
+    User groupAdmin = userRepo.findById(group.getAdminId()).get();
+    addUserToGroup(newGroupMember, groupAdmin, group.getId());
+    return newGroupMember;
+  }
+
+  private GetChallengesResponse getGroupOngoingChallenges(User user, String groupId)
+      throws Exception {
+    return getGroupChallenges(user, groupId, /* isOngoing= */ true);
+  }
+
+  private GetChallengesResponse getGroupProposedChallenges(User user, String groupId)
+      throws Exception {
+    return getGroupChallenges(user, groupId, /* isOngoing= */ false);
+  }
+
+  private GetChallengesResponse getGroupChallenges(User user, String groupId, boolean isOngoing)
+      throws Exception {
+    String challengeStatus = isOngoing ? "ongoing" : "proposed";
+    String responseJson =
+        performGetRequest(user,
+            String.format("/challenges/groups/%s/%s/", groupId, challengeStatus))
+//            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+    return mapFromJson(responseJson, GetChallengesResponse.class);
   }
 
   private GetChallengesResponse getUserOngoingChallenges(User user) throws Exception {

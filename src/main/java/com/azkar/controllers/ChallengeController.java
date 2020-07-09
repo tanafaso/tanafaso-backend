@@ -1,7 +1,5 @@
 package com.azkar.controllers;
 
-import static com.azkar.payload.challengecontroller.requests.AddChallengeRequest.GROUP_NOT_FOUND_ERROR;
-
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
@@ -12,7 +10,7 @@ import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeReques
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
-import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserReturnedChallenge;
+import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserChallenge;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.GroupRepo;
@@ -93,7 +91,7 @@ public class ChallengeController extends BaseController {
     }
     Optional<Group> group = groupRepo.findById(req.getChallenge().getGroupId());
     if (!group.isPresent()) {
-      response.setError(new Error(GROUP_NOT_FOUND_ERROR));
+      response.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
     List<String> groupUsersIds = group.get().getUsersIds();
@@ -144,7 +142,7 @@ public class ChallengeController extends BaseController {
       return getChallenges(/* isOngoing= */ true, groupId);
     }
     GetChallengesResponse response = new GetChallengesResponse();
-    response.setError(new Error(GROUP_NOT_FOUND_ERROR));
+    response.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
     return ResponseEntity.unprocessableEntity().body(response);
   }
 
@@ -155,7 +153,7 @@ public class ChallengeController extends BaseController {
       return getChallenges(/* isOngoing= */ false, groupId);
     }
     GetChallengesResponse response = new GetChallengesResponse();
-    response.setError(new Error(GROUP_NOT_FOUND_ERROR));
+    response.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
     return ResponseEntity.unprocessableEntity().body(response);
   }
 
@@ -165,19 +163,19 @@ public class ChallengeController extends BaseController {
 
   private ResponseEntity<GetChallengesResponse> getChallenges(boolean isOngoing, String groupId) {
     GetChallengesResponse response = new GetChallengesResponse();
-    List<UserReturnedChallenge> userReturnedChallenges = userRepo
+    List<UserChallenge> userChallenges = userRepo
         .findById(getCurrentUser().getUserId()).get()
         .getUserChallengeStatuses().stream()
         .filter(
             userChallengeStatus -> userChallengeStatus.isOngoing() == isOngoing && (groupId == null
                 || groupId.equals(userChallengeStatus.getGroupId())))
-        .map(this::getUserReturnedChallenge)
+        .map(this::getUserChallenge)
         .collect(Collectors.toList());
-    response.setData(userReturnedChallenges);
+    response.setData(userChallenges);
     return ResponseEntity.ok(response);
   }
 
-  private UserReturnedChallenge getUserReturnedChallenge(UserChallengeStatus userChallengeStatus) {
+  private UserChallenge getUserChallenge(UserChallengeStatus userChallengeStatus) {
     Optional<Challenge> challengeInfo = challengeRepo
         .findById(userChallengeStatus.getChallengeId());
     if (!challengeInfo.isPresent()) {
@@ -187,7 +185,7 @@ public class ChallengeController extends BaseController {
       throw new ServerErrorException(DANGLING_USER_CHALLENGE_LINK_ERROR,
           new Throwable(DANGLING_USER_CHALLENGE_LINK_ERROR));
     }
-    return UserReturnedChallenge.builder()
+    return UserChallenge.builder()
         .userChallengeStatus(userChallengeStatus)
         .challengeInfo(challengeInfo.get())
         .build();
