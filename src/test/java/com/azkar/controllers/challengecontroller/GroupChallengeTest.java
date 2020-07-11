@@ -165,10 +165,10 @@ public class GroupChallengeTest extends TestBase {
         .andExpect(status().isForbidden())
         .andExpect(content().json(mapToJson(expectedResponse)));
 
-    List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(nonGroupMember.getId())
+    List<UserChallengeStatus> userChallenges = userRepo.findById(nonGroupMember.getId())
         .get()
         .getUserChallengeStatuses();
-    assertThat(userChallengeStatuses, empty());
+    assertThat(userChallenges, empty());
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(groupChallenges, empty());
   }
