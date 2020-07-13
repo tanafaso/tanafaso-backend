@@ -2,7 +2,6 @@ package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -58,10 +57,8 @@ public class GroupChallengeTest extends TestBase {
 
   @Test
   public void addChallenge_multipleMembersInGroup_shouldSucceed() throws Exception {
-    User anotherGroupMember = UserFactory.getNewUser();
-    addNewUser(anotherGroupMember);
-    User nonGroupMember = UserFactory.getNewUser();
-    addNewUser(nonGroupMember);
+    User anotherGroupMember = getNewRegisteredUser();
+    User nonGroupMember = getNewRegisteredUser();
     addUserToGroup(anotherGroupMember, /* invitingUser= */ user1, validGroup1.getId());
     Challenge challenge = ChallengeFactory.getNewChallenge(validGroup1.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
@@ -246,7 +243,7 @@ public class GroupChallengeTest extends TestBase {
 
     performGetRequest(user1,
         String.format("/challenges/groups/%s/ongoing/", invalidGroup.getId()))
-            .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isUnprocessableEntity())
         .andExpect(content().json(mapToJson(expectedResponse)));
 
     performGetRequest(user1,
@@ -256,7 +253,24 @@ public class GroupChallengeTest extends TestBase {
   }
 
   @Test
-  public void getGroupChallenges_oneOngoingChallenge_shouldSucceed() throws Exception {
+  public void getGroupChallenges_nonGroupMember_shouldFail() throws Exception {
+    User nonGroupMember = getNewRegisteredUser();
+    GetChallengesResponse expectedResponse = new GetChallengesResponse();
+    expectedResponse.setError(new Error(GetChallengesResponse.NON_GROUP_MEMBER_ERROR));
+
+    performGetRequest(nonGroupMember,
+        String.format("/challenges/groups/%s/ongoing/", validGroup1.getId()))
+        .andExpect(status().isForbidden())
+        .andExpect(content().json(mapToJson(expectedResponse)));
+
+    performGetRequest(nonGroupMember,
+        String.format("/challenges/groups/%s/proposed/", validGroup1.getId()))
+        .andExpect(status().isForbidden())
+        .andExpect(content().json(mapToJson(expectedResponse)));
+  }
+
+  @Test
+  public void getGroupChallenges_oneOngoingOneProposedChallenge_shouldSucceed() throws Exception {
     // TODO(3bza): A hacky way to add ongoing challenge is to insert a challenge in group
     //  with only one member. This should be changed when accept challenge functionality is added.
     addNewValidChallenge(user1, ONGOING_CHALLENGE_NAME_PREFIX, validGroup1.getId());
@@ -279,8 +293,7 @@ public class GroupChallengeTest extends TestBase {
 
 
   private User createNewGroupMember(Group group) throws Exception {
-    User newGroupMember = UserFactory.getNewUser();
-    addNewUser(newGroupMember);
+    User newGroupMember = getNewRegisteredUser();
     User groupAdmin = userRepo.findById(group.getAdminId()).get();
     addUserToGroup(newGroupMember, groupAdmin, group.getId());
     return newGroupMember;
@@ -302,7 +315,7 @@ public class GroupChallengeTest extends TestBase {
     String responseJson =
         performGetRequest(user,
             String.format("/challenges/groups/%s/%s/", groupId, challengeStatus))
-//            .andExpect(status().isOk())
+            .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
     return mapFromJson(responseJson, GetChallengesResponse.class);
   }
@@ -321,6 +334,12 @@ public class GroupChallengeTest extends TestBase {
         .andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString();
     return mapFromJson(responseJson, GetChallengesResponse.class);
+  }
+
+  private User getNewRegisteredUser() {
+    User nonGroupMember = UserFactory.getNewUser();
+    addNewUser(nonGroupMember);
+    return nonGroupMember;
   }
 
   // TODO: Reuse existing functions in GroupMembershipTest.
