@@ -278,16 +278,16 @@ public class GroupChallengeTest extends TestBase {
     User groupMember = createNewGroupMember(validGroup);
     addNewValidChallenge(groupMember, PROPOSED_CHALLENGE_NAME_PREFIX, validGroup.getId());
 
-    GetChallengesResponse group1OngoingChallenges = getGroupOngoingChallenges(user1,
+    GetChallengesResponse groupOngoingChallenges = getGroupOngoingChallenges(user1,
         validGroup.getId());
-    GetChallengesResponse group1ProposedChallenges = getGroupProposedChallenges(user1,
+    GetChallengesResponse groupProposedChallenges = getGroupProposedChallenges(user1,
         validGroup.getId());
 
     assertThat(
-        Iterables.getOnlyElement(group1OngoingChallenges.getData()).getChallengeInfo().getName(),
+        Iterables.getOnlyElement(groupOngoingChallenges.getData()).getChallengeInfo().getName(),
         startsWith(ONGOING_CHALLENGE_NAME_PREFIX));
     assertThat(
-        Iterables.getOnlyElement(group1ProposedChallenges.getData()).getChallengeInfo().getName(),
+        Iterables.getOnlyElement(groupProposedChallenges.getData()).getChallengeInfo().getName(),
         startsWith(PROPOSED_CHALLENGE_NAME_PREFIX));
   }
 

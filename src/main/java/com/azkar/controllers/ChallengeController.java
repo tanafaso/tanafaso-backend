@@ -172,12 +172,17 @@ public class ChallengeController extends BaseController {
         .findById(getCurrentUser().getUserId()).get()
         .getUserChallengeStatuses().stream()
         .filter(
-            userChallengeStatus -> userChallengeStatus.isOngoing() == isOngoing && (groupId == null
-                || groupId.equals(userChallengeStatus.getGroupId())))
+            userChallengeStatus -> userChallengeStatus.isOngoing() == isOngoing
+                && nullGroupOrContainsChallenge(groupId, userChallengeStatus))
         .map(this::getUserChallenge)
         .collect(Collectors.toList());
     response.setData(userChallenges);
     return ResponseEntity.ok(response);
+  }
+
+  private boolean nullGroupOrContainsChallenge(String groupId,
+      UserChallengeStatus userChallengeStatus) {
+    return groupId == null || userChallengeStatus.getGroupId().equals(groupId);
   }
 
   private boolean groupContainsCurrentUser(String groupId) {
