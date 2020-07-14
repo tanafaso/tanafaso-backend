@@ -1,6 +1,7 @@
 package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
@@ -139,7 +140,7 @@ public class GroupChallengeTest extends TestBase {
   public void addChallenge_invalidGroup_shouldNotSucceed() throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(invalidGroup.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
-    expectedResponse.setError(new Error(AddChallengeRequest.GROUP_NOT_FOUND_ERROR));
+    expectedResponse.setError(new Error(AddChallengeResponse.GROUP_NOT_FOUND_ERROR));
 
     performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
         .andExpect(status().isBadRequest())
@@ -148,6 +149,28 @@ public class GroupChallengeTest extends TestBase {
     List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
         .getUserChallengeStatuses();
     assertTrue("UserChallenges list is not empty.", userChallengeStatuses.isEmpty());
+  }
+
+  @Test
+  public void addChallenge_nonGroupMember_shouldNotSucceed() throws Exception {
+    Challenge challenge = ChallengeFactory.getNewChallenge(validGroup.getId());
+    User nonGroupMember = UserFactory.getNewUser();
+    addNewUser(nonGroupMember);
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setError(new Error(AddChallengeResponse.NOT_GROUP_MEMBER_ERROR));
+
+    performPostRequest(nonGroupMember,
+        "/challenges",
+        mapToJson(new AddChallengeRequest(challenge)))
+        .andExpect(status().isForbidden())
+        .andExpect(content().json(mapToJson(expectedResponse)));
+
+    List<UserChallengeStatus> userChallenges = userRepo.findById(nonGroupMember.getId())
+        .get()
+        .getUserChallengeStatuses();
+    assertThat(userChallenges, empty());
+    List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
+    assertThat(groupChallenges, empty());
   }
 
   @Test
