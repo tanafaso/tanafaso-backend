@@ -92,8 +92,12 @@ public class ChallengeController extends BaseController {
     }
     Optional<Group> group = groupRepo.findById(req.getChallenge().getGroupId());
     if (!group.isPresent()) {
-      response.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
+      response.setError(new Error(AddChallengeResponse.GROUP_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
+    }
+    if (!groupContainsCurrentUser(group.get())) {
+      response.setError(new Error(AddChallengeResponse.NOT_GROUP_MEMBER_ERROR));
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
     List<String> groupUsersIds = group.get().getUsersIds();
     ArrayList<String> usersAccepted = new ArrayList(Arrays.asList(getCurrentUser().getUserId()));
@@ -113,6 +117,10 @@ public class ChallengeController extends BaseController {
 
     response.setData(challenge);
     return ResponseEntity.ok(response);
+  }
+
+  private boolean groupContainsCurrentUser(Group group) {
+    return group.getUsersIds().contains(getCurrentUser().getUserId());
   }
 
   private void addChallengeToUser(User user, Challenge challenge) {
