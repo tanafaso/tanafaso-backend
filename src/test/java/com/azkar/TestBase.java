@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.azkar.entities.User;
+import com.azkar.factories.entities.UserFactory;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -117,5 +118,11 @@ public abstract class TestBase {
   protected <T> T mapFromJson(String json, Class<T> c) throws JsonProcessingException {
     ObjectMapper objectMapper = new ObjectMapper();
     return objectMapper.readValue(json, c);
+  }
+
+  protected User getNewRegisteredUser() {
+    User newUser = UserFactory.getNewUser();
+    addNewUser(newUser);
+    return newUser;
   }
 }

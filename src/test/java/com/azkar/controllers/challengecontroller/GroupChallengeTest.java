@@ -293,7 +293,7 @@ public class GroupChallengeTest extends TestBase {
 
   @Test
   public void getGroupChallenges_oneOngoingOneProposedChallenge_shouldSucceed() throws Exception {
-    // TODO(3bza): A hacky way to add ongoing challenge is to insert a challenge in group
+    // TODO(issue#92): A hacky way to add ongoing challenge is to insert a challenge in group
     //  with only one member. This should be changed when accept challenge functionality is added.
     addNewValidChallenge(user1, ONGOING_CHALLENGE_NAME_PREFIX, validGroup.getId());
 
@@ -370,12 +370,6 @@ public class GroupChallengeTest extends TestBase {
         .andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString();
     return mapFromJson(responseJson, GetChallengesResponse.class);
-  }
-
-  private User getNewRegisteredUser() {
-    User newUser = UserFactory.getNewUser();
-    addNewUser(newUser);
-    return newUser;
   }
 
   // TODO: Reuse existing functions in GroupMembershipTest.

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,16 @@ public class ChallengeController extends BaseController {
   ChallengeRepo challengeRepo;
   @Autowired
   GroupRepo groupRepo;
+
+  private static Predicate<UserChallengeStatus> withIsOngoing(boolean isOngoing) {
+    return (userChallengeStatus -> userChallengeStatus.isOngoing() == isOngoing);
+  }
+
+  private static Predicate<UserChallengeStatus> withIsOngoingAndGroup(boolean isOngoing,
+      Group group) {
+    return withIsOngoing(isOngoing)
+        .and(userChallengeStatus -> userChallengeStatus.getGroupId().equals(group.getId()));
+  }
 
   @PostMapping(path = "/personal", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddPersonalChallengeResponse> addPersonalChallenge(
@@ -136,69 +147,64 @@ public class ChallengeController extends BaseController {
 
   @GetMapping(path = "/ongoing")
   public ResponseEntity<GetChallengesResponse> getOngoingChallenges() {
-    return getChallenges(/* isOngoing= */ true);
+    return getChallenges(withIsOngoing(true));
   }
 
   @GetMapping(path = "/proposed")
   public ResponseEntity<GetChallengesResponse> getProposedChallenges() {
-    return getChallenges(/* isOngoing= */ false);
+    return getChallenges(withIsOngoing(false));
   }
 
   @GetMapping(path = "/groups/{groupId}/ongoing")
   public ResponseEntity<GetChallengesResponse> getGroupOngoingChallenges(
       @PathVariable(value = "groupId") String groupId) {
-    if (groupRepo.existsById(groupId)) {
-      return getChallenges(/* isOngoing= */ true, groupId);
-    }
-    GetChallengesResponse response = new GetChallengesResponse();
-    response.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
-    return ResponseEntity.unprocessableEntity().body(response);
+    return getGroupChallenge(groupId, /* isOngoing= */ true);
   }
 
   @GetMapping(path = "/groups/{groupId}/proposed")
   public ResponseEntity<GetChallengesResponse> getGroupProposedChallenges(
       @PathVariable(value = "groupId") String groupId) {
-    if (groupRepo.existsById(groupId)) {
-      return getChallenges(/* isOngoing= */ false, groupId);
+    return getGroupChallenge(groupId, /* isOngoing= */ false);
+  }
+
+  private ResponseEntity<GetChallengesResponse> getGroupChallenge(
+      @PathVariable("groupId") String groupId, boolean isOngoing) {
+    Optional<Group> optionalGroup = groupRepo.findById(groupId);
+    ResponseEntity<GetChallengesResponse> error = validateGroupAndReturnErrors(optionalGroup);
+    if (error != null) {
+      return error;
     }
-    GetChallengesResponse response = new GetChallengesResponse();
-    response.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
-    return ResponseEntity.unprocessableEntity().body(response);
+    return getChallenges(withIsOngoingAndGroup(isOngoing, optionalGroup.get()));
   }
 
-  private ResponseEntity<GetChallengesResponse> getChallenges(boolean isOngoing) {
-    return getChallenges(isOngoing, /* groupId= */ null);
-  }
-
-  private ResponseEntity<GetChallengesResponse> getChallenges(boolean isOngoing, String groupId) {
+  private ResponseEntity<GetChallengesResponse> validateGroupAndReturnErrors(
+      Optional<Group> optionalGroup) {
     GetChallengesResponse response = new GetChallengesResponse();
-    if (groupId != null && !groupContainsCurrentUser(groupId)) {
+    if (!optionalGroup.isPresent()) {
+      response.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+    if (!groupContainsCurrentUser(optionalGroup.get())) {
       response.setError(new Error(GetChallengesResponse.NON_GROUP_MEMBER_ERROR));
       return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
+    return null;
+  }
+
+  private ResponseEntity<GetChallengesResponse> getChallenges(
+      Predicate<UserChallengeStatus> condition) {
+    GetChallengesResponse response = new GetChallengesResponse();
     List<UserChallenge> userChallenges = userRepo
         .findById(getCurrentUser().getUserId()).get()
         .getUserChallengeStatuses().stream()
-        .filter(
-            userChallengeStatus -> userChallengeStatus.isOngoing() == isOngoing
-                && nullGroupOrContainsChallenge(groupId, userChallengeStatus))
-        .map(this::getUserChallenge)
+        .filter(condition)
+        .map(this::constructUserChallenge)
         .collect(Collectors.toList());
     response.setData(userChallenges);
     return ResponseEntity.ok(response);
   }
 
-  private boolean nullGroupOrContainsChallenge(String groupId,
-      UserChallengeStatus userChallengeStatus) {
-    return groupId == null || userChallengeStatus.getGroupId().equals(groupId);
-  }
-
-  private boolean groupContainsCurrentUser(String groupId) {
-    Group group = groupRepo.findById(groupId).get();
-    return group.getUsersIds().contains(getCurrentUser().getUserId());
-  }
-
-  private UserChallenge getUserChallenge(UserChallengeStatus userChallengeStatus) {
+  private UserChallenge constructUserChallenge(UserChallengeStatus userChallengeStatus) {
     Optional<Challenge> challengeInfo = challengeRepo
         .findById(userChallengeStatus.getChallengeId());
     if (!challengeInfo.isPresent()) {
