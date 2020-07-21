@@ -11,6 +11,7 @@ import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserReturnedChallenge;
 import com.azkar.payload.exceptions.BadRequestException;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -78,6 +80,26 @@ public class ChallengeController extends BaseController {
     userRepo.save(loggedInUser);
     response.setData(challenge);
     return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("{challengeId}")
+  public ResponseEntity<GetChallengeResponse> getChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    GetChallengeResponse response = new GetChallengeResponse();
+    Optional<UserChallengeStatus> userChallengeStatus = getCurrentUserChallengeStatus(challengeId);
+    if (!userChallengeStatus.isPresent()) {
+      return ResponseEntity.notFound().build();
+    }
+    response.setData(getUserReturnedChallenge(userChallengeStatus.get()));
+    return ResponseEntity.ok(response);
+  }
+
+  private Optional<UserChallengeStatus> getCurrentUserChallengeStatus(String challengeId) {
+    User currentUser = userRepo.findById(getCurrentUser().getUserId()).get();
+    return currentUser.getUserChallengeStatuses()
+        .stream()
+        .filter(challengeStatus -> challengeStatus.getChallengeId().equals(challengeId))
+        .findFirst();
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
