@@ -51,16 +51,9 @@ public abstract class TestBase {
   @Value("${app.jwtSecret}")
   private String jwtSecret;
 
-  // If this token is set, it will be sent with requests instead of creating a new JWTs.
-  private String forcedJwtToken;
-
   @After
   public final void afterBase() {
     mongoTemplate.getDb().drop();
-  }
-
-  protected void setForcedJwtToken(String forcedJwtToken) {
-    this.forcedJwtToken = forcedJwtToken;
   }
 
   protected void addNewUser(User user) {
@@ -74,10 +67,6 @@ public abstract class TestBase {
   }
 
   private String getAuthenticationToken(User user) throws UnsupportedEncodingException {
-    if (forcedJwtToken != null) {
-      return forcedJwtToken;
-    }
-
     final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.MINUTES.toMillis(1);
     return JWT.create()
         .withSubject(user.getId())
@@ -87,6 +76,13 @@ public abstract class TestBase {
 
   protected ResultActions performGetRequest(User user, String path) throws Exception {
     return performGetRequest(user, path, /*body=*/null);
+  }
+
+  protected ResultActions performGetRequest(String token, String path) throws Exception {
+    MockHttpServletRequestBuilder requestBuilder = get(path);
+    requestBuilder.header(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+
+    return mockMvc.perform(requestBuilder);
   }
 
   protected ResultActions performGetRequest(User user, String path, String body) throws Exception {

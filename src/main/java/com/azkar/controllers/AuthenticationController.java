@@ -47,6 +47,7 @@ public class AuthenticationController extends BaseController {
   public static final String LOGIN_WITH_FACEBOOK_PATH = "/login/facebook";
   public static final String REGISTER_WITH_EMAIL_PATH = "/register/email";
   public static final String VERIFY_EMAIL_PATH = "/verify/email";
+  public static final String CONNECT_WITH_FACEBOOK_PATH = "/connect/facebook";
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
@@ -159,7 +160,7 @@ public class AuthenticationController extends BaseController {
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
-    FacebookBasicProfileResponse facebookResponse = assertUserFacebookData(requestBody);
+    FacebookBasicProfileResponse facebookResponse = getUserFacebookData(requestBody);
 
     if (facebookResponse == null) {
       response
@@ -201,13 +202,13 @@ public class AuthenticationController extends BaseController {
    * facebook information will override the old one. This request is expected to called by a logged
    * in user so the security context authentication is expected to be set.
    */
-  @PutMapping(value = "/connect/facebook", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = CONNECT_WITH_FACEBOOK_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> connectFacebook(
       @RequestBody FacebookAuthenticationRequest requestBody) {
     requestBody.validate();
     FacebookAuthenticationResponse response = new FacebookAuthenticationResponse();
 
-    FacebookBasicProfileResponse facebookResponse = assertUserFacebookData(requestBody);
+    FacebookBasicProfileResponse facebookResponse = getUserFacebookData(requestBody);
 
     if (facebookResponse == null) {
       response
@@ -253,7 +254,8 @@ public class AuthenticationController extends BaseController {
     return new Random(System.currentTimeMillis()).nextInt(max - min) + min;
   }
 
-  private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationRequest body) {
+  private FacebookBasicProfileResponse getUserFacebookData(
+      FacebookAuthenticationRequest body) {
     String facebookGraphApiUril =
         "https://graph.facebook.com/v7.0/me?fields=id,name,email&access_token=" + body.getToken();
 

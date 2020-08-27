@@ -2,9 +2,13 @@ package com.azkar.factories.entities;
 
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserFacebookData;
+import com.azkar.services.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class UserFactory {
 
+  @Autowired
+  static UserService userService;
   static int usersRequested = 0;
 
   public static User getNewUser() {

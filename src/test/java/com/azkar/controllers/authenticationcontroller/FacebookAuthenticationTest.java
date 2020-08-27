@@ -24,13 +24,13 @@ import org.springframework.test.web.servlet.MvcResult;
 
 public class FacebookAuthenticationTest extends TestBase {
 
-  private final static String testUserFacebookTokenAccount1 =
-      "EAADDR3MHJd8BAHmY7XY8zlGftGdNlx9d473i1dPTH0ycYjC0weIibBtSegZAkX8p0eqZCfSgYSlRgZA58MugRmewwnruiqugqoIn5KBCU8DIz4DM1MMn38mTQrNXZCWWQrtqonjfgZBmhxjkcgi7OBgKUt5HlUtLOSQBSUUE5gZBTTOBNYKZAJrHcKOsnFDgw5u0WFzSZC6EMAZDZD";
-  private final static String testUserFacebookIdAccount1 = "105160664522305";
+  private final static String TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1 =
+      "EAADDR3MHJd8BALm8YlKLPHtVcnTOuSw0AqnbwZByGi5ouItrqBTWxdEDqsB3ZAMiewdm0O6v66hsF9RRS4MLsmk1OZCSL4MpTWA7sgG9shybi04GBwmeQnDtGzniqZB9dNZC57CUVopDHgcOxdSm7mItMkuRMttECIgdtm4GopExyZBfIJpD7H091M4K0RB3ofiXWZAe4ZBqXQZDZD";
+  private final static String TEST_USER_FACEBOOK_ID_ACCOUNT_1 = "105160664522305";
 
-  private final String testUserFacebookTokenAccount2 =
-      "EAADDR3MHJd8BAIXVDbiqFl6WYoPvS5JMoVg3E0CbTTviPlLM9N0wxT7s1ZA7BHL5p9ZBA9JEpFJqtjMGNZCoxZBymvJnYXIDnZAdVGImXTREL8ikexaPpY3ixrrOfvq0GrGOMNjJg1SUYKzhBy8liJ9j9xjeWLZBIIFMqJFSn4poVgjbvnlrUJB8NtKohaWWQie9iOu4LZBigZDZD";
-  private final String testUserFacebookIdAccount2 = "109663874068160";
+  private final String TEST_USER_FACEBOOK_TOKEN_ACCOUNT_2 =
+      "EAADDR3MHJd8BAN2ZARBB6G8qsrvhZCCSc7PwJRF0zNLQQDDZBQ21FWzkYuUhR9nZCSyaJTehL9480ybmCNMm2ghJlXNvrLoYvu6PlZCzFuTgFjdYXtLpyrFByQqOtyZCtXzDmCgTqZBJbmhi2VO3vQahNZBzucaEic0kS7gGOYic3LZA6j3NIvF0lloaEHTRxOYvz0fRZAx8OfNgZDZD";
+  private final String TEST_USER_FACEBOOK_ID_ACCOUNT_2 = "109663874068160";
 
   @Autowired
   UserRepo userRepo;
@@ -46,12 +46,42 @@ public class FacebookAuthenticationTest extends TestBase {
     loginWithFacebookSucceeded();
   }
 
+  private void loginWithFacebookSucceeded() throws Exception {
+    FacebookAuthenticationRequest request = FacebookAuthenticationRequest.builder()
+        .token(TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1)
+        .facebookUserId(TEST_USER_FACEBOOK_ID_ACCOUNT_1)
+        .build();
+    FacebookAuthenticationResponse expectedAuthenticationResponse =
+        new FacebookAuthenticationResponse();
+
+    MvcResult result = performPutRequest(AuthenticationController.LOGIN_WITH_FACEBOOK_PATH,
+        mapToJson(request))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(mapToJson(expectedAuthenticationResponse)))
+        .andExpect(header().exists(HttpHeaders.AUTHORIZATION))
+        .andReturn();
+
+    User user =
+        Iterators.getOnlyElement(userRepo.findAll().iterator());
+    assertThat(user.getUserFacebookData().getAccessToken(), is(TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1));
+    assertThat(user.getUserFacebookData().getUserId(), is(TEST_USER_FACEBOOK_ID_ACCOUNT_1));
+
+    // Validate the JWT returned by the API.
+    GetHomeResponse expectedHomeResponse = new GetHomeResponse();
+    expectedHomeResponse.setData(user);
+    performGetRequest(result.getResponse().getHeader(HttpHeaders.AUTHORIZATION), "/")
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(mapToJson(expectedHomeResponse)));
+  }
+
   @Test
   public void loginWithFacebook_userAlreadyLoggedIn_shouldNotSucceed() throws Exception {
     User loggedInUser = getLoggedInUser();
     FacebookAuthenticationRequest request = FacebookAuthenticationRequest.builder()
-        .token(testUserFacebookTokenAccount1)
-        .facebookUserId(testUserFacebookIdAccount1)
+        .token(TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1)
+        .facebookUserId(TEST_USER_FACEBOOK_ID_ACCOUNT_1)
         .build();
     FacebookAuthenticationResponse expectedAuthenticationResponse =
         new FacebookAuthenticationResponse();
@@ -76,7 +106,7 @@ public class FacebookAuthenticationTest extends TestBase {
     final String wrongFacebookToken = "wrongFacebookToken";
     FacebookAuthenticationRequest request = FacebookAuthenticationRequest.builder()
         .token(wrongFacebookToken)
-        .facebookUserId(testUserFacebookIdAccount1)
+        .facebookUserId(TEST_USER_FACEBOOK_ID_ACCOUNT_1)
         .build();
     FacebookAuthenticationResponse expectedAuthenticationResponse =
         new FacebookAuthenticationResponse();
@@ -98,7 +128,7 @@ public class FacebookAuthenticationTest extends TestBase {
   public void loginWithFacebook_wrongFacebookUserId_shouldNotSucceed() throws Exception {
     final String wrongFacebookUserId = "wrongUserId";
     FacebookAuthenticationRequest request = FacebookAuthenticationRequest.builder()
-        .token(testUserFacebookTokenAccount1)
+        .token(TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1)
         .facebookUserId(wrongFacebookUserId)
         .build();
     FacebookAuthenticationResponse expectedAuthenticationResponse =
@@ -121,8 +151,8 @@ public class FacebookAuthenticationTest extends TestBase {
   public void connectFacebook_forTheFirstTime_shouldSucceed() throws Exception {
     User loggedInUser = getLoggedInUser();
 
-    assertConnectFacebookSucceeded(loggedInUser, testUserFacebookTokenAccount1,
-        testUserFacebookIdAccount1);
+    assertConnectFacebookSucceeded(loggedInUser, TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1,
+        TEST_USER_FACEBOOK_ID_ACCOUNT_1);
   }
 
   @Test
@@ -130,11 +160,11 @@ public class FacebookAuthenticationTest extends TestBase {
       throws Exception {
     User loggedInUser = getLoggedInUser();
 
-    assertConnectFacebookSucceeded(loggedInUser, testUserFacebookTokenAccount1,
-        testUserFacebookIdAccount1);
+    assertConnectFacebookSucceeded(loggedInUser, TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1,
+        TEST_USER_FACEBOOK_ID_ACCOUNT_1);
 
-    assertConnectFacebookSucceeded(loggedInUser, testUserFacebookTokenAccount1,
-        testUserFacebookIdAccount1);
+    assertConnectFacebookSucceeded(loggedInUser, TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1,
+        TEST_USER_FACEBOOK_ID_ACCOUNT_1);
   }
 
   @Test
@@ -142,11 +172,11 @@ public class FacebookAuthenticationTest extends TestBase {
       throws Exception {
     User loggedInUser = getLoggedInUser();
 
-    assertConnectFacebookSucceeded(loggedInUser, testUserFacebookTokenAccount1,
-        testUserFacebookIdAccount1);
+    assertConnectFacebookSucceeded(loggedInUser, TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1,
+        TEST_USER_FACEBOOK_ID_ACCOUNT_1);
 
-    assertConnectFacebookSucceeded(loggedInUser, testUserFacebookTokenAccount2,
-        testUserFacebookIdAccount2);
+    assertConnectFacebookSucceeded(loggedInUser, TEST_USER_FACEBOOK_TOKEN_ACCOUNT_2,
+        TEST_USER_FACEBOOK_ID_ACCOUNT_2);
   }
 
   @Test
@@ -154,20 +184,20 @@ public class FacebookAuthenticationTest extends TestBase {
       throws Exception {
     User loggedInUser1 = getLoggedInUser();
 
-    assertConnectFacebookSucceeded(loggedInUser1, testUserFacebookTokenAccount1,
-        testUserFacebookIdAccount1);
+    assertConnectFacebookSucceeded(loggedInUser1, TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1,
+        TEST_USER_FACEBOOK_ID_ACCOUNT_1);
 
     User loggedInUser2 = getLoggedInUser();
     FacebookAuthenticationRequest request = FacebookAuthenticationRequest.builder()
-        .token(testUserFacebookTokenAccount1)
-        .facebookUserId(testUserFacebookIdAccount1)
+        .token(TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1)
+        .facebookUserId(TEST_USER_FACEBOOK_ID_ACCOUNT_1)
         .build();
     FacebookAuthenticationResponse expectedAuthenticationResponse =
         new FacebookAuthenticationResponse();
     expectedAuthenticationResponse
         .setError(new Error(FacebookAuthenticationResponse.SOMEONE_ELSE_ALREADY_CONNECTED_ERROR));
 
-    performPutRequest(loggedInUser2, "/connect/facebook",
+    performPutRequest(loggedInUser2, AuthenticationController.CONNECT_WITH_FACEBOOK_PATH,
         mapToJson(request))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -176,9 +206,9 @@ public class FacebookAuthenticationTest extends TestBase {
 
     User loggedInUser1InRepo = userRepo.findById(loggedInUser1.getId()).get();
     assertThat(loggedInUser1InRepo.getUserFacebookData().getAccessToken(),
-        is(testUserFacebookTokenAccount1));
+        is(TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1));
     assertThat(loggedInUser1InRepo.getUserFacebookData().getUserId(),
-        is(testUserFacebookIdAccount1));
+        is(TEST_USER_FACEBOOK_ID_ACCOUNT_1));
 
     User loggedInUser2InRepo = userRepo.findById(loggedInUser2.getId()).get();
     assertThat(loggedInUser2InRepo.getUserFacebookData(), is(nullValue()));
@@ -191,14 +221,14 @@ public class FacebookAuthenticationTest extends TestBase {
     final String wrongFacebookToken = "wrongFacebookToken";
     FacebookAuthenticationRequest request = FacebookAuthenticationRequest.builder()
         .token(wrongFacebookToken)
-        .facebookUserId(testUserFacebookIdAccount1)
+        .facebookUserId(TEST_USER_FACEBOOK_ID_ACCOUNT_1)
         .build();
     FacebookAuthenticationResponse expectedAuthenticationResponse =
         new FacebookAuthenticationResponse();
     expectedAuthenticationResponse
         .setError(new Error(FacebookAuthenticationResponse.AUTHENTICATION_WITH_FACEBOOK_ERROR));
 
-    performPutRequest(loggedInUser, "/connect/facebook",
+    performPutRequest(loggedInUser, AuthenticationController.CONNECT_WITH_FACEBOOK_PATH,
         mapToJson(request))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -215,7 +245,7 @@ public class FacebookAuthenticationTest extends TestBase {
 
     final String wrongFacebookUserId = "wrongUserId";
     FacebookAuthenticationRequest request = FacebookAuthenticationRequest.builder()
-        .token(testUserFacebookTokenAccount1)
+        .token(TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1)
         .facebookUserId(wrongFacebookUserId)
         .build();
     FacebookAuthenticationResponse expectedAuthenticationResponse =
@@ -223,7 +253,7 @@ public class FacebookAuthenticationTest extends TestBase {
     expectedAuthenticationResponse
         .setError(new Error(FacebookAuthenticationResponse.AUTHENTICATION_WITH_FACEBOOK_ERROR));
 
-    performPutRequest(loggedInUser, "/connect/facebook",
+    performPutRequest(loggedInUser, AuthenticationController.CONNECT_WITH_FACEBOOK_PATH,
         mapToJson(request))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -238,49 +268,18 @@ public class FacebookAuthenticationTest extends TestBase {
   @Test
   public void connectFacebook_noLoggedInUser_shouldBeRedirected() throws Exception {
     FacebookAuthenticationRequest request = FacebookAuthenticationRequest.builder()
-        .token(testUserFacebookTokenAccount1)
-        .facebookUserId(testUserFacebookIdAccount1)
+        .token(TEST_USER_FACEBOOK_TOKEN_ACCOUNT_1)
+        .facebookUserId(TEST_USER_FACEBOOK_ID_ACCOUNT_1)
         .build();
 
     // TODO(omar): Add expected response here after standardizing responses for unauthenticated
     //  users.
-    performPutRequest("/connect/facebook",
+    performPutRequest(AuthenticationController.CONNECT_WITH_FACEBOOK_PATH,
         mapToJson(request))
         .andExpect(status().is3xxRedirection())
         .andReturn();
 
     assertThat(userRepo.count(), is(0L));
-  }
-
-  private void loginWithFacebookSucceeded() throws Exception {
-    FacebookAuthenticationRequest request = FacebookAuthenticationRequest.builder()
-        .token(testUserFacebookTokenAccount1)
-        .facebookUserId(testUserFacebookIdAccount1)
-        .build();
-    FacebookAuthenticationResponse expectedAuthenticationResponse =
-        new FacebookAuthenticationResponse();
-
-    MvcResult result = performPutRequest(AuthenticationController.LOGIN_WITH_FACEBOOK_PATH,
-        mapToJson(request))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedAuthenticationResponse)))
-        .andExpect(header().exists(HttpHeaders.AUTHORIZATION))
-        .andReturn();
-
-    User user =
-        Iterators.getOnlyElement(userRepo.findAll().iterator());
-    assertThat(user.getUserFacebookData().getAccessToken(), is(testUserFacebookTokenAccount1));
-    assertThat(user.getUserFacebookData().getUserId(), is(testUserFacebookIdAccount1));
-
-    // Validate the JWT returned by the API.
-    setForcedJwtToken(result.getResponse().getHeader(HttpHeaders.AUTHORIZATION));
-    GetHomeResponse expectedHomeResponse = new GetHomeResponse();
-    expectedHomeResponse.setData(user);
-    performGetRequest(user, "/")
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedHomeResponse)));
   }
 
   private void assertConnectFacebookSucceeded(User loggedInUser, String testUserFacebookToken
@@ -292,7 +291,7 @@ public class FacebookAuthenticationTest extends TestBase {
     FacebookAuthenticationResponse expectedAuthenticationResponse =
         new FacebookAuthenticationResponse();
 
-    performPutRequest(loggedInUser, "/connect/facebook",
+    performPutRequest(loggedInUser, AuthenticationController.CONNECT_WITH_FACEBOOK_PATH,
         mapToJson(request))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
