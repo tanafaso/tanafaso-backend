@@ -67,6 +67,13 @@ public abstract class TestBase {
         .sign(Algorithm.HMAC512(jwtSecret));
   }
 
+  protected ResultActions performGetRequest(String token, String path) throws Exception {
+    MockHttpServletRequestBuilder requestBuilder = get(path);
+    requestBuilder.header(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+
+    return mockMvc.perform(requestBuilder);
+  }
+
   protected ResultActions performGetRequest(User user, String path) throws Exception {
     return performGetRequest(user, path, /*body=*/null);
   }
@@ -77,6 +84,10 @@ public abstract class TestBase {
 
   protected ResultActions performPostRequest(User user, String path, String body) throws Exception {
     return mockMvc.perform(addRequestBodyAndToken(post(path), user, body));
+  }
+
+  protected ResultActions performPutRequest(String path, String body) throws Exception {
+    return mockMvc.perform(addRequestBody(put(path), body));
   }
 
   protected ResultActions performPutRequest(User user, String path, String body) throws Exception {
@@ -96,10 +107,17 @@ public abstract class TestBase {
     }
 
     if (body != null) {
-      requestBuilder.contentType(MediaType.APPLICATION_JSON);
-      requestBuilder.content(body);
+      addRequestBody(requestBuilder, body);
     }
 
+    return requestBuilder;
+  }
+
+  private RequestBuilder addRequestBody(
+      MockHttpServletRequestBuilder requestBuilder,
+      String body) {
+    requestBuilder.contentType(MediaType.APPLICATION_JSON);
+    requestBuilder.content(body);
     return requestBuilder;
   }
 

@@ -8,9 +8,11 @@ import com.azkar.entities.RegistrationEmailConfirmationState;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserFacebookData;
 import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.authenticationcontroller.requests.EmailLoginRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.FacebookAuthenticationRequest;
+import com.azkar.payload.authenticationcontroller.responses.EmailLoginResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailVerificationResponse;
 import com.azkar.payload.authenticationcontroller.responses.FacebookAuthenticationResponse;
@@ -18,6 +20,7 @@ import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
+import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 import java.util.Random;
 import lombok.Data;
@@ -47,6 +50,7 @@ public class AuthenticationController extends BaseController {
   public static final String LOGIN_WITH_FACEBOOK_PATH = "/login/facebook";
   public static final String REGISTER_WITH_EMAIL_PATH = "/register/email";
   public static final String VERIFY_EMAIL_PATH = "/verify/email";
+  public static final String LOGIN_WITH_EMAIL_PATH = "/login/email";
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
@@ -135,6 +139,49 @@ public class AuthenticationController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  @PutMapping(value = LOGIN_WITH_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<EmailLoginResponse> loginWithEmail(
+      @RequestBody EmailLoginRequestBody body) {
+    EmailLoginResponse response = new EmailLoginResponse();
+    body.validate();
+
+    if (!(SecurityContextHolder.getContext()
+        .getAuthentication() instanceof AnonymousAuthenticationToken)) {
+      response
+          .setError(new Error(EmailLoginResponse.USER_ALREADY_LOGGED_IN_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    if (registrationPinRepo.existsByEmail(body.getEmail())) {
+      response.setError(new Error(EmailLoginResponse.EMAIL_NOT_VERIFIED_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    Optional<User> user = userRepo.findByEmail(body.getEmail());
+    if (!user.isPresent() || !passwordEncoder.matches(
+        body.getPassword(),
+        user.get().getEncodedPassword())) {
+      response.setError(new Error(EmailLoginResponse.EMAIL_PASSWORD_COMBINATION_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    String jwtToken = null;
+    try {
+      jwtToken = jwtService.generateToken(user.get());
+    } catch (UnsupportedEncodingException e) {
+      logger.error("Error when generating a verified user token: " + e.getStackTrace());
+      response
+          .setError(new Error(EmailLoginResponse.LOGIN_WITH_EMAIL_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+
+    HttpHeaders httpHeaders = new HttpHeaders();
+    httpHeaders.setBearerAuth(jwtToken);
+    ResponseEntity<EmailLoginResponse> responseEntity =
+        new ResponseEntity(response, httpHeaders, HttpStatus.OK);
+    return responseEntity;
+  }
+
   /**
    * <p>
    * This mapping is used in two cases: 1- A new user is authenticating with facebook. 2- An
@@ -155,7 +202,7 @@ public class AuthenticationController extends BaseController {
     if (!(SecurityContextHolder.getContext()
         .getAuthentication() instanceof AnonymousAuthenticationToken)) {
       response
-          .setError(new Error(FacebookAuthenticationResponse.USER_ALREADY_LOGGED_IN));
+          .setError(new Error(FacebookAuthenticationResponse.USER_ALREADY_LOGGED_IN_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
