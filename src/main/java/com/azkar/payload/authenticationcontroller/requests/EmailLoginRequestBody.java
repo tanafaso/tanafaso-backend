@@ -9,17 +9,14 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class EmailRegistrationRequestBody extends RequestBodyBase {
+public class EmailLoginRequestBody extends RequestBodyBase {
 
   private String email;
   private String password;
-  private String name;
 
   @Override public void validate() throws BadRequestException {
-    checkNotNull(email, password, name);
+    checkNotNull(email, password);
     EmailAuthenticationRequestBodyUtil.validateEmail(email);
     EmailAuthenticationRequestBodyUtil.validatePassword(password);
-    EmailAuthenticationRequestBodyUtil.validateName(name);
   }
-
 }
