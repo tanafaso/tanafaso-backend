@@ -158,10 +158,9 @@ public class AuthenticationController extends BaseController {
     }
 
     Optional<User> user = userRepo.findByEmail(body.getEmail());
-    if (!user.isPresent() ||
-        !passwordEncoder.matches(
-            body.getPassword(),
-            user.get().getEncodedPassword())) {
+    if (!user.isPresent() || !passwordEncoder.matches(
+        body.getPassword(),
+        user.get().getEncodedPassword())) {
       response.setError(new Error(EmailLoginResponse.EMAIL_PASSWORD_COMBINATION_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
