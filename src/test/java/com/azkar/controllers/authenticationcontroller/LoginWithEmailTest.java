@@ -55,7 +55,6 @@ public class LoginWithEmailTest extends TestBase {
         .andExpect(content().json(mapToJson(expectedHomeResponse)));
   }
 
-
   @Test
   public void loginWithEmail_emailMissingAtSign_shouldNotSucceed() throws Exception {
     final String emailWithoutAtSign = "test_emailtest.com";
