@@ -40,9 +40,9 @@ public class AzkarController extends BaseController {
         if (values.length != 1) {
           throw new IOException("Didn't find exactly one column per row in CSV file.");
         }
-
         azkar.add(values[0]);
       }
+
       if (azkar.size() == 0) {
         throw new IOException("Error while parsing file: " + AZKAR_FILE);
       }
