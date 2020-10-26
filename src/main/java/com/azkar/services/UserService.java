@@ -28,12 +28,20 @@ public class UserService {
     return null;
   }
 
-  public User buildNewUser(String email, String name) throws UsernameGenerationException {
+
+  public User buildNewUser(String email, String name)
+      throws UsernameGenerationException {
+    return buildNewUser(email, name, /*encodedPassword=*/null);
+  }
+
+  public User buildNewUser(String email, String name, String encodedPassword)
+      throws UsernameGenerationException {
     return User.builder()
         .id(new ObjectId().toString())
         .email(email)
         .username(generateUsername(name.replace(" ", "")))
         .name(name)
+        .encodedPassword(encodedPassword)
         .build();
   }
 

@@ -3,6 +3,7 @@ package com.azkar.controllers.authenticationcontroller;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -256,7 +257,9 @@ public class RegistrationWithEmailTest extends TestBase {
         .andExpect(content().json(mapToJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(0L));
     assertThat(userRepo.count(), equalTo(1L));
-    assertThat("User is added to the database", userRepo.existsByEmail(email));
+    User user = userRepo.findAll().get(0);
+    assertThat(user.getEmail(), equalTo(email));
+    assertThat(user.getUsername(), is(notNullValue()));
   }
 
   @Test
