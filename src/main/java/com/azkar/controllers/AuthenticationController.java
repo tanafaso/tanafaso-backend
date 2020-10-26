@@ -16,10 +16,12 @@ import com.azkar.payload.authenticationcontroller.responses.EmailLoginResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailVerificationResponse;
 import com.azkar.payload.authenticationcontroller.responses.FacebookAuthenticationResponse;
+import com.azkar.payload.exceptions.DefaultExceptionResponse;
 import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
+import com.azkar.services.UsernameGenerationException;
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 import java.util.Random;
@@ -127,13 +129,17 @@ public class AuthenticationController extends BaseController {
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
-    userService.addNewUser(
-        User.builder()
-            .name(registrationEmailConfirmationState.get().getName())
-            .email(registrationEmailConfirmationState.get().getEmail())
-            .encodedPassword(registrationEmailConfirmationState.get().getPassword())
-            .build()
-    );
+    User user;
+    try {
+      user = userService.buildNewUser(registrationEmailConfirmationState.get().getEmail(),
+          registrationEmailConfirmationState.get().getName(),
+          registrationEmailConfirmationState.get().getPassword());
+    } catch (UsernameGenerationException e) {
+      logger.error(e.getMessage());
+      response.setError(new Error(DefaultExceptionResponse.DEFAULT_ERROR));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+    userService.addNewUser(user);
     registrationPinRepo.delete(registrationEmailConfirmationState.get());
 
     return ResponseEntity.ok(response);
