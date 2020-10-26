@@ -27,6 +27,7 @@ public class User extends EntityBase {
   @Id
   private String id;
   private String email;
+  @JsonIgnore
   private String encodedPassword;
   @Indexed(name = "username_index", unique = true)
   @Default
