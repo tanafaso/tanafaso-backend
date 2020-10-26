@@ -17,20 +17,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserController extends BaseController {
 
   @Autowired
   private UserRepo userRepo;
 
-  @GetMapping
+  @GetMapping(path = "/users")
   public ResponseEntity<GetUsersResponse> getUsers() {
     GetUsersResponse response = new GetUsersResponse();
     response.setData(userRepo.findAll());
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping(path = "/{id}")
+  @GetMapping(path = "users/{id}")
   public ResponseEntity<GetUserResponse> getUser(@PathVariable String id) {
     Optional<User> user = userRepo.findById(id);
     if (!user.isPresent()) {
@@ -41,7 +41,14 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @PostMapping(path = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(path = "/me")
+  public ResponseEntity<GetUserResponse> getCurrentUserProfile() {
+    GetUserResponse response = new GetUserResponse();
+    response.setData(userRepo.findById(getCurrentUser().getUserId()).get());
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping(path = "users/", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddUserResponse> addUser(@RequestBody User user) {
     User newUser = User.builder().name(user.getName()).email(user.getEmail()).build();
     userRepo.save(newUser);
