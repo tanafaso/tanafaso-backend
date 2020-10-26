@@ -57,11 +57,11 @@ public class UserService {
     name = name.replace(" ", "");
     name = name.toLowerCase();
 
-    long username_suffix = userRepo.count();
-    while (userRepo.findByUsername(name + "-" + username_suffix).isPresent()) {
-      username_suffix++;
+    long usernameSuffix = userRepo.count();
+    while (userRepo.findByUsername(name + "-" + usernameSuffix).isPresent()) {
+      usernameSuffix++;
     }
 
-    return name + "-" + username_suffix;
+    return name + "-" + usernameSuffix;
   }
 }
