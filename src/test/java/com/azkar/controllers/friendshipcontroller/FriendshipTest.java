@@ -1,4 +1,4 @@
-package com.azkar.controllers.usercontroller;
+package com.azkar.controllers.friendshipcontroller;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;

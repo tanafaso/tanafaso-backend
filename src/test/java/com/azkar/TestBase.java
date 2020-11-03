@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 public abstract class TestBase {
 
   @Autowired
-  MockMvc mockMvc;
+  protected MockMvc mockMvc;
 
   @Autowired
   UserService userService;
@@ -59,7 +59,7 @@ public abstract class TestBase {
     userService.addNewUser(user);
   }
 
-  private String getAuthenticationToken(User user) throws UnsupportedEncodingException {
+  protected String getAuthenticationToken(User user) throws UnsupportedEncodingException {
     final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.MINUTES.toMillis(1);
     return JWT.create()
         .withSubject(user.getId())

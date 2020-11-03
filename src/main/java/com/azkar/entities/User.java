@@ -20,7 +20,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "users")
-@Builder
+@Builder(toBuilder = true)
 @Data
 public class User extends EntityBase {
 
