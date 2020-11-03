@@ -20,20 +20,21 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
+  public static final String[] PRE_AUTHENTICAITON_ALLOWED_ENDPOINTS = {
+      AuthenticationController.REGISTER_WITH_EMAIL_PATH,
+      AuthenticationController.VERIFY_EMAIL_PATH,
+      AuthenticationController.LOGIN_WITH_EMAIL_PATH,
+      AuthenticationController.LOGIN_WITH_FACEBOOK_PATH
+  };
   @Autowired
   JwtAuthenticationFilter jwtAuthenticationFilter;
-
   @Autowired
   OAuthSuccessHandler oauthSuccessHandler;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.authorizeRequests()
-        .antMatchers(
-            AuthenticationController.REGISTER_WITH_EMAIL_PATH,
-            AuthenticationController.VERIFY_EMAIL_PATH,
-            AuthenticationController.LOGIN_WITH_EMAIL_PATH,
-            AuthenticationController.LOGIN_WITH_FACEBOOK_PATH)
+        .antMatchers(PRE_AUTHENTICAITON_ALLOWED_ENDPOINTS)
         .permitAll()
         .antMatchers()
         .permitAll()
