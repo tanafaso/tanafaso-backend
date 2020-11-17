@@ -118,6 +118,17 @@ public class FriendshipTest extends TestBase {
   }
 
   @Test
+  public void addFriend_addSelf_shouldNotSucceed() throws Exception {
+    AddFriendResponse expectedResponse = new AddFriendResponse();
+    expectedResponse.setError(new Error(AddFriendResponse.ADD_SELF_ERROR));
+
+    sendFriendRequest(user1, user1)
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(mapToJson(expectedResponse)));
+  }
+
+  @Test
   public void acceptFriendRequest_normalScenario_shouldSucceed() throws Exception {
     sendFriendRequest(user1, user2);
 
