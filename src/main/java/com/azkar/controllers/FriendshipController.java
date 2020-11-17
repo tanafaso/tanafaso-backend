@@ -47,6 +47,11 @@ public class FriendshipController extends BaseController {
       @PathVariable(value = "id") String otherUserId) {
     AddFriendResponse response = new AddFriendResponse();
 
+    if (getCurrentUser().getUserId().equals(otherUserId)) {
+      response.setError(new Error(AddFriendResponse.ADD_SELF_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
     // Check if the provided id is valid.
     Optional<User> otherUser = userRepo.findById(otherUserId);
     if (!otherUser.isPresent()) {
