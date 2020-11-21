@@ -47,7 +47,8 @@ public class FriendshipController extends BaseController {
       @PathVariable(value = "id") String otherUserId) {
     AddFriendResponse response = new AddFriendResponse();
 
-    if (getCurrentUser().getUserId().equals(otherUserId)) {
+    User currentUser = userRepo.findById(getCurrentUser().getUserId()).get();
+    if (currentUser.getId().equals(otherUserId)) {
       response.setError(new Error(AddFriendResponse.ADD_SELF_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
@@ -62,14 +63,14 @@ public class FriendshipController extends BaseController {
     // Check if the current user already requested friendship with the other user.
     Friendship otherUserFriendship = friendshipRepo.findByUserId(otherUserId);
     if (otherUserFriendship.getFriends().stream()
-        .anyMatch(friend -> friend.getUserId().equals(getCurrentUser().getUserId()))) {
+        .anyMatch(friend -> friend.getUserId().equals(currentUser.getId()))) {
       response.setError(new Error(AddFriendResponse.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     // Check if the other user already requested friendship with the current user. If this is the
     // case then the friendship should not be pending anymore.
-    Friendship currentUserFriendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
+    Friendship currentUserFriendship = friendshipRepo.findByUserId(currentUser.getId());
     Optional<Friend> friend = currentUserFriendship.getFriends().stream()
         .filter(f -> f.getUserId().equals(otherUserId)).findAny();
     if (friend.isPresent()) {
@@ -79,8 +80,9 @@ public class FriendshipController extends BaseController {
       // Set isPending for the current user.
       otherUserFriendship.getFriends().add(
           Friend.builder()
-              .userId(getCurrentUser().getUserId())
-              .username(getCurrentUser().getUsername())
+              .userId(currentUser.getId())
+              .username(currentUser.getUsername())
+              .name(currentUser.getName())
               .isPending(false)
               .build()
       );
@@ -92,8 +94,9 @@ public class FriendshipController extends BaseController {
 
     otherUserFriendship.getFriends().add(
         Friend.builder()
-            .userId(getCurrentUser().getUserId())
-            .username(getCurrentUser().getUsername())
+            .userId(currentUser.getId())
+            .username(currentUser.getUsername())
+            .name(currentUser.getName())
             .isPending(true)
             .build()
     );
@@ -106,8 +109,10 @@ public class FriendshipController extends BaseController {
       @PathVariable(value = "id") String otherUserId) {
     ResolveFriendRequestResponse response = new ResolveFriendRequestResponse();
 
+    User currentUser = userRepo.findById(getCurrentUser().getUserId()).get();
+
     // Assert that the current user has a pending friend request from the other user.
-    Friendship currentUserFriendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
+    Friendship currentUserFriendship = friendshipRepo.findByUserId(currentUser.getId());
     Optional<Friend> friend = currentUserFriendship.getFriends().stream()
         .filter(f -> f.getUserId().equals(otherUserId)).findAny();
     if (!friend.isPresent()) {
@@ -127,8 +132,9 @@ public class FriendshipController extends BaseController {
 
     otherUserFriendship.getFriends().add(
         Friend.builder()
-            .userId(getCurrentUser().getUserId())
-            .username(getCurrentUser().getUsername())
+            .userId(currentUser.getId())
+            .username(currentUser.getUsername())
+            .name(currentUser.getName())
             .isPending(false)
             .build()
     );
