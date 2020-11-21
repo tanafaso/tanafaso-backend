@@ -245,12 +245,14 @@ public class FriendshipTest extends TestBase {
     expectedUser1Friends.add(Friend.builder()
         .userId(user2.getId())
         .username(user2.getUsername())
+        .name(user2.getName())
         .isPending(false)
         .build()
     );
     expectedUser1Friends.add(Friend.builder()
         .userId(user3.getId())
         .username(user3.getUsername())
+        .name(user3.getName())
         .isPending(false)
         .build()
     );
@@ -270,6 +272,7 @@ public class FriendshipTest extends TestBase {
     expectedUser5Friends.add(Friend.builder()
         .userId(user1.getId())
         .username(user1.getUsername())
+        .name(user1.getName())
         .isPending(true)
         .build()
     );
