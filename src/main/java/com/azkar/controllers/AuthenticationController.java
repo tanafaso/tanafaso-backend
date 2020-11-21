@@ -224,6 +224,7 @@ public class AuthenticationController extends BaseController {
           .name(facebookResponse.name)
           .email(facebookResponse.email).build();
       user.setUserFacebookData(userFacebookData);
+      user.setName(userFacebookData.getName());
       userRepo.save(user);
       jwtToken = jwtService.generateToken(user);
     } catch (Exception e) {

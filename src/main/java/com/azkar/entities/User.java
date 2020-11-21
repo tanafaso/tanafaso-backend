@@ -33,6 +33,7 @@ public class User extends EntityBase {
   @Default
   private List<Challenge> personalChallenges = new ArrayList<>();
   private String username;
+  @NonNull
   private String name;
   private UserFacebookData userFacebookData;
   @Default
@@ -87,6 +88,7 @@ public class User extends EntityBase {
     String userId;
     String accessToken;
     String email;
+    @NonNull
     String name;
   }
 }
