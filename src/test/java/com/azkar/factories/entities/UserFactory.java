@@ -39,6 +39,7 @@ public class UserFactory {
     return User.builder()
         .id("testId" + usersRequested)
         .userFacebookData(userFacebookData)
+        .name(userFacebookData.getName())
         .build();
   }
 }
