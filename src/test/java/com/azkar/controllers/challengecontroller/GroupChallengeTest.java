@@ -265,12 +265,12 @@ public class GroupChallengeTest extends TestBase {
 
     performGetRequest(user1,
         String.format("/challenges/groups/%s/ongoing/", invalidGroup.getId()))
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().json(mapToJson(expectedResponse)));
 
     performGetRequest(user1,
         String.format("/challenges/groups/%s/proposed/", invalidGroup.getId()))
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().json(mapToJson(expectedResponse)));
   }
 

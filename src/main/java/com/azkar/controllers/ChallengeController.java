@@ -56,7 +56,7 @@ public class ChallengeController extends BaseController {
     return (userChallengeStatus -> userChallengeStatus.isOngoing() == isOngoing);
   }
 
-  private static Predicate<UserChallengeStatus> withIsOngoingAndGroup(boolean isOngoing,
+  private static Predicate<UserChallengeStatus> withIsOngoingAndInGroup(boolean isOngoing,
       Group group) {
     return withIsOngoing(isOngoing)
         .and(userChallengeStatus -> userChallengeStatus.getGroupId().equals(group.getId()));
@@ -174,7 +174,7 @@ public class ChallengeController extends BaseController {
     if (error != null) {
       return error;
     }
-    return getChallenges(withIsOngoingAndGroup(isOngoing, optionalGroup.get()));
+    return getChallenges(withIsOngoingAndInGroup(isOngoing, optionalGroup.get()));
   }
 
   private ResponseEntity<GetChallengesResponse> validateGroupAndReturnErrors(
@@ -182,7 +182,7 @@ public class ChallengeController extends BaseController {
     GetChallengesResponse response = new GetChallengesResponse();
     if (!optionalGroup.isPresent()) {
       response.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
     if (!groupContainsCurrentUser(optionalGroup.get())) {
       response.setError(new Error(GetChallengesResponse.NON_GROUP_MEMBER_ERROR));
@@ -192,12 +192,12 @@ public class ChallengeController extends BaseController {
   }
 
   private ResponseEntity<GetChallengesResponse> getChallenges(
-      Predicate<UserChallengeStatus> condition) {
+      Predicate<UserChallengeStatus> userChallengeStatusesFilter) {
     GetChallengesResponse response = new GetChallengesResponse();
     List<UserChallenge> userChallenges = userRepo
         .findById(getCurrentUser().getUserId()).get()
         .getUserChallengeStatuses().stream()
-        .filter(condition)
+        .filter(userChallengeStatusesFilter)
         .map(this::constructUserChallenge)
         .collect(Collectors.toList());
     response.setData(userChallenges);
