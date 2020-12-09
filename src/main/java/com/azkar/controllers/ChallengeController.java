@@ -10,7 +10,7 @@ import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeReques
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
-import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserReturnedChallenge;
+import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserChallenge;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.GroupRepo;
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,6 +51,16 @@ public class ChallengeController extends BaseController {
   ChallengeRepo challengeRepo;
   @Autowired
   GroupRepo groupRepo;
+
+  private static Predicate<UserChallengeStatus> withIsOngoing(boolean isOngoing) {
+    return (userChallengeStatus -> userChallengeStatus.isOngoing() == isOngoing);
+  }
+
+  private static Predicate<UserChallengeStatus> withIsOngoingAndInGroup(boolean isOngoing,
+      Group group) {
+    return withIsOngoing(isOngoing)
+        .and(userChallengeStatus -> userChallengeStatus.getGroupId().equals(group.getId()));
+  }
 
   @PostMapping(path = "/personal", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddPersonalChallengeResponse> addPersonalChallenge(
@@ -128,33 +140,71 @@ public class ChallengeController extends BaseController {
         .isAccepted(user.getId().equals(getCurrentUser().getUserId()))
         .subChallenges(challenge.getSubChallenges())
         .isOngoing(challenge.isOngoing())
+        .groupId(challenge.getGroupId())
         .build();
     user.getUserChallengeStatuses().add(userChallengeStatus);
   }
 
   @GetMapping(path = "/ongoing")
   public ResponseEntity<GetChallengesResponse> getOngoingChallenges() {
-    return getChallenges(/* isOngoing= */ true);
+    return getChallenges(withIsOngoing(true));
   }
 
   @GetMapping(path = "/proposed")
   public ResponseEntity<GetChallengesResponse> getProposedChallenges() {
-    return getChallenges(/* isOngoing= */ false);
+    return getChallenges(withIsOngoing(false));
   }
 
-  private ResponseEntity<GetChallengesResponse> getChallenges(boolean isOngoing) {
+  @GetMapping(path = "/groups/{groupId}/ongoing")
+  public ResponseEntity<GetChallengesResponse> getGroupOngoingChallenges(
+      @PathVariable(value = "groupId") String groupId) {
+    return getGroupChallenge(groupId, /* isOngoing= */ true);
+  }
+
+  @GetMapping(path = "/groups/{groupId}/proposed")
+  public ResponseEntity<GetChallengesResponse> getGroupProposedChallenges(
+      @PathVariable(value = "groupId") String groupId) {
+    return getGroupChallenge(groupId, /* isOngoing= */ false);
+  }
+
+  private ResponseEntity<GetChallengesResponse> getGroupChallenge(
+      @PathVariable("groupId") String groupId, boolean isOngoing) {
+    Optional<Group> optionalGroup = groupRepo.findById(groupId);
+    ResponseEntity<GetChallengesResponse> error = validateGroupAndReturnErrors(optionalGroup);
+    if (error != null) {
+      return error;
+    }
+    return getChallenges(withIsOngoingAndInGroup(isOngoing, optionalGroup.get()));
+  }
+
+  private ResponseEntity<GetChallengesResponse> validateGroupAndReturnErrors(
+      Optional<Group> optionalGroup) {
     GetChallengesResponse response = new GetChallengesResponse();
-    List<UserReturnedChallenge> userReturnedChallenges = userRepo
+    if (!optionalGroup.isPresent()) {
+      response.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+    if (!groupContainsCurrentUser(optionalGroup.get())) {
+      response.setError(new Error(GetChallengesResponse.NON_GROUP_MEMBER_ERROR));
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+    return null;
+  }
+
+  private ResponseEntity<GetChallengesResponse> getChallenges(
+      Predicate<UserChallengeStatus> userChallengeStatusesFilter) {
+    GetChallengesResponse response = new GetChallengesResponse();
+    List<UserChallenge> userChallenges = userRepo
         .findById(getCurrentUser().getUserId()).get()
         .getUserChallengeStatuses().stream()
-        .filter(userChallengeStatus -> userChallengeStatus.isOngoing() == isOngoing)
-        .map(this::getUserReturnedChallenge)
+        .filter(userChallengeStatusesFilter)
+        .map(this::constructUserChallenge)
         .collect(Collectors.toList());
-    response.setData(userReturnedChallenges);
+    response.setData(userChallenges);
     return ResponseEntity.ok(response);
   }
 
-  private UserReturnedChallenge getUserReturnedChallenge(UserChallengeStatus userChallengeStatus) {
+  private UserChallenge constructUserChallenge(UserChallengeStatus userChallengeStatus) {
     Optional<Challenge> challengeInfo = challengeRepo
         .findById(userChallengeStatus.getChallengeId());
     if (!challengeInfo.isPresent()) {
@@ -164,7 +214,7 @@ public class ChallengeController extends BaseController {
       throw new ServerErrorException(DANGLING_USER_CHALLENGE_LINK_ERROR,
           new Throwable(DANGLING_USER_CHALLENGE_LINK_ERROR));
     }
-    return UserReturnedChallenge.builder()
+    return UserChallenge.builder()
         .userChallengeStatus(userChallengeStatus)
         .challengeInfo(challengeInfo.get())
         .build();

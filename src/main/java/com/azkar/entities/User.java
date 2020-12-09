@@ -2,6 +2,7 @@ package com.azkar.entities;
 
 import com.azkar.entities.Challenge.SubChallenges;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -69,12 +70,19 @@ public class User extends EntityBase {
   @NoArgsConstructor
   @AllArgsConstructor
   @Setter
+  @JsonIgnoreProperties(value = {"ongoing"})
   public static class UserChallengeStatus {
 
+    @JsonIgnore
     @NonNull
     String challengeId;
     boolean isAccepted;
+    // This field is ignored using @JsonIgnoreProperties.
+    // Using @JsonIgnore does not work with boolean variables named isSomething.
     boolean isOngoing;
+    @JsonIgnore
+    @NonNull
+    String groupId;
     @NonNull
     List<SubChallenges> subChallenges;
   }

@@ -2,6 +2,7 @@ package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
@@ -25,6 +26,7 @@ import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,10 +57,8 @@ public class GroupChallengeTest extends TestBase {
 
   @Test
   public void addChallenge_multipleMembersInGroup_shouldSucceed() throws Exception {
-    User anotherGroupMember = UserFactory.getNewUser();
-    addNewUser(anotherGroupMember);
-    User nonGroupMember = UserFactory.getNewUser();
-    addNewUser(nonGroupMember);
+    User anotherGroupMember = getNewRegisteredUser();
+    User nonGroupMember = getNewRegisteredUser();
     addUserToGroup(anotherGroupMember, /* invitingUser= */ user1, validGroup.getId());
     Challenge challenge = ChallengeFactory.getNewChallenge(validGroup.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
@@ -255,6 +255,105 @@ public class GroupChallengeTest extends TestBase {
         startsWith(PROPOSED_CHALLENGE_NAME_PREFIX));
     assertThat(nonGroupMemberOngoingChallenges.getData().size(), is(0));
     assertThat(nonGroupMemberProposedChallenges.getData().size(), is(0));
+  }
+
+
+  @Test
+  public void getGroupChallenges_invalidGroup_shouldFail() throws Exception {
+    GetChallengesResponse expectedResponse = new GetChallengesResponse();
+    expectedResponse.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
+
+    performGetRequest(user1,
+        String.format("/challenges/groups/%s/ongoing/", invalidGroup.getId()))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(mapToJson(expectedResponse)));
+
+    performGetRequest(user1,
+        String.format("/challenges/groups/%s/proposed/", invalidGroup.getId()))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(mapToJson(expectedResponse)));
+  }
+
+  @Test
+  public void getGroupChallenges_nonGroupMember_shouldFail() throws Exception {
+    User nonGroupMember = getNewRegisteredUser();
+    GetChallengesResponse expectedResponse = new GetChallengesResponse();
+    expectedResponse.setError(new Error(GetChallengesResponse.NON_GROUP_MEMBER_ERROR));
+
+    performGetRequest(nonGroupMember,
+        String.format("/challenges/groups/%s/ongoing/", validGroup.getId()))
+        .andExpect(status().isForbidden())
+        .andExpect(content().json(mapToJson(expectedResponse)));
+
+    performGetRequest(nonGroupMember,
+        String.format("/challenges/groups/%s/proposed/", validGroup.getId()))
+        .andExpect(status().isForbidden())
+        .andExpect(content().json(mapToJson(expectedResponse)));
+  }
+
+  @Test
+  public void getGroupChallenges_oneOngoingOneProposedChallenge_shouldSucceed() throws Exception {
+    // TODO(issue#92): A hacky way to add ongoing challenge is to insert a challenge in group
+    //  with only one member. This should be changed when accept challenge functionality is added.
+    addNewValidChallenge(user1, ONGOING_CHALLENGE_NAME_PREFIX, validGroup.getId());
+
+    User groupMember = createNewGroupMember(validGroup);
+    addNewValidChallenge(groupMember, PROPOSED_CHALLENGE_NAME_PREFIX, validGroup.getId());
+
+    GetChallengesResponse groupOngoingChallenges = getGroupOngoingChallenges(user1,
+        validGroup.getId());
+    GetChallengesResponse groupProposedChallenges = getGroupProposedChallenges(user1,
+        validGroup.getId());
+
+    assertThat(
+        Iterables.getOnlyElement(groupOngoingChallenges.getData()).getChallengeInfo().getName(),
+        startsWith(ONGOING_CHALLENGE_NAME_PREFIX));
+    assertThat(
+        Iterables.getOnlyElement(groupProposedChallenges.getData()).getChallengeInfo().getName(),
+        startsWith(PROPOSED_CHALLENGE_NAME_PREFIX));
+  }
+
+  @Test
+  public void getGroupChallenges_multipleGroups_shouldSucceed() throws Exception {
+    Group anotherGroup = GroupFactory.getNewGroup(user1.getId());
+    groupRepo.save(anotherGroup);
+    addNewValidChallenge(user1, /* challengeNamePrefix= */"", validGroup.getId());
+
+    GetChallengesResponse validGroupOngoingChallenges = getGroupOngoingChallenges(user1,
+        validGroup.getId());
+    GetChallengesResponse anotherGroupOngoingChallenges = getGroupOngoingChallenges(user1,
+        anotherGroup.getId());
+
+    assertThat(validGroupOngoingChallenges.getData(), hasSize(1));
+    assertThat(anotherGroupOngoingChallenges.getData(), empty());
+  }
+
+  private User createNewGroupMember(Group group) throws Exception {
+    User newGroupMember = getNewRegisteredUser();
+    User groupAdmin = userRepo.findById(group.getAdminId()).get();
+    addUserToGroup(newGroupMember, groupAdmin, group.getId());
+    return newGroupMember;
+  }
+
+  private GetChallengesResponse getGroupOngoingChallenges(User user, String groupId)
+      throws Exception {
+    return getGroupChallenges(user, groupId, /* isOngoing= */ true);
+  }
+
+  private GetChallengesResponse getGroupProposedChallenges(User user, String groupId)
+      throws Exception {
+    return getGroupChallenges(user, groupId, /* isOngoing= */ false);
+  }
+
+  private GetChallengesResponse getGroupChallenges(User user, String groupId, boolean isOngoing)
+      throws Exception {
+    String challengeStatus = isOngoing ? "ongoing" : "proposed";
+    String responseJson =
+        performGetRequest(user,
+            String.format("/challenges/groups/%s/%s/", groupId, challengeStatus))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+    return mapFromJson(responseJson, GetChallengesResponse.class);
   }
 
   private GetChallengesResponse getUserOngoingChallenges(User user) throws Exception {
