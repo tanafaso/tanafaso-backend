@@ -5,7 +5,6 @@ import com.azkar.entities.User;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,8 +12,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
-  private static final int MAX_EXPECTED_NAME_MATCHES = 100;
-  private static final int MAX_USERNAME_GENERATION_TRIALS = 200;
   @Autowired
   private UserRepo userRepo;
   @Autowired
@@ -28,12 +25,18 @@ public class UserService {
     return null;
   }
 
-  public User buildNewUser(String email, String name) throws UsernameGenerationException {
+
+  public User buildNewUser(String email, String name) {
+    return buildNewUser(email, name, /*encodedPassword=*/null);
+  }
+
+  public User buildNewUser(String email, String name, String encodedPassword) {
     return User.builder()
         .id(new ObjectId().toString())
         .email(email)
-        .username(generateUsername(name.replace(" ", "")))
+        .username(generateUsername(name))
         .name(name)
+        .encodedPassword(encodedPassword)
         .build();
   }
 
@@ -48,14 +51,17 @@ public class UserService {
     return user;
   }
 
-  private String generateUsername(String name) throws UsernameGenerationException {
-    for (int i = 0; i < MAX_USERNAME_GENERATION_TRIALS; i++) {
-      int randomSuffix = ThreadLocalRandom.current().nextInt(1, MAX_EXPECTED_NAME_MATCHES);
-      String randomUsername = name + randomSuffix;
-      if (!userRepo.findByUsername(randomUsername).isPresent()) {
-        return randomUsername;
-      }
+  // Note: Only this generator should be able to create usernames with the special character '-',
+  // but users shouldn't be able to use this character while changing their usernames.
+  private String generateUsername(String name) {
+    name = name.replace(" ", "");
+    name = name.toLowerCase();
+
+    long usernameSuffix = userRepo.count();
+    while (userRepo.findByUsername(name + "-" + usernameSuffix).isPresent()) {
+      usernameSuffix++;
     }
-    throw new UsernameGenerationException();
+
+    return name + "-" + usernameSuffix;
   }
 }

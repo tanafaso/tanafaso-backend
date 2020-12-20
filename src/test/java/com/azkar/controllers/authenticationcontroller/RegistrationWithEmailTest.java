@@ -3,6 +3,7 @@ package com.azkar.controllers.authenticationcontroller;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -13,6 +14,7 @@ import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.factories.payload.requests.EmailRegistrationRequestBodyFactory;
 import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.authenticationcontroller.requests.EmailAuthenticationRequestBodyUtil;
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
@@ -86,7 +88,7 @@ public class RegistrationWithEmailTest extends TestBase {
     body.setEmail(emailWithoutAtSign);
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
-    expectedResponse.setError(new Error(EmailRegistrationRequestBody.EMAIL_NOT_VALID_ERROR));
+    expectedResponse.setError(new Error(EmailAuthenticationRequestBodyUtil.EMAIL_NOT_VALID_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(mapToJson(body))
         .andExpect(status().isBadRequest())
@@ -103,7 +105,7 @@ public class RegistrationWithEmailTest extends TestBase {
     body.setEmail(emailWithoutDot);
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
-    expectedResponse.setError(new Error(EmailRegistrationRequestBody.EMAIL_NOT_VALID_ERROR));
+    expectedResponse.setError(new Error(EmailAuthenticationRequestBodyUtil.EMAIL_NOT_VALID_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(mapToJson(body))
         .andExpect(status().isBadRequest())
@@ -121,7 +123,8 @@ public class RegistrationWithEmailTest extends TestBase {
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
-        .setError(new Error(EmailRegistrationRequestBody.PASSWORD_CHARACTERS_LESS_THAN_MIN_ERROR));
+        .setError(
+            new Error(EmailAuthenticationRequestBodyUtil.PASSWORD_CHARACTERS_LESS_THAN_MIN_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(mapToJson(body))
         .andExpect(status().isBadRequest())
@@ -138,7 +141,7 @@ public class RegistrationWithEmailTest extends TestBase {
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
-        .setError(new Error(EmailRegistrationRequestBody.NAME_EMPTY_ERROR));
+        .setError(new Error(EmailAuthenticationRequestBodyUtil.NAME_EMPTY_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(mapToJson(body))
         .andExpect(status().isBadRequest())
@@ -254,7 +257,9 @@ public class RegistrationWithEmailTest extends TestBase {
         .andExpect(content().json(mapToJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(0L));
     assertThat(userRepo.count(), equalTo(1L));
-    assertThat("User is added to the database", userRepo.existsByEmail(email));
+    User user = userRepo.findAll().get(0);
+    assertThat(user.getEmail(), equalTo(email));
+    assertThat(user.getUsername(), is(notNullValue()));
   }
 
   @Test

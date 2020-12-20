@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.azkar.entities.User;
+import com.azkar.factories.entities.UserFactory;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,7 +40,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 public abstract class TestBase {
 
   @Autowired
-  MockMvc mockMvc;
+  protected MockMvc mockMvc;
 
   @Autowired
   UserService userService;
@@ -59,12 +60,19 @@ public abstract class TestBase {
     userService.addNewUser(user);
   }
 
-  private String getAuthenticationToken(User user) throws UnsupportedEncodingException {
+  protected String getAuthenticationToken(User user) throws UnsupportedEncodingException {
     final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.MINUTES.toMillis(1);
     return JWT.create()
         .withSubject(user.getId())
         .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
         .sign(Algorithm.HMAC512(jwtSecret));
+  }
+
+  protected ResultActions performGetRequest(String token, String path) throws Exception {
+    MockHttpServletRequestBuilder requestBuilder = get(path);
+    requestBuilder.header(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+
+    return mockMvc.perform(requestBuilder);
   }
 
   protected ResultActions performGetRequest(User user, String path) throws Exception {
@@ -77,6 +85,10 @@ public abstract class TestBase {
 
   protected ResultActions performPostRequest(User user, String path, String body) throws Exception {
     return mockMvc.perform(addRequestBodyAndToken(post(path), user, body));
+  }
+
+  protected ResultActions performPutRequest(String path, String body) throws Exception {
+    return mockMvc.perform(addRequestBody(put(path), body));
   }
 
   protected ResultActions performPutRequest(User user, String path, String body) throws Exception {
@@ -96,10 +108,17 @@ public abstract class TestBase {
     }
 
     if (body != null) {
-      requestBuilder.contentType(MediaType.APPLICATION_JSON);
-      requestBuilder.content(body);
+      addRequestBody(requestBuilder, body);
     }
 
+    return requestBuilder;
+  }
+
+  private RequestBuilder addRequestBody(
+      MockHttpServletRequestBuilder requestBuilder,
+      String body) {
+    requestBuilder.contentType(MediaType.APPLICATION_JSON);
+    requestBuilder.content(body);
     return requestBuilder;
   }
 
@@ -117,5 +136,11 @@ public abstract class TestBase {
   protected <T> T mapFromJson(String json, Class<T> c) throws JsonProcessingException {
     ObjectMapper objectMapper = new ObjectMapper();
     return objectMapper.readValue(json, c);
+  }
+
+  protected User getNewRegisteredUser() {
+    User newUser = UserFactory.getNewUser();
+    addNewUser(newUser);
+    return newUser;
   }
 }

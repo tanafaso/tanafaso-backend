@@ -2,6 +2,7 @@ package com.azkar.entities;
 
 import com.azkar.entities.Challenge.SubChallenges;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -20,18 +21,20 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "users")
-@Builder
+@Builder(toBuilder = true)
 @Data
 public class User extends EntityBase {
 
   @Id
   private String id;
   private String email;
+  @JsonIgnore
   private String encodedPassword;
   @Indexed(name = "username_index", unique = true)
   @Default
   private List<Challenge> personalChallenges = new ArrayList<>();
   private String username;
+  @NonNull
   private String name;
   private UserFacebookData userFacebookData;
   @Default
@@ -67,12 +70,19 @@ public class User extends EntityBase {
   @NoArgsConstructor
   @AllArgsConstructor
   @Setter
+  @JsonIgnoreProperties(value = {"ongoing"})
   public static class UserChallengeStatus {
 
+    @JsonIgnore
     @NonNull
     String challengeId;
     boolean isAccepted;
+    // This field is ignored using @JsonIgnoreProperties.
+    // Using @JsonIgnore does not work with boolean variables named isSomething.
     boolean isOngoing;
+    @JsonIgnore
+    @NonNull
+    String groupId;
     @NonNull
     List<SubChallenges> subChallenges;
   }
@@ -86,6 +96,7 @@ public class User extends EntityBase {
     String userId;
     String accessToken;
     String email;
+    @NonNull
     String name;
   }
 }

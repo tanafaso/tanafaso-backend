@@ -1,4 +1,4 @@
-package com.azkar.controllers.usercontroller;
+package com.azkar.controllers.friendshipcontroller;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -112,6 +112,17 @@ public class FriendshipTest extends TestBase {
     expectedResponse.setError(new Error(AddFriendResponse.USER_NOT_FOUND_ERROR));
 
     sendFriendRequest(user1, unAuthenticatedUser)
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(mapToJson(expectedResponse)));
+  }
+
+  @Test
+  public void addFriend_addSelf_shouldNotSucceed() throws Exception {
+    AddFriendResponse expectedResponse = new AddFriendResponse();
+    expectedResponse.setError(new Error(AddFriendResponse.ADD_SELF_ERROR));
+
+    sendFriendRequest(user1, user1)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(expectedResponse)));
@@ -234,12 +245,14 @@ public class FriendshipTest extends TestBase {
     expectedUser1Friends.add(Friend.builder()
         .userId(user2.getId())
         .username(user2.getUsername())
+        .name(user2.getName())
         .isPending(false)
         .build()
     );
     expectedUser1Friends.add(Friend.builder()
         .userId(user3.getId())
         .username(user3.getUsername())
+        .name(user3.getName())
         .isPending(false)
         .build()
     );
@@ -259,6 +272,7 @@ public class FriendshipTest extends TestBase {
     expectedUser5Friends.add(Friend.builder()
         .userId(user1.getId())
         .username(user1.getUsername())
+        .name(user1.getName())
         .isPending(true)
         .build()
     );

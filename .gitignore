@@ -3,3 +3,6 @@ target/
 azkar.iml
 env.sh
 logs/
+LOGS_PATH_IS_UNDEFINED/
+.DS_Store
+/src/.DS_Store

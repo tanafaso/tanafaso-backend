@@ -3,12 +3,12 @@ package com.azkar.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -26,7 +26,7 @@ public class Friendship extends EntityBase {
 
   @Id
   private String id;
-  @NotNull
+  @NonNull
   @Indexed(name = "user_id_index")
   private String userId;
   @Default
@@ -44,10 +44,12 @@ public class Friendship extends EntityBase {
   @AllArgsConstructor
   public static class Friend {
 
-    @NotNull
+    @NonNull
     private String userId;
-    @NotNull
+    @NonNull
     private String username;
+    @NonNull
+    private String name;
     private boolean isPending;
   }
 }

@@ -1,12 +1,9 @@
 package com.azkar.configs.authentication;
 
-import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
-import com.azkar.services.UsernameGenerationException;
 import java.io.IOException;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
@@ -53,14 +50,8 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
     } else {
       logger.info(String.format("First successful Oauth for user: %s with email: %s", name, email));
 
-      try {
-        currentUser = userService.buildNewUser(email, name);
-        userService.addNewUser(currentUser);
-      } catch (UsernameGenerationException e) {
-        httpServletResponse
-            .sendError(SC_INTERNAL_SERVER_ERROR, "Cannot generate username for the new user.");
-        return;
-      }
+      currentUser = userService.buildNewUser(email, name);
+      userService.addNewUser(currentUser);
     }
     String token = jwtService.generateToken(currentUser);
     httpServletResponse.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);

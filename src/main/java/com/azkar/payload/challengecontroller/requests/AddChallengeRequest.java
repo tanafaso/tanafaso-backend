@@ -19,8 +19,6 @@ public class AddChallengeRequest extends RequestBodyBase {
   @VisibleForTesting
   public static final String PAST_EXPIRY_DATE_ERROR = "Expiry date is in the past.";
   @VisibleForTesting
-  public static final String GROUP_NOT_FOUND_ERROR = "The given group is not found.";
-  @VisibleForTesting
   public static final String MALFORMED_SUB_CHALLENGES_ERROR =
       "Sub challenges repetitions must be greater than 0.";
 
