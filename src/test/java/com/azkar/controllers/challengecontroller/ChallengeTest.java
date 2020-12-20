@@ -11,6 +11,7 @@ import com.azkar.entities.User.UserChallengeStatus;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
+import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserReturnedChallenge;
@@ -22,11 +23,11 @@ import org.springframework.http.MediaType;
 
 public class ChallengeTest extends TestBase {
 
-  User user;
-  Group group;
+  private User user;
+  private Group group;
 
   @Autowired
-  GroupRepo groupRepo;
+  private GroupRepo groupRepo;
 
   @Before
   public void setUp() {
@@ -38,15 +39,20 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void getChallenge_normalScenario_shouldSucceed() throws Exception {
-    UserReturnedChallenge userChallenge = createOngoingUserChallenge(user, group);
+    UserReturnedChallenge queriedChallenge = createOngoingUserChallenge(user, group);
+    UserReturnedChallenge anotherChallenge = createOngoingUserChallenge(user, group);
     GetChallengeResponse response = new GetChallengeResponse();
-    response.setData(userChallenge);
+    response.setData(queriedChallenge);
 
-    String path = String.format("/challenges/%s", userChallenge.getChallengeInfo().getId());
+    String path = getChallengePath(queriedChallenge.getChallengeInfo());
     performGetRequest(user, path)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(mapToJson(response)));
+  }
+
+  private String getChallengePath(Challenge challenge) {
+    return String.format("/challenges/%s", challenge.getId());
   }
 
   private UserReturnedChallenge createOngoingUserChallenge(User user, Group group)
@@ -63,8 +69,18 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void getChallenge_invalidChallengeId_shouldFail() throws Exception {
+    GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
+
     performGetRequest(user, "/challenges/invalidId")
-        .andExpect(status().isNotFound());
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(mapToJson(notFoundResponse)));
+  }
+
+  private GetChallengeResponse getGetChallengeNotFoundResponse() {
+    GetChallengeResponse expectedResponse = new GetChallengeResponse();
+    expectedResponse.setError(new Error(GetChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
+    return expectedResponse;
   }
 
   @Test
@@ -73,13 +89,17 @@ public class ChallengeTest extends TestBase {
     addChallenge(user, challenge);
     User nonGroupMember = UserFactory.getNewUser();
     addNewUser(nonGroupMember);
+    GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
 
-    String path = String.format("/challenges/%s", challenge.getId());
+    String path = getChallengePath(challenge);
     performGetRequest(nonGroupMember, path)
-        .andExpect(status().isNotFound());
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(mapToJson(notFoundResponse)));
   }
 
   private void addChallenge(User user, Challenge challenge) throws Exception {
-    performPostRequest(user, "/challenges", mapToJson(new AddChallengeRequest(challenge)));
+    performPostRequest(user, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
+        .andExpect(status().isOk());
   }
 }

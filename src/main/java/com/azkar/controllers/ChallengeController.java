@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -88,7 +89,8 @@ public class ChallengeController extends BaseController {
     GetChallengeResponse response = new GetChallengeResponse();
     Optional<UserChallengeStatus> userChallengeStatus = getCurrentUserChallengeStatus(challengeId);
     if (!userChallengeStatus.isPresent()) {
-      return ResponseEntity.notFound().build();
+      response.setError(new Error(GetChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     response.setData(getUserReturnedChallenge(userChallengeStatus.get()));
     return ResponseEntity.ok(response);
