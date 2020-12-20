@@ -21,6 +21,10 @@ public class GetChallengesResponse extends ResponseBase<List<UserChallenge>> {
   @AllArgsConstructor
   @Setter
   @Getter
+  /**
+   * Wrapper class for Challenge.
+   * It contains both the challenge info as well as info about user status in this challenge
+   */
   public static class UserChallenge {
 
     // NOTE: challengeInfo.id and userChallengeStatus.challengeId must be equal

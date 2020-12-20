@@ -101,8 +101,14 @@ public class ChallengeController extends BaseController {
       response.setError(new Error(GetChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
-    response.setData(getUserReturnedChallenge(userChallengeStatus.get()));
+    response.setData(getUserChallenge(userChallengeStatus.get()));
     return ResponseEntity.ok(response);
+  }
+
+  private UserChallenge getUserChallenge(UserChallengeStatus userChallengeStatus) {
+    Optional<Challenge> challenge = challengeRepo.findById(userChallengeStatus.getChallengeId());
+    return UserChallenge.builder().challengeInfo(challenge.get())
+        .userChallengeStatus(userChallengeStatus).build();
   }
 
   private Optional<UserChallengeStatus> getCurrentUserChallengeStatus(String challengeId) {

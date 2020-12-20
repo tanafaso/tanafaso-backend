@@ -14,7 +14,7 @@ import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
-import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserReturnedChallenge;
+import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserChallenge;
 import com.azkar.repos.GroupRepo;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,8 +39,8 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void getChallenge_normalScenario_shouldSucceed() throws Exception {
-    UserReturnedChallenge queriedChallenge = createOngoingUserChallenge(user, group);
-    UserReturnedChallenge anotherChallenge = createOngoingUserChallenge(user, group);
+    UserChallenge queriedChallenge = createOngoingUserChallenge(user, group);
+    UserChallenge anotherChallenge = createOngoingUserChallenge(user, group);
     GetChallengeResponse response = new GetChallengeResponse();
     response.setData(queriedChallenge);
 
@@ -55,7 +55,7 @@ public class ChallengeTest extends TestBase {
     return String.format("/challenges/%s", challenge.getId());
   }
 
-  private UserReturnedChallenge createOngoingUserChallenge(User user, Group group)
+  private UserChallenge createOngoingUserChallenge(User user, Group group)
       throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
     addChallenge(user, challenge);
@@ -63,8 +63,9 @@ public class ChallengeTest extends TestBase {
     UserChallengeStatus userChallengeStatus = new UserChallengeStatus(challenge.getId(),
         /* isAccepted= */true,
         challenge.isOngoing(),
+        group.getId(),
         challenge.getSubChallenges());
-    return new UserReturnedChallenge(challenge, userChallengeStatus);
+    return new UserChallenge(challenge, userChallengeStatus);
   }
 
   @Test
