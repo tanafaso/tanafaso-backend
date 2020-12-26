@@ -1,12 +1,8 @@
 package com.azkar;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
+import com.azkar.controllers.utils.AzkarApi;
+import com.azkar.controllers.utils.HttpClient;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.services.UserService;
@@ -14,24 +10,15 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.UnsupportedEncodingException;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -40,16 +27,13 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 public abstract class TestBase {
 
   @Autowired
-  protected MockMvc mockMvc;
-
+  public AzkarApi azkarApi;
+  @Autowired
+  protected HttpClient httpClient;
   @Autowired
   UserService userService;
-
   @Autowired
   MongoTemplate mongoTemplate;
-
-  @Value("${app.jwtSecret}")
-  String jwtSecret;
 
   @After
   public final void afterBase() {
@@ -60,66 +44,38 @@ public abstract class TestBase {
     userService.addNewUser(user);
   }
 
-  protected String getAuthenticationToken(User user) throws UnsupportedEncodingException {
-    final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.MINUTES.toMillis(1);
-    return JWT.create()
-        .withSubject(user.getId())
-        .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
-        .sign(Algorithm.HMAC512(jwtSecret));
-  }
-
+  //TODO(#118): All perform.*Request methods should be moved to httpClient.
+  // If you need to use any of these methods, a corresponding method to your use case should be
+  // created in AzkarApi and called instead or use HttpClient.perform.*Request if the use case
+  // should not belong to AzkarApi.
+  @Deprecated
   protected ResultActions performGetRequest(String token, String path) throws Exception {
-    MockHttpServletRequestBuilder requestBuilder = get(path);
-    requestBuilder.header(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-
-    return mockMvc.perform(requestBuilder);
+    return httpClient.performGetRequest(token, path);
   }
 
+  @Deprecated
   protected ResultActions performGetRequest(User user, String path) throws Exception {
-    return performGetRequest(user, path, /*body=*/null);
+    return httpClient.performGetRequest(user, path);
   }
 
-  protected ResultActions performGetRequest(User user, String path, String body) throws Exception {
-    return mockMvc.perform(addRequestBodyAndToken(get(path), user, body));
-  }
-
+  @Deprecated
   protected ResultActions performPostRequest(User user, String path, String body) throws Exception {
-    return mockMvc.perform(addRequestBodyAndToken(post(path), user, body));
+    return httpClient.performPostRequest(user, path, body);
   }
 
+  @Deprecated
   protected ResultActions performPutRequest(String path, String body) throws Exception {
-    return mockMvc.perform(addRequestBody(put(path), body));
+    return httpClient.performPutRequest(path, body);
   }
 
+  @Deprecated
   protected ResultActions performPutRequest(User user, String path, String body) throws Exception {
-    return mockMvc.perform(addRequestBodyAndToken(put(path), user, body));
+    return httpClient.performPutRequest(user, path, body);
   }
 
+  @Deprecated
   protected ResultActions performDeleteRequest(User user, String path) throws Exception {
-    return mockMvc.perform(addRequestBodyAndToken(delete(path), user, /*body=*/null));
-  }
-
-  private RequestBuilder addRequestBodyAndToken(
-      MockHttpServletRequestBuilder requestBuilder,
-      User user,
-      String body) throws UnsupportedEncodingException {
-    if (user != null) {
-      requestBuilder.header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user));
-    }
-
-    if (body != null) {
-      addRequestBody(requestBuilder, body);
-    }
-
-    return requestBuilder;
-  }
-
-  private RequestBuilder addRequestBody(
-      MockHttpServletRequestBuilder requestBuilder,
-      String body) {
-    requestBuilder.contentType(MediaType.APPLICATION_JSON);
-    requestBuilder.content(body);
-    return requestBuilder;
+    return httpClient.performDeleteRequest(user, path);
   }
 
   protected String mapToJson(Object obj) throws JsonProcessingException {

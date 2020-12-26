@@ -1,6 +1,5 @@
 package com.azkar.controllers.usercontroller;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,10 +10,8 @@ import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.exceptions.DefaultExceptionResponse;
 import com.azkar.payload.usercontroller.GetUserResponse;
 import org.junit.Test;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 public class UserRetrievalTest extends TestBase {
 
@@ -25,9 +22,7 @@ public class UserRetrievalTest extends TestBase {
     GetUserResponse expectedResponse = new GetUserResponse();
     expectedResponse.setData(user);
 
-    MockHttpServletRequestBuilder requestBuilder = get("/users/me");
-    requestBuilder.header(HttpHeaders.AUTHORIZATION, "Bearer " + getAuthenticationToken(user));
-    ResultActions result = mockMvc.perform(requestBuilder);
+    ResultActions result = azkarApi.getProfile(user);
 
     result
         .andExpect(status().isOk())

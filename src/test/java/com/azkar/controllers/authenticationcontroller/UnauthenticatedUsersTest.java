@@ -1,6 +1,5 @@
 package com.azkar.controllers.authenticationcontroller;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -10,7 +9,6 @@ import com.azkar.payload.authenticationcontroller.responses.UnauthenticatedRespo
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 public class UnauthenticatedUsersTest extends TestBase {
 
@@ -33,8 +31,7 @@ public class UnauthenticatedUsersTest extends TestBase {
     UnauthenticatedResponse expectedResponse = new UnauthenticatedResponse();
     expectedResponse.setError(new Error(UnauthenticatedResponse.AUTHENTICATION_ERROR));
 
-    MockHttpServletRequestBuilder requestBuilder = get("/users/me");
-    ResultActions result = mockMvc.perform(requestBuilder);
+    ResultActions result = azkarApi.getProfileWithoutAuthentication();
 
     result
         .andExpect(status().isUnauthorized())
