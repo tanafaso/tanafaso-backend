@@ -44,26 +44,36 @@ public abstract class TestBase {
     userService.addNewUser(user);
   }
 
+  //TODO(#118): All perform.*Request methods should be moved to httpClient.
+  // If you need to use any of these methods, a corresponding method to your use case should be
+  // created in AzkarApi and called instead or use HttpClient.perform.*Request if the use case
+  // should not belong to AzkarApi.
+  @Deprecated
   protected ResultActions performGetRequest(String token, String path) throws Exception {
     return httpClient.performGetRequest(token, path);
   }
 
+  @Deprecated
   protected ResultActions performGetRequest(User user, String path) throws Exception {
     return httpClient.performGetRequest(user, path);
   }
 
+  @Deprecated
   protected ResultActions performPostRequest(User user, String path, String body) throws Exception {
     return httpClient.performPostRequest(user, path, body);
   }
 
+  @Deprecated
   protected ResultActions performPutRequest(String path, String body) throws Exception {
     return httpClient.performPutRequest(path, body);
   }
 
+  @Deprecated
   protected ResultActions performPutRequest(User user, String path, String body) throws Exception {
     return httpClient.performPutRequest(user, path, body);
   }
 
+  @Deprecated
   protected ResultActions performDeleteRequest(User user, String path) throws Exception {
     return httpClient.performDeleteRequest(user, path);
   }
