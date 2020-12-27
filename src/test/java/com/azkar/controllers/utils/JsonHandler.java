@@ -13,14 +13,10 @@ public class JsonHandler {
   }
 
   public static String toJson(Object obj) throws JsonProcessingException {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setSerializationInclusion(Include.NON_NULL);
-    return objectMapper.writeValueAsString(obj);
+    return mapper.writeValueAsString(obj);
   }
 
   public static <T> T fromJson(String json, Class<T> c) throws JsonProcessingException {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setSerializationInclusion(Include.NON_NULL);
-    return objectMapper.readValue(json, c);
+    return mapper.readValue(json, c);
   }
 }
