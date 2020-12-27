@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
+import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.entities.User;
@@ -54,7 +55,7 @@ public class PersonalChallengeTest extends TestBase {
         .expiryDate(expiryDate)
         .motivation(CHALLENGE_MOTIVATION).build();
 
-    MvcResult result = performPostRequest(USER, "/challenges/personal", mapToJson(requestBody))
+    MvcResult result = azkarApi.createPersonalChallenge(USER, requestBody)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andReturn();
@@ -72,7 +73,8 @@ public class PersonalChallengeTest extends TestBase {
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setData(expectedChallenge);
     String actualResponseJson = result.getResponse().getContentAsString();
-    JSONAssert.assertEquals(mapToJson(expectedResponse), actualResponseJson, /* strict= */ false);
+    JSONAssert.assertEquals(JsonHandler.toJson(expectedResponse), actualResponseJson, /* strict= */
+        false);
   }
 
   @Test
@@ -85,10 +87,10 @@ public class PersonalChallengeTest extends TestBase {
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setError(new Error(AddPersonalChallengeRequest.PAST_EXPIRY_DATE_ERROR));
 
-    performPostRequest(USER, "/challenges/personal", mapToJson(requestBody))
+    azkarApi.createPersonalChallenge(USER, requestBody)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -100,9 +102,9 @@ public class PersonalChallengeTest extends TestBase {
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
 
-    performPostRequest(USER, "/challenges/personal", mapToJson(requestBody))
+    azkarApi.createPersonalChallenge(USER, requestBody)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 }

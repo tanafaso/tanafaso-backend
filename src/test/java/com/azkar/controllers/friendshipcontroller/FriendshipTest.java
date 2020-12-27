@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
+import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.User;
@@ -56,7 +57,7 @@ public class FriendshipTest extends TestBase {
     sendFriendRequest(user1, user2)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
@@ -78,7 +79,7 @@ public class FriendshipTest extends TestBase {
     sendFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
 
@@ -90,7 +91,7 @@ public class FriendshipTest extends TestBase {
     sendFriendRequest(user2, user1)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
@@ -114,7 +115,7 @@ public class FriendshipTest extends TestBase {
     sendFriendRequest(user1, unAuthenticatedUser)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -125,7 +126,7 @@ public class FriendshipTest extends TestBase {
     sendFriendRequest(user1, user1)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -136,7 +137,7 @@ public class FriendshipTest extends TestBase {
     acceptFriendRequest(user2, user1)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
@@ -159,7 +160,7 @@ public class FriendshipTest extends TestBase {
     rejectFriendRequest(user2, user1)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
@@ -176,7 +177,7 @@ public class FriendshipTest extends TestBase {
     acceptFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
@@ -194,12 +195,12 @@ public class FriendshipTest extends TestBase {
     acceptFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     rejectFriendRequest(user2, user1)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -213,22 +214,22 @@ public class FriendshipTest extends TestBase {
     acceptFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     rejectFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     acceptFriendRequest(user2, user1)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     rejectFriendRequest(user2, user1)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
 
@@ -263,7 +264,8 @@ public class FriendshipTest extends TestBase {
             .andReturn();
 
     GetFriendsResponse getUser1FriendsResponse =
-        mapFromJson(mvcResult.getResponse().getContentAsString(), GetFriendsResponse.class);
+        JsonHandler
+            .fromJson(mvcResult.getResponse().getContentAsString(), GetFriendsResponse.class);
 
     compareFriendshipList(getUser1FriendsResponse.getData().getFriends(), expectedUser1Friends);
 
@@ -281,7 +283,8 @@ public class FriendshipTest extends TestBase {
         .andReturn();
 
     GetFriendsResponse getUser5FriendsResponse =
-        mapFromJson(mvcResult.getResponse().getContentAsString(), GetFriendsResponse.class);
+        JsonHandler
+            .fromJson(mvcResult.getResponse().getContentAsString(), GetFriendsResponse.class);
 
     compareFriendshipList(getUser5FriendsResponse.getData().getFriends(), expectedUser5Friends);
 
@@ -295,7 +298,7 @@ public class FriendshipTest extends TestBase {
     deleteFriend(user1, user2)
         .andExpect(status().isNoContent())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     Friendship user1Friendship = friendshipRepo.findByUserId(user1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(user2.getId());
@@ -312,7 +315,7 @@ public class FriendshipTest extends TestBase {
     deleteFriend(user1, unAuthenticatedUser)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -324,7 +327,7 @@ public class FriendshipTest extends TestBase {
     deleteFriend(user1, user2)
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -335,7 +338,7 @@ public class FriendshipTest extends TestBase {
     deleteFriend(user1, user2)
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   private void compareFriendshipList(List<Friend> actual, List<Friend> expected) {
