@@ -32,6 +32,7 @@ public class PersonalChallengeTest extends TestBase {
   private static final int DATE_OFFSET_IN_SECONDS = 60 * 60;
   private static final ImmutableList<SubChallenges> SUB_CHALLENGES = ImmutableList.of(
       SubChallenges.builder()
+          .zekrId(1)
           .zekr("test-zekr")
           .originalRepetitions(4)
           .leftRepetitions(4)
