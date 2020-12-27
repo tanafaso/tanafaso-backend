@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
+import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.azkarcontroller.responses.GetAzkarResponse;
@@ -50,6 +51,6 @@ public class AzkarControllerTest extends TestBase {
     performGetRequest(user, "/azkar")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 }

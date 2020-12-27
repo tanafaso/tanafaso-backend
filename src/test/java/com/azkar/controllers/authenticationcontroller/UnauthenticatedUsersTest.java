@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
+import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.authenticationcontroller.responses.UnauthenticatedResponse;
 import org.junit.Test;
@@ -23,7 +24,7 @@ public class UnauthenticatedUsersTest extends TestBase {
     result
         .andExpect(status().isUnauthorized())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -36,6 +37,6 @@ public class UnauthenticatedUsersTest extends TestBase {
     result
         .andExpect(status().isUnauthorized())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 }

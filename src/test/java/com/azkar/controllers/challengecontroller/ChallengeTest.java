@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
+import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
@@ -12,7 +13,6 @@ import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
-import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserChallenge;
 import com.azkar.repos.GroupRepo;
@@ -44,21 +44,16 @@ public class ChallengeTest extends TestBase {
     GetChallengeResponse response = new GetChallengeResponse();
     response.setData(queriedChallenge);
 
-    String path = getChallengePath(queriedChallenge.getChallengeInfo());
-    performGetRequest(user, path)
+    azkarApi.getChallenge(user, queriedChallenge.getChallengeInfo().getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(response)));
-  }
-
-  private String getChallengePath(Challenge challenge) {
-    return String.format("/challenges/%s", challenge.getId());
+        .andExpect(content().json(JsonHandler.toJson(response)));
   }
 
   private UserChallenge createOngoingUserChallenge(User user, Group group)
       throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
-    addChallenge(user, challenge);
+    azkarApi.createChallenge(user, challenge).andExpect(status().isOk());
     challenge.setOngoing(true);
     UserChallengeStatus userChallengeStatus = new UserChallengeStatus(challenge.getId(),
         /* isAccepted= */true,
@@ -72,10 +67,10 @@ public class ChallengeTest extends TestBase {
   public void getChallenge_invalidChallengeId_shouldFail() throws Exception {
     GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
 
-    performGetRequest(user, "/challenges/invalidId")
+    azkarApi.getChallenge(user, "invalidChallengeId")
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(notFoundResponse)));
+        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
   }
 
   private GetChallengeResponse getGetChallengeNotFoundResponse() {
@@ -87,20 +82,14 @@ public class ChallengeTest extends TestBase {
   @Test
   public void getChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
-    addChallenge(user, challenge);
+    azkarApi.createChallenge(user, challenge).andExpect(status().isOk());
     User nonGroupMember = UserFactory.getNewUser();
     addNewUser(nonGroupMember);
     GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
 
-    String path = getChallengePath(challenge);
-    performGetRequest(nonGroupMember, path)
+    azkarApi.getChallenge(nonGroupMember, challenge.getId())
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(notFoundResponse)));
-  }
-
-  private void addChallenge(User user, Challenge challenge) throws Exception {
-    performPostRequest(user, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
-        .andExpect(status().isOk());
+        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
   }
 }

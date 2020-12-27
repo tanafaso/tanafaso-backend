@@ -3,13 +3,12 @@ package com.azkar;
 
 import com.azkar.controllers.utils.AzkarApi;
 import com.azkar.controllers.utils.HttpClient;
+import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.services.UserService;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.UnsupportedEncodingException;
 import org.junit.After;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,20 +77,10 @@ public abstract class TestBase {
     return httpClient.performDeleteRequest(user, path);
   }
 
-  protected String mapToJson(Object obj) throws JsonProcessingException {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setSerializationInclusion(Include.NON_NULL);
-    return objectMapper.writeValueAsString(obj);
-  }
-
-  protected <T> T mapFromJson(String json, TypeReference<T> c) throws JsonProcessingException {
-    ObjectMapper objectMapper = new ObjectMapper();
-    return objectMapper.readValue(json, c);
-  }
-
-  protected <T> T mapFromJson(String json, Class<T> c) throws JsonProcessingException {
-    ObjectMapper objectMapper = new ObjectMapper();
-    return objectMapper.readValue(json, c);
+  protected <T> T getResponse(ResultActions resultActions, Class<T> cls)
+      throws JsonProcessingException, UnsupportedEncodingException {
+    String jsonResponse = resultActions.andReturn().getResponse().getContentAsString();
+    return JsonHandler.fromJson(jsonResponse, cls);
   }
 
   protected User getNewRegisteredUser() {

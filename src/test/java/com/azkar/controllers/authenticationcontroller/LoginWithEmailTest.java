@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.azkar.TestBase;
 import com.azkar.controllers.AuthenticationController;
+import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.factories.payload.requests.EmailLoginRequestBodyFactory;
@@ -40,10 +41,10 @@ public class LoginWithEmailTest extends TestBase {
 
     EmailLoginRequestBody emailLoginRequestBody =
         EmailLoginRequestBody.builder().email(email).password(password).build();
-    MvcResult result = loginWithEmail(mapToJson(emailLoginRequestBody))
+    MvcResult result = loginWithEmail(JsonHandler.toJson(emailLoginRequestBody))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(new EmailLoginResponse())))
+        .andExpect(content().json(JsonHandler.toJson(new EmailLoginResponse())))
         .andReturn();
 
     // Validate the JWT returned by the API.
@@ -52,7 +53,7 @@ public class LoginWithEmailTest extends TestBase {
     performGetRequest(result.getResponse().getHeader(HttpHeaders.AUTHORIZATION), "/")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedHomeResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedHomeResponse)));
   }
 
   @Test
@@ -64,10 +65,10 @@ public class LoginWithEmailTest extends TestBase {
 
     EmailLoginResponse expectedResponse = new EmailLoginResponse();
     expectedResponse.setError(new Error(EmailAuthenticationRequestBodyUtil.EMAIL_NOT_VALID_ERROR));
-    loginWithEmail(mapToJson(body))
+    loginWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -79,10 +80,10 @@ public class LoginWithEmailTest extends TestBase {
 
     EmailLoginResponse expectedResponse = new EmailLoginResponse();
     expectedResponse.setError(new Error(EmailAuthenticationRequestBodyUtil.EMAIL_NOT_VALID_ERROR));
-    loginWithEmail(mapToJson(body))
+    loginWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -96,10 +97,10 @@ public class LoginWithEmailTest extends TestBase {
     expectedResponse
         .setError(
             new Error(EmailAuthenticationRequestBodyUtil.PASSWORD_CHARACTERS_LESS_THAN_MIN_ERROR));
-    loginWithEmail(mapToJson(body))
+    loginWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -111,10 +112,10 @@ public class LoginWithEmailTest extends TestBase {
     EmailLoginResponse expectedResponse = new EmailLoginResponse();
     expectedResponse
         .setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
-    loginWithEmail(mapToJson(bodyMissingEmailField))
+    loginWithEmail(JsonHandler.toJson(bodyMissingEmailField))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -124,10 +125,11 @@ public class LoginWithEmailTest extends TestBase {
         EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
 
     performPutRequest(
-        AuthenticationController.REGISTER_WITH_EMAIL_PATH, mapToJson(emailRegistrationRequestBody))
+        AuthenticationController.REGISTER_WITH_EMAIL_PATH,
+        JsonHandler.toJson(emailRegistrationRequestBody))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(new EmailRegistrationResponse())));
+        .andExpect(content().json(JsonHandler.toJson(new EmailRegistrationResponse())));
 
     EmailLoginRequestBody emailLoginRequestBody =
         EmailLoginRequestBody.builder().email(emailRegistrationRequestBody.getEmail())
@@ -135,10 +137,10 @@ public class LoginWithEmailTest extends TestBase {
     EmailLoginResponse expectedResponse = new EmailLoginResponse();
     expectedResponse.setError(new Error(EmailLoginResponse.EMAIL_NOT_VERIFIED_ERROR));
 
-    loginWithEmail(mapToJson(emailLoginRequestBody))
+    loginWithEmail(JsonHandler.toJson(emailLoginRequestBody))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   private ResultActions loginWithEmail(String body) throws Exception {

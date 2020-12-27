@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
+import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.entities.Group;
@@ -70,10 +71,9 @@ public class GroupChallengeTest extends TestBase {
         .build()
     );
 
-    performPostRequest(user1, "/challenges", /* body= */
-        mapToJson(new AddChallengeRequest(challenge)))
+    azkarApi.createChallenge(user1, challenge)
         .andExpect(status().isOk())
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
         .getUserChallengeStatuses();
@@ -101,9 +101,9 @@ public class GroupChallengeTest extends TestBase {
         .build()
     );
 
-    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
+    azkarApi.createChallenge(user1, challenge)
         .andExpect(status().isOk())
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
         .getUserChallengeStatuses();
@@ -127,9 +127,9 @@ public class GroupChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setError(new Error(AddChallengeRequest.MALFORMED_SUB_CHALLENGES_ERROR));
 
-    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
+    azkarApi.createChallenge(user1, challenge)
         .andExpect(status().isBadRequest())
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
         .getUserChallengeStatuses();
@@ -142,9 +142,9 @@ public class GroupChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setError(new Error(AddChallengeResponse.GROUP_NOT_FOUND_ERROR));
 
-    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
+    azkarApi.createChallenge(user1, challenge)
         .andExpect(status().isBadRequest())
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
         .getUserChallengeStatuses();
@@ -159,11 +159,9 @@ public class GroupChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setError(new Error(AddChallengeResponse.NOT_GROUP_MEMBER_ERROR));
 
-    performPostRequest(nonGroupMember,
-        "/challenges",
-        mapToJson(new AddChallengeRequest(challenge)))
+    azkarApi.createChallenge(nonGroupMember, challenge)
         .andExpect(status().isForbidden())
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<UserChallengeStatus> userChallenges = userRepo.findById(nonGroupMember.getId())
         .get()
@@ -185,9 +183,9 @@ public class GroupChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
 
-    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
+    azkarApi.createChallenge(user1, challenge)
         .andExpect(status().isBadRequest())
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
         .getUserChallengeStatuses();
@@ -211,9 +209,9 @@ public class GroupChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setError(new Error(AddChallengeRequest.PAST_EXPIRY_DATE_ERROR));
 
-    performPostRequest(user1, "/challenges", mapToJson(new AddChallengeRequest(challenge)))
+    azkarApi.createChallenge(user1, challenge)
         .andExpect(status().isBadRequest())
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
         .getUserChallengeStatuses();
@@ -263,15 +261,13 @@ public class GroupChallengeTest extends TestBase {
     GetChallengesResponse expectedResponse = new GetChallengesResponse();
     expectedResponse.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
 
-    performGetRequest(user1,
-        String.format("/challenges/groups/%s/ongoing/", invalidGroup.getId()))
+    azkarApi.getOngoingChallenges(user1, invalidGroup.getId())
         .andExpect(status().isBadRequest())
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    performGetRequest(user1,
-        String.format("/challenges/groups/%s/proposed/", invalidGroup.getId()))
+    azkarApi.getProposedChallenges(user1, invalidGroup.getId())
         .andExpect(status().isBadRequest())
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -280,15 +276,13 @@ public class GroupChallengeTest extends TestBase {
     GetChallengesResponse expectedResponse = new GetChallengesResponse();
     expectedResponse.setError(new Error(GetChallengesResponse.NON_GROUP_MEMBER_ERROR));
 
-    performGetRequest(nonGroupMember,
-        String.format("/challenges/groups/%s/ongoing/", validGroup.getId()))
+    azkarApi.getOngoingChallenges(nonGroupMember, validGroup.getId())
         .andExpect(status().isForbidden())
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    performGetRequest(nonGroupMember,
-        String.format("/challenges/groups/%s/proposed/", validGroup.getId()))
+    azkarApi.getProposedChallenges(nonGroupMember, validGroup.getId())
         .andExpect(status().isForbidden())
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -337,39 +331,26 @@ public class GroupChallengeTest extends TestBase {
 
   private GetChallengesResponse getGroupOngoingChallenges(User user, String groupId)
       throws Exception {
-    return getGroupChallenges(user, groupId, /* isOngoing= */ true);
+    ResultActions resultActions = azkarApi.getOngoingChallenges(user, groupId)
+        .andExpect(status().isOk());
+    return getResponse(resultActions, GetChallengesResponse.class);
   }
 
   private GetChallengesResponse getGroupProposedChallenges(User user, String groupId)
       throws Exception {
-    return getGroupChallenges(user, groupId, /* isOngoing= */ false);
-  }
-
-  private GetChallengesResponse getGroupChallenges(User user, String groupId, boolean isOngoing)
-      throws Exception {
-    String challengeStatus = isOngoing ? "ongoing" : "proposed";
-    String responseJson =
-        performGetRequest(user,
-            String.format("/challenges/groups/%s/%s/", groupId, challengeStatus))
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString();
-    return mapFromJson(responseJson, GetChallengesResponse.class);
+    ResultActions resultActions = azkarApi.getProposedChallenges(user, groupId)
+        .andExpect(status().isOk());
+    return getResponse(resultActions, GetChallengesResponse.class);
   }
 
   private GetChallengesResponse getUserOngoingChallenges(User user) throws Exception {
-    return getUserChallenges(user, /* isOngoing= */true);
+    ResultActions resultActions = azkarApi.getOngoingChallenges(user).andExpect(status().isOk());
+    return getResponse(resultActions, GetChallengesResponse.class);
   }
 
   private GetChallengesResponse getUserProposedChallenges(User user) throws Exception {
-    return getUserChallenges(user, /* isOngoing= */false);
-  }
-
-  private GetChallengesResponse getUserChallenges(User user, boolean isOngoing) throws Exception {
-    String responseJson = performGetRequest(user,
-        "/challenges/" + (isOngoing ? "ongoing" : "proposed"))
-        .andExpect(status().isOk())
-        .andReturn().getResponse().getContentAsString();
-    return mapFromJson(responseJson, GetChallengesResponse.class);
+    ResultActions resultActions = azkarApi.getProposedChallenges(user).andExpect(status().isOk());
+    return getResponse(resultActions, GetChallengesResponse.class);
   }
 
   // TODO: Reuse existing functions in GroupMembershipTest.
@@ -395,7 +376,6 @@ public class GroupChallengeTest extends TestBase {
       String groupId)
       throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(challengeNamePrefix, groupId);
-    return performPostRequest(creatingUser, "/challenges",
-        mapToJson(new AddChallengeRequest(challenge)));
+    return azkarApi.createChallenge(creatingUser, challenge);
   }
 }

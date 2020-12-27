@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.azkar.TestBase;
 import com.azkar.controllers.AuthenticationController;
+import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.RegistrationEmailConfirmationState;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
@@ -48,10 +49,10 @@ public class RegistrationWithEmailTest extends TestBase {
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
 
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
-    registerWithEmail(mapToJson(body))
+    registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     RegistrationEmailConfirmationState state =
         Iterators.getOnlyElement(registrationEmailConfirmationStateRepo.findAll().iterator());
@@ -70,10 +71,10 @@ public class RegistrationWithEmailTest extends TestBase {
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
 
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
-    registerWithEmail(mapToJson(body))
+    registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     RegistrationEmailConfirmationState state = Iterators
         .getOnlyElement(registrationEmailConfirmationStateRepo.findAll().iterator());
@@ -90,10 +91,10 @@ public class RegistrationWithEmailTest extends TestBase {
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse.setError(new Error(EmailAuthenticationRequestBodyUtil.EMAIL_NOT_VALID_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
-    registerWithEmail(mapToJson(body))
+    registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
   }
 
@@ -107,10 +108,10 @@ public class RegistrationWithEmailTest extends TestBase {
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse.setError(new Error(EmailAuthenticationRequestBodyUtil.EMAIL_NOT_VALID_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
-    registerWithEmail(mapToJson(body))
+    registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
   }
 
@@ -126,10 +127,10 @@ public class RegistrationWithEmailTest extends TestBase {
         .setError(
             new Error(EmailAuthenticationRequestBodyUtil.PASSWORD_CHARACTERS_LESS_THAN_MIN_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
-    registerWithEmail(mapToJson(body))
+    registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
   }
 
@@ -143,10 +144,10 @@ public class RegistrationWithEmailTest extends TestBase {
     expectedResponse
         .setError(new Error(EmailAuthenticationRequestBodyUtil.NAME_EMPTY_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
-    registerWithEmail(mapToJson(body))
+    registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
   }
 
@@ -160,10 +161,10 @@ public class RegistrationWithEmailTest extends TestBase {
     expectedResponse
         .setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
-    registerWithEmail(mapToJson(bodyMissingNameField))
+    registerWithEmail(JsonHandler.toJson(bodyMissingNameField))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
   }
 
@@ -175,19 +176,19 @@ public class RegistrationWithEmailTest extends TestBase {
 
     EmailRegistrationResponse expectedResponse1 = new EmailRegistrationResponse();
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
-    registerWithEmail(mapToJson(body))
+    registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse1)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse1)));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(1L));
 
     EmailRegistrationResponse expectedResponse2 = new EmailRegistrationResponse();
     expectedResponse2
         .setError(new Error(EmailRegistrationResponse.PIN_ALREADY_SENT_TO_USER_ERROR));
-    registerWithEmail(mapToJson(body))
+    registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse2)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse2)));
 
     assertThat(registrationEmailConfirmationStateRepo.count(), is(1L));
   }
@@ -206,10 +207,10 @@ public class RegistrationWithEmailTest extends TestBase {
 
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     assertThat(userRepo.count(), is(1L));
-    registerWithEmail(mapToJson(body))
+    registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     assertThat(userRepo.count(), is(1L));
   }
@@ -229,10 +230,10 @@ public class RegistrationWithEmailTest extends TestBase {
 
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     assertThat(userRepo.count(), is(1L));
-    registerWithEmail(mapToJson(body))
+    registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     assertThat(userRepo.count(), is(1L));
   }
@@ -251,10 +252,10 @@ public class RegistrationWithEmailTest extends TestBase {
         .build();
     EmailVerificationResponse expectedResponse = new EmailVerificationResponse();
 
-    verifyEmail(mapToJson(body))
+    verifyEmail(JsonHandler.toJson(body))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(0L));
     assertThat(userRepo.count(), equalTo(1L));
     User user = userRepo.findAll().get(0);
@@ -273,15 +274,15 @@ public class RegistrationWithEmailTest extends TestBase {
         .pin(pin)
         .build();
     // Verify for the first time.
-    verifyEmail(mapToJson(body)).andExpect(status().isOk());
+    verifyEmail(JsonHandler.toJson(body)).andExpect(status().isOk());
     EmailVerificationResponse expectedResponse = new EmailVerificationResponse();
     expectedResponse.setError(new Error(EmailVerificationResponse.EMAIL_ALREADY_VERIFIED_ERROR));
 
     // Verify again
-    verifyEmail(mapToJson(body))
+    verifyEmail(JsonHandler.toJson(body))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(0L));
     assertThat(userRepo.count(), equalTo(1L));
   }
@@ -302,10 +303,10 @@ public class RegistrationWithEmailTest extends TestBase {
     EmailVerificationResponse expectedResponse = new EmailVerificationResponse();
     expectedResponse.setError(new Error(EmailVerificationResponse.VERIFICATION_ERROR));
 
-    verifyEmail(mapToJson(body))
+    verifyEmail(JsonHandler.toJson(body))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(1L));
     assertThat(userRepo.count(), equalTo(0L));
   }
@@ -326,10 +327,10 @@ public class RegistrationWithEmailTest extends TestBase {
     EmailVerificationResponse expectedResponse = new EmailVerificationResponse();
     expectedResponse.setError(new Error(EmailVerificationResponse.VERIFICATION_ERROR));
 
-    verifyEmail(mapToJson(body))
+    verifyEmail(JsonHandler.toJson(body))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(mapToJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(1L));
     assertThat(userRepo.count(), equalTo(0L));
   }
