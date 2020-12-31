@@ -18,7 +18,10 @@ public class GetChallengesResponse extends ResponseBase<List<UserChallenge>> {
 
   /**
    * Wrapper class for Challenge. It contains both the challenge info as well as info about user
-   * status in this challenge
+   * status in this challenge.
+   * All info about user's progress (such as leftRepetitions for the zekr) in the challenge should
+   * be read from userChallengeStatus. There are no guarantees that this value is consistent if
+   * read from challengeInfo.
    */
   @Builder(toBuilder = true)
   @NoArgsConstructor

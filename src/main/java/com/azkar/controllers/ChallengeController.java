@@ -1,17 +1,21 @@
 package com.azkar.controllers;
 
 import com.azkar.entities.Challenge;
+import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserChallengeStatus;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest.ModifiedSubChallenge;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserChallenge;
+import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.GroupRepo;
@@ -33,6 +37,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -85,7 +90,7 @@ public class ChallengeController extends BaseController {
         .createdAt(Instant.now().getEpochSecond())
         .modifiedAt(Instant.now().getEpochSecond())
         .build();
-    User loggedInUser = userRepo.findById(getCurrentUser().getUserId()).get();
+    User loggedInUser = getCurrentUser(userRepo);
     loggedInUser.getPersonalChallenges().add(challenge);
     userRepo.save(loggedInUser);
     response.setData(challenge);
@@ -96,7 +101,8 @@ public class ChallengeController extends BaseController {
   public ResponseEntity<GetChallengeResponse> getChallenge(
       @PathVariable(value = "challengeId") String challengeId) {
     GetChallengeResponse response = new GetChallengeResponse();
-    Optional<UserChallengeStatus> userChallengeStatus = getCurrentUserChallengeStatus(challengeId);
+    Optional<UserChallengeStatus> userChallengeStatus = getUserChallengeStatus(
+        getCurrentUser(userRepo), challengeId);
     if (!userChallengeStatus.isPresent()) {
       response.setError(new Error(GetChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
@@ -111,9 +117,8 @@ public class ChallengeController extends BaseController {
         .userChallengeStatus(userChallengeStatus).build();
   }
 
-  private Optional<UserChallengeStatus> getCurrentUserChallengeStatus(String challengeId) {
-    User currentUser = userRepo.findById(getCurrentUser().getUserId()).get();
-    return currentUser.getUserChallengeStatuses()
+  private Optional<UserChallengeStatus> getUserChallengeStatus(User user, String challengeId) {
+    return user.getUserChallengeStatuses()
         .stream()
         .filter(challengeStatus -> challengeStatus.getChallengeId().equals(challengeId))
         .findFirst();
@@ -222,8 +227,7 @@ public class ChallengeController extends BaseController {
   private ResponseEntity<GetChallengesResponse> getChallenges(
       Predicate<UserChallengeStatus> userChallengeStatusesFilter) {
     GetChallengesResponse response = new GetChallengesResponse();
-    List<UserChallenge> userChallenges = userRepo
-        .findById(getCurrentUser().getUserId()).get()
+    List<UserChallenge> userChallenges = getCurrentUser(userRepo)
         .getUserChallengeStatuses().stream()
         .filter(userChallengeStatusesFilter)
         .map(this::constructUserChallenge)
@@ -246,5 +250,65 @@ public class ChallengeController extends BaseController {
         .userChallengeStatus(userChallengeStatus)
         .challengeInfo(challengeInfo.get())
         .build();
+  }
+
+  @PutMapping(path = "/{challengeId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<UpdateChallengeResponse> updateChallenge(
+      @PathVariable(value = "challengeId") String challengeId,
+      @RequestBody UpdateChallengeRequest request) {
+    UpdateChallengeResponse response = new UpdateChallengeResponse();
+    User currentUser = getCurrentUser(userRepo);
+    Optional<UserChallengeStatus> currentUserChallenge = getUserChallengeStatus(currentUser,
+        challengeId);
+    if (!currentUserChallenge.isPresent()) {
+      return ResponseEntity.badRequest().build();
+    }
+
+    List<SubChallenges> oldSubChallenges = currentUserChallenge.get().getSubChallenges();
+    List<ModifiedSubChallenge> allModifiedSubChallenges = request.getAllModifiedSubChallenges();
+    for (ModifiedSubChallenge modifiedSubChallenge : allModifiedSubChallenges) {
+      Optional<SubChallenges> subChallenge = findSubChallenge(oldSubChallenges,
+          modifiedSubChallenge);
+      if (!subChallenge.isPresent()) {
+        response.setError(new Error(UpdateChallengeResponse.NON_EXISTENT_SUB_CHALLENGE_ERROR));
+        return ResponseEntity.unprocessableEntity().body(response);
+      }
+      Optional<String> errorMessage = updateSubChallenge(subChallenge.get(), modifiedSubChallenge);
+      if (errorMessage.isPresent()) {
+        response.setError(new Error(errorMessage.get()));
+        return ResponseEntity.unprocessableEntity().body(response);
+      }
+    }
+    userRepo.save(currentUser);
+    return ResponseEntity.ok().build();
+  }
+
+  private Optional<SubChallenges> findSubChallenge(List<SubChallenges> oldSubChallenges,
+      ModifiedSubChallenge modifiedSubChallenge) {
+    for (SubChallenges subChallenge : oldSubChallenges) {
+      if (subChallenge.getZekrId() == modifiedSubChallenge.getZekrId()) {
+        return Optional.of(subChallenge);
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Tries updating the subChallenge as requested in modifiedSubChallenge. If an error occurred the
+   * function returns a String with the error message, and returns empty object otherwise.
+   */
+  private Optional<String> updateSubChallenge(SubChallenges subChallenge,
+      ModifiedSubChallenge modifiedSubChallenge) {
+    int newLeftRepetitions = modifiedSubChallenge.getNewLeftRepetitions();
+    if (newLeftRepetitions > subChallenge.getLeftRepetitions()) {
+      return Optional.of(UpdateChallengeResponse.INCREMENTING_LEFT_REPETITIONS_ERROR);
+    }
+    if (newLeftRepetitions < 0) {
+      logger.warn("Received UpdateChallenge request with negative leftRepetition value of: "
+          + newLeftRepetitions);
+      newLeftRepetitions = 0;
+    }
+    subChallenge.setLeftRepetitions(newLeftRepetitions);
+    return Optional.empty();
   }
 }
