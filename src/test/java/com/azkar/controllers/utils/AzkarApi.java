@@ -4,6 +4,7 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.User;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.test.web.servlet.ResultActions;
@@ -55,5 +56,11 @@ public class AzkarApi {
   public ResultActions getProposedChallenges(User user) throws Exception {
     return httpClient
         .performGetRequest(user, "/challenges/proposed/");
+  }
+
+  public ResultActions updateChallenge(User user, String challengeId,
+      UpdateChallengeRequest request) throws Exception {
+    return httpClient.performPutRequest(user, String.format("/challenges/%s", challengeId),
+        JsonHandler.toJson(request));
   }
 }

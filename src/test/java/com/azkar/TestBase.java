@@ -1,10 +1,14 @@
 package com.azkar;
 
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.azkar.controllers.utils.AzkarApi;
 import com.azkar.controllers.utils.HttpClient;
 import com.azkar.controllers.utils.JsonHandler;
+import com.azkar.entities.Challenge;
 import com.azkar.entities.User;
+import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -87,5 +91,11 @@ public abstract class TestBase {
     User newUser = UserFactory.getNewUser();
     addNewUser(newUser);
     return newUser;
+  }
+
+  protected Challenge createNewChallenge(User user, String groupId) throws Exception {
+    Challenge challenge = ChallengeFactory.getNewChallenge(groupId);
+    azkarApi.createChallenge(user, challenge).andExpect(status().isOk());
+    return challenge;
   }
 }
