@@ -63,4 +63,8 @@ public class AzkarApi {
     return httpClient.performPutRequest(user, String.format("/challenges/%s", challengeId),
         JsonHandler.toJson(request));
   }
+
+  public ResultActions getPersonalChallenges(User user) throws Exception {
+    return httpClient.performGetRequest(user, "/challenges/personal");
+  }
 }

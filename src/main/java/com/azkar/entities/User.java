@@ -74,14 +74,12 @@ public class User extends EntityBase {
   public static class UserChallengeStatus {
 
     @JsonIgnore
-    @NonNull
     String challengeId;
     boolean isAccepted;
     // This field is ignored using @JsonIgnoreProperties.
     // Using @JsonIgnore does not work with boolean variables named isSomething.
     boolean isOngoing;
     @JsonIgnore
-    @NonNull
     String groupId;
     @NonNull
     List<SubChallenges> subChallenges;
