@@ -34,7 +34,7 @@ public class AddChallengeRequest extends RequestBodyBase {
       throw new BadRequestException(PAST_EXPIRY_DATE_ERROR);
     }
     challenge.getSubChallenges().forEach(subChallenges -> {
-      if (subChallenges.getLeftRepetitions() <= 0) {
+      if (subChallenges.getOriginalRepetitions() <= 0) {
         throw new BadRequestException(MALFORMED_SUB_CHALLENGES_ERROR);
       }
     });

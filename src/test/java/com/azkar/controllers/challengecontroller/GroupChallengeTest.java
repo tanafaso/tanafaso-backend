@@ -116,7 +116,7 @@ public class GroupChallengeTest extends TestBase {
   @Test
   public void addChallenge_zeroSubChallengeRepetitions_shouldNotSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
-    SubChallenges zeroRepetitionSubChallenge = SubChallenges.builder().zekrId(1).zekr("zekr")
+    SubChallenges zeroRepetitionSubChallenge = SubChallenges.builder().zekrId("1").zekr("zekr")
         .build();
     Challenge challenge = Challenge.builder()
         .name(ChallengeFactory.CHALLENGE_NAME_BASE)

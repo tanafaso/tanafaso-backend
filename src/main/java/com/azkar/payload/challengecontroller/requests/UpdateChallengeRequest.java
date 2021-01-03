@@ -21,7 +21,7 @@ public class UpdateChallengeRequest {
   @AllArgsConstructor
   public static class ModifiedSubChallenge {
 
-    int zekrId;
+    String zekrId;
     int newLeftRepetitions;
   }
 }

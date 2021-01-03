@@ -11,15 +11,13 @@ public class ChallengeFactory {
   public final static String CHALLENGE_MOTIVATION = "challenge_motivation";
   public final static long EXPIRY_DATE_OFFSET = 60 * 60;
   public final static SubChallenges SUB_CHALLENGE_1 = SubChallenges.builder()
-      .zekrId(1)
+      .zekrId("1")
       .zekr("zekr")
-      .leftRepetitions(3)
       .originalRepetitions(3)
       .build();
   public final static SubChallenges SUB_CHALLENGE_2 = SubChallenges.builder()
-      .zekrId(2)
+      .zekrId("2")
       .zekr("zekr2")
-      .leftRepetitions(5)
       .originalRepetitions(5)
       .build();
   private static int challengesRequested = 0;

@@ -9,6 +9,7 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserChallengeStatus;
+import com.azkar.entities.User.UserSubChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
@@ -59,7 +60,7 @@ public class ChallengeTest extends TestBase {
         /* isAccepted= */true,
         challenge.isOngoing(),
         group.getId(),
-        challenge.getSubChallenges());
+        UserSubChallenge.fromSubChallengesCollection(challenge.getSubChallenges()));
     return new UserChallenge(challenge, userChallengeStatus);
   }
 
