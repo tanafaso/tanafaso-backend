@@ -1,10 +1,10 @@
 package com.azkar.controllers;
 
 import com.azkar.entities.Challenge;
-import com.azkar.entities.Challenge.SubChallenges;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserChallengeStatus;
+import com.azkar.entities.User.UserSubChallenge;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
@@ -110,7 +110,8 @@ public class ChallengeController extends BaseController {
   private UserChallenge constructPersonalUserChallengeFromChallenge(Challenge challenge) {
     UserChallengeStatus userChallengeStatus = UserChallengeStatus.builder()
         .challengeId(challenge.getId()).isAccepted(true).isOngoing(true)
-        .subChallenges(challenge.getSubChallenges()).build();
+        .subChallenges(UserSubChallenge.fromSubChallengesCollection(challenge.getSubChallenges()))
+        .build();
     return new UserChallenge(challenge, userChallengeStatus);
   }
 
@@ -188,7 +189,7 @@ public class ChallengeController extends BaseController {
     UserChallengeStatus userChallengeStatus = UserChallengeStatus.builder()
         .challengeId(challenge.getId())
         .isAccepted(user.getId().equals(getCurrentUser().getUserId()))
-        .subChallenges(challenge.getSubChallenges())
+        .subChallenges(UserSubChallenge.fromSubChallengesCollection(challenge.getSubChallenges()))
         .isOngoing(challenge.isOngoing())
         .groupId(challenge.getGroupId())
         .build();
@@ -281,10 +282,10 @@ public class ChallengeController extends BaseController {
       return ResponseEntity.badRequest().build();
     }
 
-    List<SubChallenges> oldSubChallenges = currentUserChallenge.get().getSubChallenges();
+    List<UserSubChallenge> oldSubChallenges = currentUserChallenge.get().getSubChallenges();
     List<ModifiedSubChallenge> allModifiedSubChallenges = request.getAllModifiedSubChallenges();
     for (ModifiedSubChallenge modifiedSubChallenge : allModifiedSubChallenges) {
-      Optional<SubChallenges> subChallenge = findSubChallenge(oldSubChallenges,
+      Optional<UserSubChallenge> subChallenge = findSubChallenge(oldSubChallenges,
           modifiedSubChallenge);
       if (!subChallenge.isPresent()) {
         response.setError(new Error(UpdateChallengeResponse.NON_EXISTENT_SUB_CHALLENGE_ERROR));
@@ -300,9 +301,9 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok().build();
   }
 
-  private Optional<SubChallenges> findSubChallenge(List<SubChallenges> oldSubChallenges,
+  private Optional<UserSubChallenge> findSubChallenge(List<UserSubChallenge> oldSubChallenges,
       ModifiedSubChallenge modifiedSubChallenge) {
-    for (SubChallenges subChallenge : oldSubChallenges) {
+    for (UserSubChallenge subChallenge : oldSubChallenges) {
       if (subChallenge.getZekrId().equals(modifiedSubChallenge.getZekrId())) {
         return Optional.of(subChallenge);
       }
@@ -314,7 +315,7 @@ public class ChallengeController extends BaseController {
    * Tries updating the subChallenge as requested in modifiedSubChallenge. If an error occurred the
    * function returns a String with the error message, and returns empty object otherwise.
    */
-  private Optional<String> updateSubChallenge(SubChallenges subChallenge,
+  private Optional<String> updateSubChallenge(UserSubChallenge subChallenge,
       ModifiedSubChallenge modifiedSubChallenge) {
     int newLeftRepetitions = modifiedSubChallenge.getNewLeftRepetitions();
     if (newLeftRepetitions > subChallenge.getLeftRepetitions()) {

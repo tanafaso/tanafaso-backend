@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -82,7 +83,57 @@ public class User extends EntityBase {
     @JsonIgnore
     String groupId;
     @NonNull
-    List<SubChallenges> subChallenges;
+    List<UserSubChallenge> subChallenges;
+  }
+
+  public static class UserSubChallenge {
+
+    private SubChallenges subChallenge;
+    @Getter
+    @Setter
+    private int leftRepetitions;
+
+    public UserSubChallenge() {
+      this.subChallenge = new SubChallenges();
+    }
+
+    private UserSubChallenge(SubChallenges subChallenge, int leftRepetitions) {
+      this.subChallenge = subChallenge;
+      this.leftRepetitions = leftRepetitions;
+    }
+
+    public static UserSubChallenge getInstance(SubChallenges subChallenge) {
+      return new UserSubChallenge(subChallenge, subChallenge.getOriginalRepetitions());
+    }
+
+    public static List<UserSubChallenge> fromSubChallengesCollection(
+        List<SubChallenges> subChallenges) {
+      return subChallenges.stream().map(UserSubChallenge::getInstance).collect(Collectors.toList());
+    }
+
+    public String getZekrId() {
+      return subChallenge.getZekrId();
+    }
+
+    public void setZekrId(String zekrId) {
+      subChallenge.setZekrId(zekrId);
+    }
+
+    public String getZekr() {
+      return subChallenge.getZekr();
+    }
+
+    public void setZekr(String zekr) {
+      subChallenge.setZekr(zekr);
+    }
+
+    public int getOriginalRepetitions() {
+      return subChallenge.getOriginalRepetitions();
+    }
+
+    public void setOriginalRepetitions(int originalRepetitions) {
+      subChallenge.setOriginalRepetitions(originalRepetitions);
+    }
   }
 
   @Builder
