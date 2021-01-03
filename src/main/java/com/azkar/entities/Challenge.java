@@ -60,7 +60,7 @@ public class Challenge extends EntityBase {
     // TODO: This uses lombok.NonNull because using mongodb.NonNull does not have effect here.
     // The NonNull annotations usage can be improved to be more consistent and cleaner.
     @lombok.NonNull
-    Integer zekrId;
+    String zekrId;
     @NonNull
     private String zekr;
     private int originalRepetitions;

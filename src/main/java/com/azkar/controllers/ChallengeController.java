@@ -303,7 +303,7 @@ public class ChallengeController extends BaseController {
   private Optional<SubChallenges> findSubChallenge(List<SubChallenges> oldSubChallenges,
       ModifiedSubChallenge modifiedSubChallenge) {
     for (SubChallenges subChallenge : oldSubChallenges) {
-      if (subChallenge.getZekrId() == modifiedSubChallenge.getZekrId()) {
+      if (subChallenge.getZekrId().equals(modifiedSubChallenge.getZekrId())) {
         return Optional.of(subChallenge);
       }
     }

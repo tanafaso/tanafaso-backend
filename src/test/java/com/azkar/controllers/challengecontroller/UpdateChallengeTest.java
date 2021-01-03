@@ -161,7 +161,7 @@ public class UpdateChallengeTest extends TestBase {
 
   @Test
   public void testDoZekr_invalidZekrId_shouldFail() throws Exception {
-    int invalidZekrId = 777;
+    String invalidZekrId = "777";
     Challenge challenge = createNewChallenge(user, group.getId());
     ModifiedSubChallenge invalidModifiedSubChallenge = ModifiedSubChallenge.builder()
         .zekrId(invalidZekrId).newLeftRepetitions(1).build();
