@@ -44,11 +44,12 @@ public class PersonalChallengeTest extends TestBase {
   @Autowired
   UserRepo userRepo;
 
-  private static AddPersonalChallengeRequest getDefaultPersonalChallengeRequest(long expiryDate) {
-    return getDefaultPersonalChallengeRequest(CHALLENGE_NAME, expiryDate);
+  private static AddPersonalChallengeRequest createPersonalChallengeRequest(long expiryDate) {
+    return createPersonalChallengeRequest(CHALLENGE_NAME, expiryDate);
   }
 
-  private static AddPersonalChallengeRequest getDefaultPersonalChallengeRequest(String name, long expiryDate) {
+  private static AddPersonalChallengeRequest createPersonalChallengeRequest(String name,
+      long expiryDate) {
     return AddPersonalChallengeRequest.builder()
         .name(name)
         .subChallenges(SUB_CHALLENGES)
@@ -64,7 +65,7 @@ public class PersonalChallengeTest extends TestBase {
   @Test
   public void addPersonalChallenge_normalScenario_shouldSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS;
-    AddPersonalChallengeRequest requestBody = getDefaultPersonalChallengeRequest(expiryDate);
+    AddPersonalChallengeRequest requestBody = createPersonalChallengeRequest(expiryDate);
 
     MvcResult result = azkarApi.createPersonalChallenge(USER, requestBody)
         .andExpect(status().isOk())
@@ -91,7 +92,7 @@ public class PersonalChallengeTest extends TestBase {
   @Test
   public void addPersonalChallenge_pastExpiryDate_shouldFail() throws Exception {
     long pastExpiryDate = Instant.now().getEpochSecond() - DATE_OFFSET_IN_SECONDS;
-    AddPersonalChallengeRequest requestBody = getDefaultPersonalChallengeRequest(pastExpiryDate);
+    AddPersonalChallengeRequest requestBody = createPersonalChallengeRequest(pastExpiryDate);
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setError(new Error(AddPersonalChallengeRequest.PAST_EXPIRY_DATE_ERROR));
 
@@ -130,8 +131,10 @@ public class PersonalChallengeTest extends TestBase {
   @Test
   public void getPersonalChallenge_multipleChallenges_shouldSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS;
-    AddPersonalChallengeRequest request1 = getDefaultPersonalChallengeRequest("challenge_1", expiryDate);
-    AddPersonalChallengeRequest request2 = getDefaultPersonalChallengeRequest("challenge_2", expiryDate);
+    AddPersonalChallengeRequest request1 = createPersonalChallengeRequest("challenge_1",
+        expiryDate);
+    AddPersonalChallengeRequest request2 = createPersonalChallengeRequest("challenge_2",
+        expiryDate);
     addPersonalChallenge(USER, request1);
     addPersonalChallenge(USER, request2);
 
@@ -140,13 +143,15 @@ public class PersonalChallengeTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andReturn().getResponse().getContentAsString();
 
-    List<UserChallenge> data = JsonHandler.fromJson(response, GetChallengesResponse.class).getData();
+    List<UserChallenge> data = JsonHandler.fromJson(response, GetChallengesResponse.class)
+        .getData();
     assertThat(data, hasSize(2));
-    assertUserChallengeConformWithCreateChallengeRequest(data.get(0), request1);
-    assertUserChallengeConformWithCreateChallengeRequest(data.get(1), request2);
+    assertUserChallengeConsistentWithRequest(data.get(0), request1);
+    assertUserChallengeConsistentWithRequest(data.get(1), request2);
   }
 
-  private void assertUserChallengeConformWithCreateChallengeRequest(UserChallenge userChallenge, AddPersonalChallengeRequest request) {
+  private void assertUserChallengeConsistentWithRequest(UserChallenge userChallenge,
+      AddPersonalChallengeRequest request) {
     Challenge challengeInfo = userChallenge.getChallengeInfo();
     UserChallengeStatus userChallengeStatus = userChallenge.getUserChallengeStatus();
     assertThat(challengeInfo.getName(), is(request.getName()));
