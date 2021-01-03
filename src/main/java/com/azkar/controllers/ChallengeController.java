@@ -97,6 +97,23 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  @GetMapping(path = "/personal")
+  public ResponseEntity<GetChallengesResponse> getPersonalChallenges() {
+    GetChallengesResponse response = new GetChallengesResponse();
+    List<Challenge> personalChallenges = getCurrentUser(userRepo).getPersonalChallenges();
+    response.setData(
+        personalChallenges.stream().map(this::constructPersonalUserChallengeFromChallenge).collect(
+            Collectors.toList()));
+    return ResponseEntity.ok(response);
+  }
+
+  private UserChallenge constructPersonalUserChallengeFromChallenge(Challenge challenge) {
+    UserChallengeStatus userChallengeStatus = UserChallengeStatus.builder()
+        .challengeId(challenge.getId()).isAccepted(true).isOngoing(true)
+        .subChallenges(challenge.getSubChallenges()).build();
+    return new UserChallenge(challenge, userChallengeStatus);
+  }
+
   @GetMapping("{challengeId}")
   public ResponseEntity<GetChallengeResponse> getChallenge(
       @PathVariable(value = "challengeId") String challengeId) {
