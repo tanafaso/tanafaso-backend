@@ -32,9 +32,9 @@ import org.springframework.test.web.servlet.ResultActions;
 public class UpdateChallengeTest extends TestBase {
 
   public static final int OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS = ChallengeFactory.SUB_CHALLENGE_1
-      .getLeftRepetitions();
+      .getOriginalRepetitions();
   public static final int OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS = ChallengeFactory.SUB_CHALLENGE_2
-      .getLeftRepetitions();
+      .getOriginalRepetitions();
   public static final int NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS =
       OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS - 1;
   public static final int NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS =
@@ -139,7 +139,7 @@ public class UpdateChallengeTest extends TestBase {
     ModifiedSubChallenge modifiedSubChallengeWithIncreasingRepetitions =
         createModifiedSubChallenge(
             ChallengeFactory.SUB_CHALLENGE_1,
-            ChallengeFactory.SUB_CHALLENGE_1.getLeftRepetitions() + 1);
+            OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS + 1);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(
         modifiedSubChallengeWithIncreasingRepetitions);
     UpdateChallengeResponse expectedResponse = new UpdateChallengeResponse();

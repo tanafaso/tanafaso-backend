@@ -64,6 +64,5 @@ public class Challenge extends EntityBase {
     @NonNull
     private String zekr;
     private int originalRepetitions;
-    private int leftRepetitions;
   }
 }
