@@ -45,7 +45,6 @@ public class UpdateChallengeTest extends TestBase {
   private static final ModifiedSubChallenge MODIFIED_SUB_CHALLENGE_2 =
       createModifiedSubChallenge(ChallengeFactory.SUB_CHALLENGE_2,
           NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
-  ;
   @Autowired
   GroupRepo groupRepo;
   private User user;

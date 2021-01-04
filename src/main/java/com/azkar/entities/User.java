@@ -136,7 +136,7 @@ public class User extends EntityBase {
     }
   }
 
-  @Builder
+  @Builder(toBuilder = true)
   @Data
   @AllArgsConstructor
   public static class UserFacebookData {
