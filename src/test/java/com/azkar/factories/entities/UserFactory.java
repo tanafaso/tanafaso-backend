@@ -42,4 +42,19 @@ public class UserFactory {
         .name(userFacebookData.getName())
         .build();
   }
+
+  public static User getUserRegisteredWithFacebookWithFacebookUserId(String facebookUserId) {
+    usersRequested++;
+    UserFacebookData userFacebookData = UserFacebookData.builder()
+        .email("testFacebookEmail" + usersRequested + "@example_domain.com")
+        .userId(facebookUserId)
+        .name("testFacebookName" + usersRequested)
+        .build();
+
+    return User.builder()
+        .id("testId" + usersRequested)
+        .userFacebookData(userFacebookData)
+        .name(userFacebookData.getName())
+        .build();
+  }
 }

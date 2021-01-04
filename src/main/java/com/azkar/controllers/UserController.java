@@ -38,13 +38,42 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  // TODO(issue#110): Think if getUserByUsername should return everything about user.
-  @GetMapping(path = "")
-  public ResponseEntity<GetUserResponse> getUserByUsername(
-      @RequestParam(name = "username") String username) {
-    GetUserResponse response = new GetUserResponse();
+  /**
+   * Searches for a user with {@code username} if specified. If {@code username} is not specified,
+   * searches for a user with {@code facebook_user_id}.
+   */
+  // TODO(issue#110): Think if searchForUser return everything about user.
+  @GetMapping(path = "/search")
+  public ResponseEntity<GetUserResponse> searchForUser(
+      @RequestParam(name = "username", required = false) String username,
+      @RequestParam(name = "facebook_user_id", required = false) String facebookUserId) {
+    if (username != null) {
+      return searchForUserByUsername(username);
+    }
 
+    if (facebookUserId != null) {
+      return searchForUserByFacebookUserId(facebookUserId);
+    }
+
+    GetUserResponse response = new GetUserResponse();
+    response.setError(new Error(GetUserResponse.SEARCH_PARAMETERS_NOT_SPECIFIED));
+    return ResponseEntity.badRequest().body(response);
+  }
+
+  private ResponseEntity<GetUserResponse> searchForUserByUsername(String username) {
     Optional<User> user = userRepo.findByUsername(username);
+    GetUserResponse response = new GetUserResponse();
+    if (!user.isPresent()) {
+      response.setError(new Error(GetUserResponse.USER_NOT_FOUND_ERROR));
+      return ResponseEntity.unprocessableEntity().body(response);
+    }
+    response.setData(user.get());
+    return ResponseEntity.ok(response);
+  }
+
+  private ResponseEntity<GetUserResponse> searchForUserByFacebookUserId(String facebookUserId) {
+    GetUserResponse response = new GetUserResponse();
+    Optional<User> user = userRepo.findByUserFacebookData_UserId(facebookUserId);
     if (!user.isPresent()) {
       response.setError(new Error(GetUserResponse.USER_NOT_FOUND_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);

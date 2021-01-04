@@ -23,6 +23,16 @@ public class AzkarApi {
     return httpClient.performGetRequest(/*user=*/ (User) null, "/users/me");
   }
 
+  public ResultActions searchForUserByUsername(User user, String username) throws Exception {
+    return httpClient.performGetRequest(user, String.format("/users/search?username=%s", username));
+  }
+
+  public ResultActions searchForUserByFacebookUserId(User user, String facebookUserId)
+      throws Exception {
+    return httpClient.performGetRequest(user, String.format("/users/search?facebook_user_id=%s",
+        facebookUserId));
+  }
+
   public ResultActions getChallenge(User user, String challengeId) throws Exception {
     return httpClient.performGetRequest(user, String.format("/challenges/%s", challengeId));
   }
