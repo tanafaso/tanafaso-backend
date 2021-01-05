@@ -33,7 +33,7 @@ public class User extends EntityBase {
   private String encodedPassword;
   @Indexed(name = "username_index", unique = true)
   @Default
-  private List<Challenge> personalChallenges = new ArrayList<>();
+  private List<PersonalChallenge> personalChallenges = new ArrayList<>();
   private String username;
   @NonNull
   private String name;
@@ -75,6 +75,7 @@ public class User extends EntityBase {
   public static class UserChallengeStatus {
 
     @JsonIgnore
+    @NonNull
     String challengeId;
     boolean isAccepted;
     // This field is ignored using @JsonIgnoreProperties.

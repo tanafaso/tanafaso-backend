@@ -38,17 +38,17 @@ public class PersonalChallengeTest extends TestBase {
   private static final String CHALLENGE_MOTIVATION = ChallengeFactory.CHALLENGE_MOTIVATION;
   private static final long DATE_OFFSET_IN_SECONDS = ChallengeFactory.EXPIRY_DATE_OFFSET;
   private static final ImmutableList<SubChallenges> SUB_CHALLENGES = ImmutableList.of(
-      ChallengeFactory.SUB_CHALLENGE_1);
+      ChallengeFactory.SUB_CHALLENGE_1, ChallengeFactory.SUB_CHALLENGE_2);
   private static final String CHALLENGE_NAME = "test-challenge";
 
   @Autowired
   UserRepo userRepo;
 
-  private static AddPersonalChallengeRequest createPersonalChallengeRequest(long expiryDate) {
+  public static AddPersonalChallengeRequest createPersonalChallengeRequest(long expiryDate) {
     return createPersonalChallengeRequest(CHALLENGE_NAME, expiryDate);
   }
 
-  private static AddPersonalChallengeRequest createPersonalChallengeRequest(String name,
+  public static AddPersonalChallengeRequest createPersonalChallengeRequest(String name,
       long expiryDate) {
     return AddPersonalChallengeRequest.builder()
         .name(name)
@@ -130,13 +130,14 @@ public class PersonalChallengeTest extends TestBase {
 
   @Test
   public void getPersonalChallenge_multipleChallenges_shouldSucceed() throws Exception {
-    long expiryDate = Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS;
-    AddPersonalChallengeRequest request1 = createPersonalChallengeRequest("challenge_1",
-        expiryDate);
-    AddPersonalChallengeRequest request2 = createPersonalChallengeRequest("challenge_2",
-        expiryDate);
-    addPersonalChallenge(USER, request1);
-    addPersonalChallenge(USER, request2);
+    long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
+    AddPersonalChallengeRequest request1 = PersonalChallengeTest
+        .createPersonalChallengeRequest("challenge_1", expiryDate);
+    AddPersonalChallengeRequest request2 = PersonalChallengeTest
+        .createPersonalChallengeRequest("challenge_2", expiryDate);
+
+    createPersonalChallenge(USER, request1);
+    createPersonalChallenge(USER, request2);
 
     String response = azkarApi.getPersonalChallenges(USER)
         .andExpect(status().isOk())
@@ -159,10 +160,4 @@ public class PersonalChallengeTest extends TestBase {
     assertThat(challengeInfo.getCreatingUserId(), is(USER.getId()));
     assertThat(userChallengeStatus.isAccepted(), is(true));
   }
-
-  private void addPersonalChallenge(User user, AddPersonalChallengeRequest request)
-      throws Exception {
-    azkarApi.createPersonalChallenge(user, request).andExpect(status().isOk());
-  }
-
 }

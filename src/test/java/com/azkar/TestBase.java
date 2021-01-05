@@ -3,6 +3,7 @@ package com.azkar;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.azkar.controllers.challengecontroller.PersonalChallengeTest;
 import com.azkar.controllers.utils.AzkarApi;
 import com.azkar.controllers.utils.HttpClient;
 import com.azkar.controllers.utils.JsonHandler;
@@ -10,9 +11,12 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
+import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
+import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
+import java.time.Instant;
 import org.junit.After;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,9 +97,24 @@ public abstract class TestBase {
     return newUser;
   }
 
-  protected Challenge createNewChallenge(User user, String groupId) throws Exception {
+  protected Challenge createGroupChallenge(User user, String groupId) throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(groupId);
     azkarApi.createChallenge(user, challenge).andExpect(status().isOk());
     return challenge;
+  }
+
+  protected Challenge createPersonalChallenge(User user)
+      throws Exception {
+    long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
+    AddPersonalChallengeRequest request = PersonalChallengeTest
+        .createPersonalChallengeRequest(expiryDate);
+    return createPersonalChallenge(user, request);
+  }
+
+  protected Challenge createPersonalChallenge(User user, AddPersonalChallengeRequest request)
+      throws Exception {
+    ResultActions response = azkarApi.createPersonalChallenge(user, request)
+        .andExpect(status().isOk());
+    return getResponse(response, AddPersonalChallengeResponse.class).getData();
   }
 }

@@ -8,4 +8,5 @@ public class UpdateChallengeResponse extends ResponseBase<String> {
       "The value of left repetitions can not be incremented.";
   public static final String NON_EXISTENT_SUB_CHALLENGE_ERROR =
       "One or more of the sub challenges to be updated do not exist.";
+  public static final String CHALLENGE_NOT_FOUND_ERROR = "Could not find the challenge to update.";
 }
