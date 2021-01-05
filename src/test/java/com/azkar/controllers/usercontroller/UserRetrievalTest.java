@@ -69,7 +69,7 @@ public class UserRetrievalTest extends TestBase {
   }
 
   @Test
-  public void getUserByUsername_validUsername_shouldSucceed() throws Exception {
+  public void searchForUserByUsername_validUsername_shouldSucceed() throws Exception {
     String username = "example_username";
     User user = UserFactory.getNewUser().toBuilder().
         username(username).
@@ -78,7 +78,7 @@ public class UserRetrievalTest extends TestBase {
     GetUserResponse expectedResponse = new GetUserResponse();
     expectedResponse.setData(user);
 
-    ResultActions result = performGetRequest(user, String.format("/users?username=%s", username));
+    ResultActions result = azkarApi.searchForUserByUsername(user, username);
 
     result
         .andExpect(status().isOk())
@@ -87,7 +87,7 @@ public class UserRetrievalTest extends TestBase {
   }
 
   @Test
-  public void getUserByUsername_fakeUsername_shouldNotSucceed() throws Exception {
+  public void searchForUserByUsername_fakeUsername_shouldNotSucceed() throws Exception {
     String realUsername = "example-username";
     String fakeUsername = "fake-username";
     User user = UserFactory.getNewUser().toBuilder().
@@ -97,8 +97,7 @@ public class UserRetrievalTest extends TestBase {
     GetUserResponse expectedResponse = new GetUserResponse();
     expectedResponse.setError(new Error(GetUserResponse.USER_NOT_FOUND_ERROR));
 
-    ResultActions result =
-        performGetRequest(user, String.format("/users?username=%s", fakeUsername));
+    ResultActions result = azkarApi.searchForUserByUsername(user, fakeUsername);
 
     result
         .andExpect(status().isUnprocessableEntity())
@@ -107,7 +106,40 @@ public class UserRetrievalTest extends TestBase {
   }
 
   @Test
-  public void getUserByUsername_wrongQueryParameterName_shouldNotSucceed() throws Exception {
+  public void searchForUserByFacebookUserId_validFacebookUserId_shouldSucceed() throws Exception {
+    String facebookUserId = "0123401234";
+    User user = UserFactory.getUserRegisteredWithFacebookWithFacebookUserId(facebookUserId);
+    addNewUser(user);
+    GetUserResponse expectedResponse = new GetUserResponse();
+    expectedResponse.setData(user);
+
+    ResultActions result = azkarApi.searchForUserByFacebookUserId(user, facebookUserId);
+
+    result
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+  }
+
+  @Test
+  public void searchForUserByFacebookUserId_fakeFacebookUserId_shouldNotSucceed() throws Exception {
+    String realFacebookUserId = "1234120";
+    String fakeFacebookUserId = "23423413";
+    User user = UserFactory.getUserRegisteredWithFacebookWithFacebookUserId(realFacebookUserId);
+    addNewUser(user);
+    GetUserResponse expectedResponse = new GetUserResponse();
+    expectedResponse.setError(new Error(GetUserResponse.USER_NOT_FOUND_ERROR));
+
+    ResultActions result = azkarApi.searchForUserByFacebookUserId(user, fakeFacebookUserId);
+
+    result
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+  }
+
+  @Test
+  public void searchForUserByUsername_wrongQueryParameterName_shouldNotSucceed() throws Exception {
     String username = "example-username";
     User user = UserFactory.getNewUser().toBuilder()
         .username(username)
@@ -116,7 +148,28 @@ public class UserRetrievalTest extends TestBase {
     DefaultExceptionResponse expectedResponse = new DefaultExceptionResponse();
 
     ResultActions result =
-        performGetRequest(user, String.format("/users?wrong=%s", username));
+        performGetRequest(user, String.format("/users/search?wrong=%s", username));
+
+    result
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+  }
+
+  @Test
+  public void searchForUserByUsername_noQueryParametersSpecified_shouldNotSucceed()
+      throws Exception {
+    String username = "example-username";
+    User user = UserFactory.getNewUser().toBuilder()
+        .username(username)
+        .build();
+    addNewUser(user);
+
+    GetUserResponse expectedResponse = new GetUserResponse();
+    expectedResponse.setError(new Error(GetUserResponse.SEARCH_PARAMETERS_NOT_SPECIFIED));
+
+    ResultActions result =
+        performGetRequest(user, String.format("/users/search", username));
 
     result
         .andExpect(status().isBadRequest())
