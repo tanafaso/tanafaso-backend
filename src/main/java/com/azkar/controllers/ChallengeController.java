@@ -4,8 +4,8 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.PersonalChallenge;
 import com.azkar.entities.User;
-import com.azkar.entities.User.UserChallengeStatus;
-import com.azkar.entities.User.UserSubChallenge;
+import com.azkar.entities.User.ChallengeProgress;
+import com.azkar.entities.User.SubChallengeProgress;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
@@ -60,11 +60,11 @@ public class ChallengeController extends BaseController {
   @Autowired
   GroupRepo groupRepo;
 
-  private static Predicate<UserChallengeStatus> withIsOngoing(boolean isOngoing) {
+  private static Predicate<ChallengeProgress> withIsOngoing(boolean isOngoing) {
     return (userChallengeStatus -> userChallengeStatus.isOngoing() == isOngoing);
   }
 
-  private static Predicate<UserChallengeStatus> withIsOngoingAndInGroup(boolean isOngoing,
+  private static Predicate<ChallengeProgress> withIsOngoingAndInGroup(boolean isOngoing,
       Group group) {
     return withIsOngoing(isOngoing)
         .and(userChallengeStatus -> userChallengeStatus.getGroupId().equals(group.getId()));
@@ -111,11 +111,11 @@ public class ChallengeController extends BaseController {
   }
 
   private UserChallenge constructPersonalUserChallenge(PersonalChallenge challenge) {
-    UserChallengeStatus userChallengeStatus = UserChallengeStatus.builder()
+    ChallengeProgress challengeProgress = ChallengeProgress.builder()
         .challengeId(challenge.getId()).isAccepted(true).isOngoing(true)
-        .subChallenges(challenge.getUserSubChallenges())
+        .subChallenges(challenge.getSubChallengesProgress())
         .build();
-    return new UserChallenge(challenge.getChallenge(), userChallengeStatus);
+    return new UserChallenge(challenge.getChallenge(), challengeProgress);
   }
 
   @PutMapping(path = "/personal/{challengeId}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -131,7 +131,8 @@ public class ChallengeController extends BaseController {
       response.setError(new Error(UpdateChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
-    List<UserSubChallenge> oldSubChallenges = personalChallenge.get().getUserSubChallenges();
+    List<SubChallengeProgress> oldSubChallenges = personalChallenge.get()
+        .getSubChallengesProgress();
     Optional<ResponseEntity<UpdateChallengeResponse>> errorResponse = updateSubChallenges(
         oldSubChallenges, request);
     if (errorResponse.isPresent()) {
@@ -142,11 +143,11 @@ public class ChallengeController extends BaseController {
   }
 
   private Optional<ResponseEntity<UpdateChallengeResponse>> updateSubChallenges(
-      List<UserSubChallenge> subChallenges, UpdateChallengeRequest request) {
+      List<SubChallengeProgress> subChallenges, UpdateChallengeRequest request) {
     List<ModifiedSubChallenge> allModifiedSubChallenges = request.getAllModifiedSubChallenges();
     for (ModifiedSubChallenge modifiedSubChallenge : allModifiedSubChallenges) {
       UpdateChallengeResponse response = new UpdateChallengeResponse();
-      Optional<UserSubChallenge> subChallenge = findSubChallenge(subChallenges,
+      Optional<SubChallengeProgress> subChallenge = findSubChallenge(subChallenges,
           modifiedSubChallenge);
       if (!subChallenge.isPresent()) {
         response.setError(new Error(UpdateChallengeResponse.NON_EXISTENT_SUB_CHALLENGE_ERROR));
@@ -161,9 +162,10 @@ public class ChallengeController extends BaseController {
     return Optional.empty();
   }
 
-  private Optional<UserSubChallenge> findSubChallenge(List<UserSubChallenge> oldSubChallenges,
+  private Optional<SubChallengeProgress> findSubChallenge(
+      List<SubChallengeProgress> oldSubChallenges,
       ModifiedSubChallenge modifiedSubChallenge) {
-    for (UserSubChallenge subChallenge : oldSubChallenges) {
+    for (SubChallengeProgress subChallenge : oldSubChallenges) {
       if (subChallenge.getZekrId().equals(modifiedSubChallenge.getZekrId())) {
         return Optional.of(subChallenge);
       }
@@ -175,7 +177,7 @@ public class ChallengeController extends BaseController {
    * Tries updating the subChallenge as requested in modifiedSubChallenge. If an error occurred the
    * function returns a String with the error message, and returns empty object otherwise.
    */
-  private Optional<String> updateSubChallenge(UserSubChallenge subChallenge,
+  private Optional<String> updateSubChallenge(SubChallengeProgress subChallenge,
       ModifiedSubChallenge modifiedSubChallenge) {
     int newLeftRepetitions = modifiedSubChallenge.getNewLeftRepetitions();
     if (newLeftRepetitions > subChallenge.getLeftRepetitions()) {
@@ -194,7 +196,7 @@ public class ChallengeController extends BaseController {
   public ResponseEntity<GetChallengeResponse> getChallenge(
       @PathVariable(value = "challengeId") String challengeId) {
     GetChallengeResponse response = new GetChallengeResponse();
-    Optional<UserChallengeStatus> userChallengeStatus = getUserChallengeStatus(
+    Optional<ChallengeProgress> userChallengeStatus = getUserChallengeStatus(
         getCurrentUser(userRepo), challengeId);
     if (!userChallengeStatus.isPresent()) {
       response.setError(new Error(GetChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
@@ -204,14 +206,14 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private UserChallenge getUserChallenge(UserChallengeStatus userChallengeStatus) {
-    Optional<Challenge> challenge = challengeRepo.findById(userChallengeStatus.getChallengeId());
+  private UserChallenge getUserChallenge(ChallengeProgress challengeProgress) {
+    Optional<Challenge> challenge = challengeRepo.findById(challengeProgress.getChallengeId());
     return UserChallenge.builder().challengeInfo(challenge.get())
-        .userChallengeStatus(userChallengeStatus).build();
+        .challengeProgress(challengeProgress).build();
   }
 
-  private Optional<UserChallengeStatus> getUserChallengeStatus(User user, String challengeId) {
-    return user.getUserChallengeStatuses()
+  private Optional<ChallengeProgress> getUserChallengeStatus(User user, String challengeId) {
+    return user.getChallengesProgress()
         .stream()
         .filter(challengeStatus -> challengeStatus.getChallengeId().equals(challengeId))
         .findFirst();
@@ -261,14 +263,15 @@ public class ChallengeController extends BaseController {
   }
 
   private void addChallengeToUser(User user, Challenge challenge) {
-    UserChallengeStatus userChallengeStatus = UserChallengeStatus.builder()
+    ChallengeProgress challengeProgress = ChallengeProgress.builder()
         .challengeId(challenge.getId())
         .isAccepted(user.getId().equals(getCurrentUser().getUserId()))
-        .subChallenges(UserSubChallenge.fromSubChallengesCollection(challenge.getSubChallenges()))
+        .subChallenges(
+            SubChallengeProgress.fromSubChallengesCollection(challenge.getSubChallenges()))
         .isOngoing(challenge.isOngoing())
         .groupId(challenge.getGroupId())
         .build();
-    user.getUserChallengeStatuses().add(userChallengeStatus);
+    user.getChallengesProgress().add(challengeProgress);
   }
 
   @GetMapping(path = "/ongoing")
@@ -318,10 +321,10 @@ public class ChallengeController extends BaseController {
   }
 
   private ResponseEntity<GetChallengesResponse> getChallenges(
-      Predicate<UserChallengeStatus> userChallengeStatusesFilter) {
+      Predicate<ChallengeProgress> userChallengeStatusesFilter) {
     GetChallengesResponse response = new GetChallengesResponse();
     List<UserChallenge> userChallenges = getCurrentUser(userRepo)
-        .getUserChallengeStatuses().stream()
+        .getChallengesProgress().stream()
         .filter(userChallengeStatusesFilter)
         .map(this::constructUserChallenge)
         .collect(Collectors.toList());
@@ -329,18 +332,18 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private UserChallenge constructUserChallenge(UserChallengeStatus userChallengeStatus) {
+  private UserChallenge constructUserChallenge(ChallengeProgress challengeProgress) {
     Optional<Challenge> challengeInfo = challengeRepo
-        .findById(userChallengeStatus.getChallengeId());
+        .findById(challengeProgress.getChallengeId());
     if (!challengeInfo.isPresent()) {
       logger
           .error("Challenge {} found in User {} entity and without corresponding challenge entity.",
-              userChallengeStatus.getChallengeId(), getCurrentUser().getUserId());
+              challengeProgress.getChallengeId(), getCurrentUser().getUserId());
       throw new ServerErrorException(DANGLING_USER_CHALLENGE_LINK_ERROR,
           new Throwable(DANGLING_USER_CHALLENGE_LINK_ERROR));
     }
     return UserChallenge.builder()
-        .userChallengeStatus(userChallengeStatus)
+        .challengeProgress(challengeProgress)
         .challengeInfo(challengeInfo.get())
         .build();
   }
@@ -350,7 +353,7 @@ public class ChallengeController extends BaseController {
       @PathVariable(value = "challengeId") String challengeId,
       @RequestBody UpdateChallengeRequest request) {
     User currentUser = getCurrentUser(userRepo);
-    Optional<UserChallengeStatus> currentUserChallenge = getUserChallengeStatus(currentUser,
+    Optional<ChallengeProgress> currentUserChallenge = getUserChallengeStatus(currentUser,
         challengeId);
     if (!currentUserChallenge.isPresent()) {
       UpdateChallengeResponse response = new UpdateChallengeResponse();
@@ -358,7 +361,7 @@ public class ChallengeController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
-    List<UserSubChallenge> oldSubChallenges = currentUserChallenge.get().getSubChallenges();
+    List<SubChallengeProgress> oldSubChallenges = currentUserChallenge.get().getSubChallenges();
     Optional<ResponseEntity<UpdateChallengeResponse>> errorResponse = updateSubChallenges(
         oldSubChallenges, request);
     if (errorResponse.isPresent()) {

@@ -4,7 +4,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.azkar.entities.Challenge;
 import com.azkar.entities.User;
-import com.azkar.entities.User.UserChallengeStatus;
+import com.azkar.entities.User.ChallengeProgress;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import org.junit.Before;
@@ -24,13 +24,13 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
   }
 
   @Override
-  protected UserChallengeStatus getUserChallengeStatusFromApi(Challenge challenge)
+  protected ChallengeProgress getChallengeProgressFromApi(Challenge challenge)
       throws Exception {
     ResultActions resultActions = azkarApi.getChallenge(user, challenge.getId())
         .andExpect(status().isOk());
     return getResponse(resultActions, GetChallengeResponse.class)
         .getData()
-        .getUserChallengeStatus();
+        .getChallengeProgress();
   }
 
   @Override

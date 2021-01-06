@@ -1,6 +1,6 @@
 package com.azkar.payload.challengecontroller.requests;
 
-import com.azkar.entities.Challenge.SubChallenges;
+import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.payload.RequestBodyBase;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.google.common.annotations.VisibleForTesting;
@@ -21,7 +21,7 @@ public class AddPersonalChallengeRequest extends RequestBodyBase {
   private String motivation;
   private String name;
   private long expiryDate;
-  private List<SubChallenges> subChallenges;
+  private List<SubChallenge> subChallenges;
 
 
   @Override

@@ -1,6 +1,6 @@
 package com.azkar.entities;
 
-import com.azkar.entities.Challenge.SubChallenges;
+import com.azkar.entities.Challenge.SubChallenge;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ public class User extends EntityBase {
   @Default
   private List<UserGroup> userGroups = new ArrayList();
   @Default
-  private List<UserChallengeStatus> userChallengeStatuses = new ArrayList();
+  private List<ChallengeProgress> challengesProgress = new ArrayList();
   @JsonIgnore
   @CreatedDate
   private long createdAt;
@@ -72,7 +72,7 @@ public class User extends EntityBase {
   @AllArgsConstructor
   @Setter
   @JsonIgnoreProperties(value = {"ongoing"})
-  public static class UserChallengeStatus {
+  public static class ChallengeProgress {
 
     @JsonIgnore
     @NonNull
@@ -84,32 +84,33 @@ public class User extends EntityBase {
     @JsonIgnore
     String groupId;
     @NonNull
-    List<UserSubChallenge> subChallenges;
+    List<SubChallengeProgress> subChallenges;
   }
 
-  public static class UserSubChallenge {
+  public static class SubChallengeProgress {
 
-    private SubChallenges subChallenge;
+    private SubChallenge subChallenge;
     @Getter
     @Setter
     private int leftRepetitions;
 
-    public UserSubChallenge() {
-      this.subChallenge = new SubChallenges();
+    public SubChallengeProgress() {
+      this.subChallenge = new SubChallenge();
     }
 
-    private UserSubChallenge(SubChallenges subChallenge, int leftRepetitions) {
+    private SubChallengeProgress(SubChallenge subChallenge, int leftRepetitions) {
       this.subChallenge = subChallenge;
       this.leftRepetitions = leftRepetitions;
     }
 
-    public static UserSubChallenge getInstance(SubChallenges subChallenge) {
-      return new UserSubChallenge(subChallenge, subChallenge.getOriginalRepetitions());
+    public static SubChallengeProgress getInstance(SubChallenge subChallenge) {
+      return new SubChallengeProgress(subChallenge, subChallenge.getOriginalRepetitions());
     }
 
-    public static List<UserSubChallenge> fromSubChallengesCollection(
-        List<SubChallenges> subChallenges) {
-      return subChallenges.stream().map(UserSubChallenge::getInstance).collect(Collectors.toList());
+    public static List<SubChallengeProgress> fromSubChallengesCollection(
+        List<SubChallenge> subChallenges) {
+      return subChallenges.stream().map(SubChallengeProgress::getInstance)
+          .collect(Collectors.toList());
     }
 
     public String getZekrId() {

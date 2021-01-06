@@ -1,22 +1,24 @@
 package com.azkar.entities;
 
-import com.azkar.entities.User.UserSubChallenge;
+import com.azkar.entities.User.SubChallengeProgress;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Delegate;
 
 public class PersonalChallenge {
+
   @Delegate
   @Getter
   private Challenge challenge;
   @Setter
   @Getter
-  private List<UserSubChallenge> userSubChallenges;
+  private List<SubChallengeProgress> subChallengesProgress;
 
   private PersonalChallenge(Challenge challenge) {
     this.challenge = challenge;
-    userSubChallenges = UserSubChallenge.fromSubChallengesCollection(challenge.getSubChallenges());
+    subChallengesProgress = SubChallengeProgress
+        .fromSubChallengesCollection(challenge.getSubChallenges());
   }
 
   public static PersonalChallenge getInstance(Challenge challenge) {
