@@ -355,7 +355,6 @@ public class ChallengeController extends BaseController {
     if (!currentUserChallenge.isPresent()) {
       UpdateChallengeResponse response = new UpdateChallengeResponse();
       response.setError(new Error(UpdateChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
-      response.setError(new Error(UpdateChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
