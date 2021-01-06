@@ -77,4 +77,11 @@ public class AzkarApi {
   public ResultActions getPersonalChallenges(User user) throws Exception {
     return httpClient.performGetRequest(user, "/challenges/personal");
   }
+
+  public ResultActions updatePersonalChallenge(User user, String challengeId,
+      UpdateChallengeRequest body)
+      throws Exception {
+    return httpClient.performPutRequest(user, String.format("/challenges/personal/%s", challengeId),
+        JsonHandler.toJson(body));
+  }
 }

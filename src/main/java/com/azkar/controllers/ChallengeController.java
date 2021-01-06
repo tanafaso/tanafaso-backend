@@ -2,6 +2,7 @@ package com.azkar.controllers;
 
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
+import com.azkar.entities.PersonalChallenge;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserChallengeStatus;
 import com.azkar.entities.User.UserSubChallenge;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -80,6 +82,7 @@ public class ChallengeController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
     Challenge challenge = Challenge.builder()
+        .id(UUID.randomUUID().toString())
         .name(request.getName())
         .motivation(request.getMotivation())
         .expiryDate(request.getExpiryDate())
@@ -91,7 +94,7 @@ public class ChallengeController extends BaseController {
         .modifiedAt(Instant.now().getEpochSecond())
         .build();
     User loggedInUser = getCurrentUser(userRepo);
-    loggedInUser.getPersonalChallenges().add(challenge);
+    loggedInUser.getPersonalChallenges().add(PersonalChallenge.getInstance(challenge));
     userRepo.save(loggedInUser);
     response.setData(challenge);
     return ResponseEntity.ok(response);
@@ -100,19 +103,91 @@ public class ChallengeController extends BaseController {
   @GetMapping(path = "/personal")
   public ResponseEntity<GetChallengesResponse> getPersonalChallenges() {
     GetChallengesResponse response = new GetChallengesResponse();
-    List<Challenge> personalChallenges = getCurrentUser(userRepo).getPersonalChallenges();
+    List<PersonalChallenge> personalChallenges = getCurrentUser(userRepo).getPersonalChallenges();
     response.setData(
-        personalChallenges.stream().map(this::constructPersonalUserChallengeFromChallenge).collect(
+        personalChallenges.stream().map(this::constructPersonalUserChallenge).collect(
             Collectors.toList()));
     return ResponseEntity.ok(response);
   }
 
-  private UserChallenge constructPersonalUserChallengeFromChallenge(Challenge challenge) {
+  private UserChallenge constructPersonalUserChallenge(PersonalChallenge challenge) {
     UserChallengeStatus userChallengeStatus = UserChallengeStatus.builder()
         .challengeId(challenge.getId()).isAccepted(true).isOngoing(true)
-        .subChallenges(UserSubChallenge.fromSubChallengesCollection(challenge.getSubChallenges()))
+        .subChallenges(challenge.getUserSubChallenges())
         .build();
-    return new UserChallenge(challenge, userChallengeStatus);
+    return new UserChallenge(challenge.getChallenge(), userChallengeStatus);
+  }
+
+  @PutMapping(path = "/personal/{challengeId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<UpdateChallengeResponse> updatePersonalChallenge(
+      @PathVariable(value = "challengeId") String challengeId,
+      @RequestBody UpdateChallengeRequest request) {
+    User currentUser = getCurrentUser(userRepo);
+    Optional<PersonalChallenge> personalChallenge = currentUser.getPersonalChallenges().stream()
+        .filter(personalChallengeItem -> personalChallengeItem.getId().equals(challengeId))
+        .findAny();
+    if (!personalChallenge.isPresent()) {
+      UpdateChallengeResponse response = new UpdateChallengeResponse();
+      response.setError(new Error(UpdateChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+    List<UserSubChallenge> oldSubChallenges = personalChallenge.get().getUserSubChallenges();
+    Optional<ResponseEntity<UpdateChallengeResponse>> errorResponse = updateSubChallenges(
+        oldSubChallenges, request);
+    if (errorResponse.isPresent()) {
+      return errorResponse.get();
+    }
+    userRepo.save(currentUser);
+    return ResponseEntity.ok().build();
+  }
+
+  private Optional<ResponseEntity<UpdateChallengeResponse>> updateSubChallenges(
+      List<UserSubChallenge> subChallenges, UpdateChallengeRequest request) {
+    List<ModifiedSubChallenge> allModifiedSubChallenges = request.getAllModifiedSubChallenges();
+    for (ModifiedSubChallenge modifiedSubChallenge : allModifiedSubChallenges) {
+      UpdateChallengeResponse response = new UpdateChallengeResponse();
+      Optional<UserSubChallenge> subChallenge = findSubChallenge(subChallenges,
+          modifiedSubChallenge);
+      if (!subChallenge.isPresent()) {
+        response.setError(new Error(UpdateChallengeResponse.NON_EXISTENT_SUB_CHALLENGE_ERROR));
+        return Optional.of(ResponseEntity.unprocessableEntity().body(response));
+      }
+      Optional<String> errorMessage = updateSubChallenge(subChallenge.get(), modifiedSubChallenge);
+      if (errorMessage.isPresent()) {
+        response.setError(new Error(errorMessage.get()));
+        return Optional.of(ResponseEntity.unprocessableEntity().body(response));
+      }
+    }
+    return Optional.empty();
+  }
+
+  private Optional<UserSubChallenge> findSubChallenge(List<UserSubChallenge> oldSubChallenges,
+      ModifiedSubChallenge modifiedSubChallenge) {
+    for (UserSubChallenge subChallenge : oldSubChallenges) {
+      if (subChallenge.getZekrId().equals(modifiedSubChallenge.getZekrId())) {
+        return Optional.of(subChallenge);
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Tries updating the subChallenge as requested in modifiedSubChallenge. If an error occurred the
+   * function returns a String with the error message, and returns empty object otherwise.
+   */
+  private Optional<String> updateSubChallenge(UserSubChallenge subChallenge,
+      ModifiedSubChallenge modifiedSubChallenge) {
+    int newLeftRepetitions = modifiedSubChallenge.getNewLeftRepetitions();
+    if (newLeftRepetitions > subChallenge.getLeftRepetitions()) {
+      return Optional.of(UpdateChallengeResponse.INCREMENTING_LEFT_REPETITIONS_ERROR);
+    }
+    if (newLeftRepetitions < 0) {
+      logger.warn("Received UpdateChallenge request with negative leftRepetition value of: "
+          + newLeftRepetitions);
+      newLeftRepetitions = 0;
+    }
+    subChallenge.setLeftRepetitions(newLeftRepetitions);
+    return Optional.empty();
   }
 
   @GetMapping("{challengeId}")
@@ -274,59 +349,22 @@ public class ChallengeController extends BaseController {
   public ResponseEntity<UpdateChallengeResponse> updateChallenge(
       @PathVariable(value = "challengeId") String challengeId,
       @RequestBody UpdateChallengeRequest request) {
-    UpdateChallengeResponse response = new UpdateChallengeResponse();
     User currentUser = getCurrentUser(userRepo);
     Optional<UserChallengeStatus> currentUserChallenge = getUserChallengeStatus(currentUser,
         challengeId);
     if (!currentUserChallenge.isPresent()) {
-      return ResponseEntity.badRequest().build();
+      UpdateChallengeResponse response = new UpdateChallengeResponse();
+      response.setError(new Error(UpdateChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
     }
 
     List<UserSubChallenge> oldSubChallenges = currentUserChallenge.get().getSubChallenges();
-    List<ModifiedSubChallenge> allModifiedSubChallenges = request.getAllModifiedSubChallenges();
-    for (ModifiedSubChallenge modifiedSubChallenge : allModifiedSubChallenges) {
-      Optional<UserSubChallenge> subChallenge = findSubChallenge(oldSubChallenges,
-          modifiedSubChallenge);
-      if (!subChallenge.isPresent()) {
-        response.setError(new Error(UpdateChallengeResponse.NON_EXISTENT_SUB_CHALLENGE_ERROR));
-        return ResponseEntity.unprocessableEntity().body(response);
-      }
-      Optional<String> errorMessage = updateSubChallenge(subChallenge.get(), modifiedSubChallenge);
-      if (errorMessage.isPresent()) {
-        response.setError(new Error(errorMessage.get()));
-        return ResponseEntity.unprocessableEntity().body(response);
-      }
+    Optional<ResponseEntity<UpdateChallengeResponse>> errorResponse = updateSubChallenges(
+        oldSubChallenges, request);
+    if (errorResponse.isPresent()) {
+      return errorResponse.get();
     }
     userRepo.save(currentUser);
     return ResponseEntity.ok().build();
-  }
-
-  private Optional<UserSubChallenge> findSubChallenge(List<UserSubChallenge> oldSubChallenges,
-      ModifiedSubChallenge modifiedSubChallenge) {
-    for (UserSubChallenge subChallenge : oldSubChallenges) {
-      if (subChallenge.getZekrId().equals(modifiedSubChallenge.getZekrId())) {
-        return Optional.of(subChallenge);
-      }
-    }
-    return Optional.empty();
-  }
-
-  /**
-   * Tries updating the subChallenge as requested in modifiedSubChallenge. If an error occurred the
-   * function returns a String with the error message, and returns empty object otherwise.
-   */
-  private Optional<String> updateSubChallenge(UserSubChallenge subChallenge,
-      ModifiedSubChallenge modifiedSubChallenge) {
-    int newLeftRepetitions = modifiedSubChallenge.getNewLeftRepetitions();
-    if (newLeftRepetitions > subChallenge.getLeftRepetitions()) {
-      return Optional.of(UpdateChallengeResponse.INCREMENTING_LEFT_REPETITIONS_ERROR);
-    }
-    if (newLeftRepetitions < 0) {
-      logger.warn("Received UpdateChallenge request with negative leftRepetition value of: "
-          + newLeftRepetitions);
-      newLeftRepetitions = 0;
-    }
-    subChallenge.setLeftRepetitions(newLeftRepetitions);
-    return Optional.empty();
   }
 }
