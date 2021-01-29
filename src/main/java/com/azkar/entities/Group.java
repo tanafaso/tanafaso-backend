@@ -19,7 +19,6 @@ public class Group extends EntityBase {
 
   @Id
   private String id;
-  private boolean isBinary;
   @NonNull
   private String name;
   @NonNull
