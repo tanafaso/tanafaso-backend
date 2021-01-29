@@ -10,4 +10,5 @@ public class AddGroupRequest {
 
   @NonNull
   private String name;
+  private boolean isBinary;
 }

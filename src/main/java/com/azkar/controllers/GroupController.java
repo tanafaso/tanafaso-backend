@@ -52,6 +52,7 @@ public class GroupController extends BaseController {
         Group.builder()
             .name(req.getName())
             .adminId(userId)
+            .isBinary(req.isBinary())
             .usersIds(new ArrayList<>(Arrays.asList(userId)))
             .build();
     groupRepo.save(newGroup);
