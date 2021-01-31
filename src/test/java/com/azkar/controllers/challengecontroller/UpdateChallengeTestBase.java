@@ -8,10 +8,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.azkar.TestBase;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Challenge;
-import com.azkar.entities.Challenge.SubChallenges;
+import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
-import com.azkar.entities.User.UserChallengeStatus;
+import com.azkar.entities.User.ChallengeProgress;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
@@ -60,9 +60,9 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .allModifiedSubChallenges(allModifiedSubChallenges).build();
   }
 
-  static ModifiedSubChallenge createModifiedSubChallenge(SubChallenges subChallenges,
+  static ModifiedSubChallenge createModifiedSubChallenge(SubChallenge subChallenge,
       int newLeftRepetition) {
-    return ModifiedSubChallenge.builder().zekrId(subChallenges.getZekrId())
+    return ModifiedSubChallenge.builder().zekrId(subChallenge.getZekrId())
         .newLeftRepetitions(newLeftRepetition).build();
   }
 
@@ -83,7 +83,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk());
 
-    UserChallengeStatus updatedChallenge = getUserChallengeStatusFromApi(challenge);
+    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(), is(
         OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(), is(
@@ -100,7 +100,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk());
 
-    UserChallengeStatus updatedChallenge = getUserChallengeStatusFromApi(challenge);
+    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(),
         is(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(),
@@ -118,7 +118,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk());
 
-    UserChallengeStatus updatedChallenge = getUserChallengeStatusFromApi(challenge);
+    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(),
         is(0));
     assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(),
@@ -144,7 +144,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    UserChallengeStatus updatedChallenge = getUserChallengeStatusFromApi(challenge);
+    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(),
         is(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(),
@@ -169,7 +169,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    UserChallengeStatus updatedChallenge = getUserChallengeStatusFromApi(challenge);
+    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(),
         is(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(),
@@ -193,6 +193,6 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   protected abstract ResultActions updateChallenge(User user, String challengeId,
       UpdateChallengeRequest requestBody) throws Exception;
 
-  protected abstract UserChallengeStatus getUserChallengeStatusFromApi(Challenge challenge)
+  protected abstract ChallengeProgress getChallengeProgressFromApi(Challenge challenge)
       throws Exception;
 }

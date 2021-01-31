@@ -12,10 +12,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.azkar.TestBase;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Challenge;
-import com.azkar.entities.Challenge.SubChallenges;
+import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
-import com.azkar.entities.User.UserChallengeStatus;
+import com.azkar.entities.User.ChallengeProgress;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
@@ -75,18 +75,18 @@ public class GroupChallengeTest extends TestBase {
         .andExpect(status().isOk())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
-        .getUserChallengeStatuses();
-    assertThat(userChallengeStatuses.size(), is(1));
+    List<ChallengeProgress> challengesProgress = userRepo.findById(user1.getId()).get()
+        .getChallengesProgress();
+    assertThat(challengesProgress.size(), is(1));
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(groupChallenges.size(), is(1));
     User updatedUser1 = userRepo.findById(user1.getId()).get();
     User updatedAnotherGroupMember = userRepo.findById(anotherGroupMember.getId()).get();
     User updatedNonGroupMember = userRepo.findById(nonGroupMember.getId()).get();
-    assertThat(updatedUser1.getUserChallengeStatuses().size(), is(1));
-    assertThat(updatedUser1.getUserChallengeStatuses().get(0).isOngoing(), is(false));
-    assertThat(updatedAnotherGroupMember.getUserChallengeStatuses().size(), is(1));
-    assertThat(updatedNonGroupMember.getUserChallengeStatuses().size(), is(0));
+    assertThat(updatedUser1.getChallengesProgress().size(), is(1));
+    assertThat(updatedUser1.getChallengesProgress().get(0).isOngoing(), is(false));
+    assertThat(updatedAnotherGroupMember.getChallengesProgress().size(), is(1));
+    assertThat(updatedNonGroupMember.getChallengesProgress().size(), is(0));
   }
 
   @Test
@@ -105,18 +105,18 @@ public class GroupChallengeTest extends TestBase {
         .andExpect(status().isOk())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
-        .getUserChallengeStatuses();
+    List<ChallengeProgress> challengesProgress = userRepo.findById(user1.getId()).get()
+        .getChallengesProgress();
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
-    assertThat(userChallengeStatuses.size(), is(1));
-    assertThat(userChallengeStatuses.get(0).isOngoing(), is(true));
+    assertThat(challengesProgress.size(), is(1));
+    assertThat(challengesProgress.get(0).isOngoing(), is(true));
     assertThat(groupChallenges.size(), is(1));
   }
 
   @Test
   public void addChallenge_zeroSubChallengeRepetitions_shouldNotSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
-    SubChallenges zeroRepetitionSubChallenge = SubChallenges.builder().zekrId("1").zekr("zekr")
+    SubChallenge zeroRepetitionSubChallenge = SubChallenge.builder().zekrId("1").zekr("zekr")
         .build();
     Challenge challenge = Challenge.builder()
         .name(ChallengeFactory.CHALLENGE_NAME_BASE)
@@ -132,9 +132,9 @@ public class GroupChallengeTest extends TestBase {
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
-        .getUserChallengeStatuses();
-    assertTrue("UserChallenges list is not empty.", userChallengeStatuses.isEmpty());
+    List<ChallengeProgress> challengesProgress = userRepo.findById(user1.getId()).get()
+        .getChallengesProgress();
+    assertTrue("Challenges progress list is not empty.", challengesProgress.isEmpty());
   }
 
   @Test
@@ -147,9 +147,9 @@ public class GroupChallengeTest extends TestBase {
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
-        .getUserChallengeStatuses();
-    assertTrue("UserChallenges list is not empty.", userChallengeStatuses.isEmpty());
+    List<ChallengeProgress> challengesProgress = userRepo.findById(user1.getId()).get()
+        .getChallengesProgress();
+    assertTrue("UserChallenges list is not empty.", challengesProgress.isEmpty());
   }
 
   @Test
@@ -164,9 +164,9 @@ public class GroupChallengeTest extends TestBase {
         .andExpect(status().isForbidden())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    List<UserChallengeStatus> userChallenges = userRepo.findById(nonGroupMember.getId())
+    List<ChallengeProgress> userChallenges = userRepo.findById(nonGroupMember.getId())
         .get()
-        .getUserChallengeStatuses();
+        .getChallengesProgress();
     assertThat(userChallenges, empty());
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(groupChallenges, empty());
@@ -188,10 +188,10 @@ public class GroupChallengeTest extends TestBase {
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
-        .getUserChallengeStatuses();
+    List<ChallengeProgress> challengesProgress = userRepo.findById(user1.getId()).get()
+        .getChallengesProgress();
     assertTrue("UserChallenges list is expected to be empty but it is not.",
-        userChallengeStatuses.isEmpty());
+        challengesProgress.isEmpty());
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertTrue("GroupChallenges list is expected to be empty but it is not.",
         groupChallenges.isEmpty());
@@ -214,9 +214,9 @@ public class GroupChallengeTest extends TestBase {
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    List<UserChallengeStatus> userChallengeStatuses = userRepo.findById(user1.getId()).get()
-        .getUserChallengeStatuses();
-    assertTrue("UserChallenges list is not empty.", userChallengeStatuses.isEmpty());
+    List<ChallengeProgress> challengesProgress = userRepo.findById(user1.getId()).get()
+        .getChallengesProgress();
+    assertTrue("UserChallenges list is not empty.", challengesProgress.isEmpty());
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertTrue("GroupChallenges list is expected to be empty but it is not.",
         groupChallenges.isEmpty());

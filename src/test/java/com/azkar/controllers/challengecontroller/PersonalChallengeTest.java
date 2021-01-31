@@ -9,9 +9,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.azkar.TestBase;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Challenge;
-import com.azkar.entities.Challenge.SubChallenges;
+import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.User;
-import com.azkar.entities.User.UserChallengeStatus;
+import com.azkar.entities.User.ChallengeProgress;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
@@ -37,7 +37,7 @@ public class PersonalChallengeTest extends TestBase {
   private static final User USER = UserFactory.getNewUser();
   private static final String CHALLENGE_MOTIVATION = ChallengeFactory.CHALLENGE_MOTIVATION;
   private static final long DATE_OFFSET_IN_SECONDS = ChallengeFactory.EXPIRY_DATE_OFFSET;
-  private static final ImmutableList<SubChallenges> SUB_CHALLENGES = ImmutableList.of(
+  private static final ImmutableList<SubChallenge> SUB_CHALLENGES = ImmutableList.of(
       ChallengeFactory.SUB_CHALLENGE_1, ChallengeFactory.SUB_CHALLENGE_2);
   private static final String CHALLENGE_NAME = "test-challenge";
 
@@ -151,13 +151,14 @@ public class PersonalChallengeTest extends TestBase {
     assertUserChallengeConsistentWithRequest(data.get(1), request2);
   }
 
-  private void assertUserChallengeConsistentWithRequest(UserChallenge userChallenge,
+  private void assertUserChallengeConsistentWithRequest(
+      UserChallenge userChallenge,
       AddPersonalChallengeRequest request) {
     Challenge challengeInfo = userChallenge.getChallengeInfo();
-    UserChallengeStatus userChallengeStatus = userChallenge.getUserChallengeStatus();
+    ChallengeProgress challengeProgress = userChallenge.getChallengeProgress();
     assertThat(challengeInfo.getName(), is(request.getName()));
     assertThat(challengeInfo.isOngoing(), is(true));
     assertThat(challengeInfo.getCreatingUserId(), is(USER.getId()));
-    assertThat(userChallengeStatus.isAccepted(), is(true));
+    assertThat(challengeProgress.isAccepted(), is(true));
   }
 }

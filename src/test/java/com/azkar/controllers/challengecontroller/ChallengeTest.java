@@ -8,8 +8,8 @@ import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
-import com.azkar.entities.User.UserChallengeStatus;
-import com.azkar.entities.User.UserSubChallenge;
+import com.azkar.entities.User.ChallengeProgress;
+import com.azkar.entities.User.SubChallengeProgress;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
@@ -40,8 +40,8 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void getChallenge_normalScenario_shouldSucceed() throws Exception {
-    UserChallenge queriedChallenge = createOngoingUserChallenge(user, group);
-    UserChallenge anotherChallenge = createOngoingUserChallenge(user, group);
+    UserChallenge queriedChallenge = createOngoingGroupChallenge(user, group);
+    UserChallenge anotherChallenge = createOngoingGroupChallenge(user, group);
     GetChallengeResponse response = new GetChallengeResponse();
     response.setData(queriedChallenge);
 
@@ -51,17 +51,17 @@ public class ChallengeTest extends TestBase {
         .andExpect(content().json(JsonHandler.toJson(response)));
   }
 
-  private UserChallenge createOngoingUserChallenge(User user, Group group)
+  private UserChallenge createOngoingGroupChallenge(User user, Group group)
       throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
     azkarApi.createChallenge(user, challenge).andExpect(status().isOk());
     challenge.setOngoing(true);
-    UserChallengeStatus userChallengeStatus = new UserChallengeStatus(challenge.getId(),
+    ChallengeProgress challengeProgress = new ChallengeProgress(challenge.getId(),
         /* isAccepted= */true,
         challenge.isOngoing(),
         group.getId(),
-        UserSubChallenge.fromSubChallengesCollection(challenge.getSubChallenges()));
-    return new UserChallenge(challenge, userChallengeStatus);
+        SubChallengeProgress.fromSubChallengesCollection(challenge.getSubChallenges()));
+    return new UserChallenge(challenge, challengeProgress);
   }
 
   @Test

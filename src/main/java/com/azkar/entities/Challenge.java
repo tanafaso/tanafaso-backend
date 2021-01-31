@@ -42,7 +42,7 @@ public class Challenge extends EntityBase {
   @Default
   private List<String> usersFinished = new ArrayList<>();
   @NonNull
-  private List<SubChallenges> subChallenges;
+  private List<SubChallenge> subChallenges;
   @JsonIgnore
   @CreatedDate
   private long createdAt;
@@ -55,7 +55,7 @@ public class Challenge extends EntityBase {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
-  public static class SubChallenges {
+  public static class SubChallenge {
 
     // TODO: This uses lombok.NonNull because using mongodb.NonNull does not have effect here.
     // The NonNull annotations usage can be improved to be more consistent and cleaner.

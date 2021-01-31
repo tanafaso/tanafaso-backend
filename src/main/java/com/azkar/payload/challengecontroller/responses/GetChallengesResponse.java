@@ -1,7 +1,7 @@
 package com.azkar.payload.challengecontroller.responses;
 
 import com.azkar.entities.Challenge;
-import com.azkar.entities.User.UserChallengeStatus;
+import com.azkar.entities.User.ChallengeProgress;
 import com.azkar.payload.ResponseBase;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserChallenge;
 import java.util.List;
@@ -32,6 +32,6 @@ public class GetChallengesResponse extends ResponseBase<List<UserChallenge>> {
     // NOTE: challengeInfo.id and userChallengeStatus.challengeId must be equal
     // as they represent the same challenge.
     Challenge challengeInfo;
-    UserChallengeStatus userChallengeStatus;
+    ChallengeProgress challengeProgress;
   }
 }
