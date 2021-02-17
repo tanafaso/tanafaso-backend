@@ -1,13 +1,18 @@
 package com.azkar.payload.groupcontroller;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@AllArgsConstructor
 @Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AddGroupRequest {
 
-  @NonNull
-  private String name;
+  String name;
+
 }

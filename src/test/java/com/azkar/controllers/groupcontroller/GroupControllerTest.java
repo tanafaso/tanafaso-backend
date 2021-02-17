@@ -14,6 +14,7 @@ import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.groupcontroller.AcceptGroupInvitationResponse;
+import com.azkar.payload.groupcontroller.AddGroupRequest;
 import com.azkar.payload.groupcontroller.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.InviteToGroupResponse;
 import com.azkar.payload.groupcontroller.LeaveGroupResponse;
@@ -26,9 +27,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
-public class GroupMembershipTest extends TestBase {
+public class GroupControllerTest extends TestBase {
 
   @Autowired
   GroupRepo groupRepo;
@@ -51,6 +53,21 @@ public class GroupMembershipTest extends TestBase {
     addNewUser(user3);
     addNewUser(user4);
     groupRepo.save(user1Group);
+  }
+
+  @Test
+  public void addGroup_normalScenario_shouldSucceed() throws Exception {
+    final String TEST_GROUP_NAME = "example_name";
+    AddGroupRequest addGroupRequest = AddGroupRequest.builder().name(TEST_GROUP_NAME).build();
+    long groupRepoCountBeforeOperation = groupRepo.count();
+
+    MvcResult result =
+        azkarApi.addGroup(user1, addGroupRequest).andExpect(status().isOk()).andReturn();
+
+    Group addedGroup = JsonHandler.fromJson(result.getResponse().getContentAsString(), Group.class);
+    assertThat(addedGroup.getName(), equals(TEST_GROUP_NAME));
+    assertThat(groupRepo.count(), is(groupRepoCountBeforeOperation + 1));
+    assertThat(groupRepo.findById(addedGroup.getId()).isPresent(), is(true));
   }
 
   @Test
