@@ -13,12 +13,13 @@ import com.azkar.entities.User.UserGroup;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
-import com.azkar.payload.groupcontroller.AcceptGroupInvitationResponse;
-import com.azkar.payload.groupcontroller.AddGroupRequest;
-import com.azkar.payload.groupcontroller.GetUserGroupsResponse;
-import com.azkar.payload.groupcontroller.InviteToGroupResponse;
-import com.azkar.payload.groupcontroller.LeaveGroupResponse;
-import com.azkar.payload.groupcontroller.RejectGroupInvitationResponse;
+import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
+import com.azkar.payload.groupcontroller.responses.AcceptGroupInvitationResponse;
+import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
+import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
+import com.azkar.payload.groupcontroller.responses.InviteToGroupResponse;
+import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
+import com.azkar.payload.groupcontroller.responses.RejectGroupInvitationResponse;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import java.util.ArrayList;
@@ -64,10 +65,12 @@ public class GroupControllerTest extends TestBase {
     MvcResult result =
         azkarApi.addGroup(user1, addGroupRequest).andExpect(status().isOk()).andReturn();
 
-    Group addedGroup = JsonHandler.fromJson(result.getResponse().getContentAsString(), Group.class);
-    assertThat(addedGroup.getName(), equals(TEST_GROUP_NAME));
+    AddGroupResponse response = JsonHandler.fromJson(result.getResponse().getContentAsString(),
+        AddGroupResponse.class);
+    Group returnedGroup = response.getData();
+    assertThat(returnedGroup.getName(), is(TEST_GROUP_NAME));
     assertThat(groupRepo.count(), is(groupRepoCountBeforeOperation + 1));
-    assertThat(groupRepo.findById(addedGroup.getId()).isPresent(), is(true));
+    assertThat(groupRepo.findById(returnedGroup.getId()).isPresent(), is(true));
   }
 
   @Test

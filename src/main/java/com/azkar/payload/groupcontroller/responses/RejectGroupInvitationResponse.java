@@ -1,8 +1,8 @@
-package com.azkar.payload.groupcontroller;
+package com.azkar.payload.groupcontroller.responses;
 
 import com.azkar.payload.ResponseBase;
 
-public class AcceptGroupInvitationResponse extends ResponseBase {
+public class RejectGroupInvitationResponse extends ResponseBase {
 
   public static final String GROUP_INVALID_ERROR = "Invalid group ID.";
   public static final String USER_ALREADY_MEMBER_ERROR =

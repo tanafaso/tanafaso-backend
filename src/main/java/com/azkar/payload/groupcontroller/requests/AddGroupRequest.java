@@ -1,4 +1,4 @@
-package com.azkar.payload.groupcontroller;
+package com.azkar.payload.groupcontroller.requests;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,11 +1,14 @@
 package com.azkar.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -15,10 +18,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "groups")
 @Getter
 @Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Group extends EntityBase {
 
   @Id
   private String id;
+  @JsonProperty("binary")
   private boolean isBinary;
   @NonNull
   private String name;
