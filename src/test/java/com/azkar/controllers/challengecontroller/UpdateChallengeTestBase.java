@@ -17,10 +17,8 @@ import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
-import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest.ModifiedSubChallenge;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.repos.GroupRepo;
-import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.junit.Before;
@@ -31,39 +29,21 @@ import org.springframework.test.web.servlet.ResultActions;
 
 public abstract class UpdateChallengeTestBase extends TestBase {
 
-  public static final int OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS = ChallengeFactory.SUB_CHALLENGE_1
+  public static final int OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS = ChallengeFactory.subChallenge1()
       .getOriginalRepetitions();
   public static final int NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS =
       OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS - 1;
-  public static final ModifiedSubChallenge MODIFIED_SUB_CHALLENGE_1 =
-      createModifiedSubChallenge(ChallengeFactory.SUB_CHALLENGE_1,
-          NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
-  public static final int OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS = ChallengeFactory.SUB_CHALLENGE_2
+  public static final int OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS = ChallengeFactory.subChallenge2()
       .getOriginalRepetitions();
   public static final int NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS =
       OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS - 2;
-  public static final ModifiedSubChallenge MODIFIED_SUB_CHALLENGE_2 =
-      createModifiedSubChallenge(ChallengeFactory.SUB_CHALLENGE_2,
-          NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
   protected User user;
   @Autowired
   protected GroupRepo groupRepo;
-  @Autowired
-  protected UserRepo userRepo;
   protected Group group;
 
-  static UpdateChallengeRequest createUpdateChallengeRequest(
-      ModifiedSubChallenge... modifiedSubChallenges) {
-    List<ModifiedSubChallenge> allModifiedSubChallenges = ImmutableList
-        .copyOf(modifiedSubChallenges);
-    return UpdateChallengeRequest.builder()
-        .allModifiedSubChallenges(allModifiedSubChallenges).build();
-  }
-
-  static ModifiedSubChallenge createModifiedSubChallenge(SubChallenge subChallenge,
-      int newLeftRepetition) {
-    return ModifiedSubChallenge.builder().zekrId(subChallenge.getZekrId())
-        .newLeftRepetitions(newLeftRepetition).build();
+  static UpdateChallengeRequest createUpdateChallengeRequest(Challenge newChallenge) {
+    return UpdateChallengeRequest.builder().newChallenge(newChallenge).build();
   }
 
   @Before
@@ -77,8 +57,9 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   @Test
   public void updateChallenge_updateOneSubChallenge_shouldSucceed() throws Exception {
     Challenge challenge = createNewChallenge(user);
-    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(
-        MODIFIED_SUB_CHALLENGE_2);
+    challenge.getSubChallenges().get(1)
+        .setOriginalRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk());
@@ -94,8 +75,11 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   @Test
   public void updateChallenge_updateMultipleSubChallenges_shouldSucceed() throws Exception {
     Challenge challenge = createNewChallenge(user);
-    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(
-        MODIFIED_SUB_CHALLENGE_1, MODIFIED_SUB_CHALLENGE_2);
+    challenge.getSubChallenges().get(0)
+        .setOriginalRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
+    challenge.getSubChallenges().get(1)
+        .setOriginalRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk());
@@ -110,10 +94,8 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   @Test
   public void updateChallenge_NegativeLeftRepetitions_shouldUpdateWithZero() throws Exception {
     Challenge challenge = createNewChallenge(user);
-    ModifiedSubChallenge modifiedSubChallenge1WithNegativeRepetitions = createModifiedSubChallenge(
-        ChallengeFactory.SUB_CHALLENGE_1, /*newLeftRepetition*/ -1);
-    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(
-        modifiedSubChallenge1WithNegativeRepetitions);
+    challenge.getSubChallenges().get(0).setOriginalRepetitions(-1);
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk());
@@ -129,12 +111,9 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   @Test
   public void updateChallenge_IncrementLeftRepetitions_shouldFail() throws Exception {
     Challenge challenge = createNewChallenge(user);
-    ModifiedSubChallenge modifiedSubChallengeWithIncreasingRepetitions =
-        createModifiedSubChallenge(
-            ChallengeFactory.SUB_CHALLENGE_1,
-            OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS + 1);
-    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(
-        modifiedSubChallengeWithIncreasingRepetitions);
+    challenge.getSubChallenges().get(0)
+        .setOriginalRepetitions(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS + 1);
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse expectedResponse = new UpdateChallengeResponse();
     expectedResponse
         .setError(new Error(UpdateChallengeResponse.INCREMENTING_LEFT_REPETITIONS_ERROR));
@@ -156,10 +135,8 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   public void updateChallenge_invalidZekrId_shouldFail() throws Exception {
     String invalidZekrId = "777";
     Challenge challenge = createNewChallenge(user);
-    ModifiedSubChallenge invalidModifiedSubChallenge = ModifiedSubChallenge.builder()
-        .zekrId(invalidZekrId).newLeftRepetitions(1).build();
-    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(
-        MODIFIED_SUB_CHALLENGE_1, invalidModifiedSubChallenge);
+    challenge.getSubChallenges().get(1).setZekrId(invalidZekrId);
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse expectedResponse = new UpdateChallengeResponse();
     expectedResponse
         .setError(new Error(UpdateChallengeResponse.NON_EXISTENT_SUB_CHALLENGE_ERROR));
@@ -179,13 +156,84 @@ public abstract class UpdateChallengeTestBase extends TestBase {
 
   @Test
   public void updateChallenge_invalidChallengeId_shouldFail() throws Exception {
-    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(MODIFIED_SUB_CHALLENGE_1);
+    Challenge unsavedChallenge = ChallengeFactory.getNewChallenge("invalidId");
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(unsavedChallenge);
     UpdateChallengeResponse response = new UpdateChallengeResponse();
     response.setError(new Error(UpdateChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
 
     updateChallenge(user, "invalidId", requestBody)
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(response)));
+  }
+
+  @Test
+  public void updateChallenge_extraSubChallenge_shouldFail() throws Exception {
+    Challenge challenge = createNewChallenge(user);
+    List<SubChallenge> updatedSubChallenges = ImmutableList.of(
+        challenge.getSubChallenges().get(0),
+        challenge.getSubChallenges().get(0),
+        challenge.getSubChallenges().get(1));
+    updatedSubChallenges.get(2).setOriginalRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
+    challenge.setSubChallenges(updatedSubChallenges);
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
+    UpdateChallengeResponse response = new UpdateChallengeResponse();
+    response.setError(new Error(UpdateChallengeResponse.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+
+    updateChallenge(user, challenge.getId(), requestBody)
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(content().json(JsonHandler.toJson(response)));
+
+    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
+    assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(), is(
+        OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
+    assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(), is(
+        OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS));
+  }
+
+  @Test
+  public void updateChallenge_missingSubChallenge_shouldFail() throws Exception {
+    Challenge challenge = createNewChallenge(user);
+    List<SubChallenge> updatedSubChallenges = ImmutableList.of(
+        challenge.getSubChallenges().get(0));
+    updatedSubChallenges.get(0).setOriginalRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
+    challenge.setSubChallenges(updatedSubChallenges);
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
+    UpdateChallengeResponse response = new UpdateChallengeResponse();
+    response.setError(new Error(UpdateChallengeResponse.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+
+    updateChallenge(user, challenge.getId(), requestBody)
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(content().json(JsonHandler.toJson(response)));
+
+    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
+    assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(), is(
+        OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
+    assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(), is(
+        OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS));
+  }
+
+  @Test
+  public void updateChallenge_duplicatedSubChallenge_shouldFail() throws Exception {
+    Challenge challenge = createNewChallenge(user);
+    List<SubChallenge> updatedSubChallenges = ImmutableList.of(
+        challenge.getSubChallenges().get(0),
+        challenge.getSubChallenges().get(0));
+    updatedSubChallenges.get(0).setOriginalRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
+    updatedSubChallenges.get(1).setOriginalRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
+    challenge.setSubChallenges(updatedSubChallenges);
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
+    UpdateChallengeResponse response = new UpdateChallengeResponse();
+    response.setError(new Error(UpdateChallengeResponse.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+
+    updateChallenge(user, challenge.getId(), requestBody)
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(content().json(JsonHandler.toJson(response)));
+
+    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
+    assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(), is(
+        OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
+    assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(), is(
+        OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS));
   }
 
   protected abstract Challenge createNewChallenge(User user) throws Exception;

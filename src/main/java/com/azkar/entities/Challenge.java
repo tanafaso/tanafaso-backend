@@ -63,6 +63,7 @@ public class Challenge extends EntityBase {
     String zekrId;
     @NonNull
     private String zekr;
+    // TODO: Rename to repetition.
     private int originalRepetitions;
   }
 }

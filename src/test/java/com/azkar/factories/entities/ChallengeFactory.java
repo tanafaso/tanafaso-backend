@@ -10,6 +10,7 @@ public class ChallengeFactory {
   public static final String CHALLENGE_NAME_BASE = "challenge_name";
   public final static String CHALLENGE_MOTIVATION = "challenge_motivation";
   public final static long EXPIRY_DATE_OFFSET = 60 * 60;
+
   public static SubChallenge subChallenge1() {
     return SubChallenge.builder()
         .zekrId("1")
