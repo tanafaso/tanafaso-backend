@@ -38,7 +38,7 @@ public class PersonalChallengeTest extends TestBase {
   private static final String CHALLENGE_MOTIVATION = ChallengeFactory.CHALLENGE_MOTIVATION;
   private static final long DATE_OFFSET_IN_SECONDS = ChallengeFactory.EXPIRY_DATE_OFFSET;
   private static final ImmutableList<SubChallenge> SUB_CHALLENGES = ImmutableList.of(
-      ChallengeFactory.SUB_CHALLENGE_1, ChallengeFactory.SUB_CHALLENGE_2);
+      ChallengeFactory.subChallenge1(), ChallengeFactory.subChallenge2());
   private static final String CHALLENGE_NAME = "test-challenge";
 
   @Autowired

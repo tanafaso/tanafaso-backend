@@ -54,7 +54,7 @@ public class Challenge extends EntityBase {
   @Setter
   @NoArgsConstructor
   @AllArgsConstructor
-  @Builder
+  @Builder(toBuilder = true)
   public static class SubChallenge {
 
     // TODO: This uses lombok.NonNull because using mongodb.NonNull does not have effect here.

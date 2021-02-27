@@ -10,16 +10,22 @@ public class ChallengeFactory {
   public static final String CHALLENGE_NAME_BASE = "challenge_name";
   public final static String CHALLENGE_MOTIVATION = "challenge_motivation";
   public final static long EXPIRY_DATE_OFFSET = 60 * 60;
-  public final static SubChallenge SUB_CHALLENGE_1 = SubChallenge.builder()
-      .zekrId("1")
-      .zekr("zekr")
-      .originalRepetitions(3)
-      .build();
-  public final static SubChallenge SUB_CHALLENGE_2 = SubChallenge.builder()
-      .zekrId("2")
-      .zekr("zekr2")
-      .originalRepetitions(5)
-      .build();
+  public static SubChallenge subChallenge1() {
+    return SubChallenge.builder()
+        .zekrId("1")
+        .zekr("zekr")
+        .originalRepetitions(3)
+        .build();
+  }
+
+  public static SubChallenge subChallenge2() {
+    return SubChallenge.builder()
+        .zekrId("2")
+        .zekr("zekr2")
+        .originalRepetitions(5)
+        .build();
+  }
+
   private static int challengesRequested = 0;
 
   public static Challenge getNewChallenge(String groupId) {
@@ -34,7 +40,7 @@ public class ChallengeFactory {
         .name(challengeFullName)
         .motivation(CHALLENGE_MOTIVATION)
         .expiryDate(expiryDate)
-        .subChallenges(ImmutableList.of(SUB_CHALLENGE_1, SUB_CHALLENGE_2))
+        .subChallenges(ImmutableList.of(subChallenge1(), subChallenge2()))
         .groupId(groupId)
         .build();
   }
