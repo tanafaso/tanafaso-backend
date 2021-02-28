@@ -1,6 +1,7 @@
 package com.azkar.controllers;
 
 import com.azkar.entities.Challenge;
+import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.PersonalChallenge;
 import com.azkar.entities.User;
@@ -10,7 +11,6 @@ import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
-import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest.ModifiedSubChallenge;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
@@ -25,8 +25,10 @@ import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -144,9 +146,16 @@ public class ChallengeController extends BaseController {
 
   private Optional<ResponseEntity<UpdateChallengeResponse>> updateSubChallenges(
       List<SubChallengeProgress> subChallenges, UpdateChallengeRequest request) {
-    List<ModifiedSubChallenge> allModifiedSubChallenges = request.getAllModifiedSubChallenges();
-    for (ModifiedSubChallenge modifiedSubChallenge : allModifiedSubChallenges) {
-      UpdateChallengeResponse response = new UpdateChallengeResponse();
+    UpdateChallengeResponse response = new UpdateChallengeResponse();
+    List<SubChallenge> allModifiedSubChallenges = request.getNewChallenge().getSubChallenges();
+    if (allModifiedSubChallenges.size() != subChallenges.size()) {
+      response
+          .setError(new Error(UpdateChallengeResponse.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+      return Optional.of(ResponseEntity.unprocessableEntity().body(response));
+    }
+    Set<String> modifiedZekrIds = new HashSet<>();
+    for (SubChallenge modifiedSubChallenge : allModifiedSubChallenges) {
+      modifiedZekrIds.add(modifiedSubChallenge.getZekrId());
       Optional<SubChallengeProgress> subChallenge = findSubChallenge(subChallenges,
           modifiedSubChallenge);
       if (!subChallenge.isPresent()) {
@@ -159,12 +168,17 @@ public class ChallengeController extends BaseController {
         return Optional.of(ResponseEntity.unprocessableEntity().body(response));
       }
     }
+    if (modifiedZekrIds.size() != subChallenges.size()) {
+      response
+          .setError(new Error(UpdateChallengeResponse.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+      return Optional.of(ResponseEntity.unprocessableEntity().body(response));
+    }
     return Optional.empty();
   }
 
   private Optional<SubChallengeProgress> findSubChallenge(
       List<SubChallengeProgress> oldSubChallenges,
-      ModifiedSubChallenge modifiedSubChallenge) {
+      SubChallenge modifiedSubChallenge) {
     for (SubChallengeProgress subChallenge : oldSubChallenges) {
       if (subChallenge.getZekrId().equals(modifiedSubChallenge.getZekrId())) {
         return Optional.of(subChallenge);
@@ -178,8 +192,8 @@ public class ChallengeController extends BaseController {
    * function returns a String with the error message, and returns empty object otherwise.
    */
   private Optional<String> updateSubChallenge(SubChallengeProgress subChallenge,
-      ModifiedSubChallenge modifiedSubChallenge) {
-    int newLeftRepetitions = modifiedSubChallenge.getNewLeftRepetitions();
+      SubChallenge modifiedSubChallenge) {
+    int newLeftRepetitions = modifiedSubChallenge.getOriginalRepetitions();
     if (newLeftRepetitions > subChallenge.getLeftRepetitions()) {
       return Optional.of(UpdateChallengeResponse.INCREMENTING_LEFT_REPETITIONS_ERROR);
     }

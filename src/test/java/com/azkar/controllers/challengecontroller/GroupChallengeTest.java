@@ -178,7 +178,7 @@ public class GroupChallengeTest extends TestBase {
     Challenge challenge = Challenge.builder()
         .name(ChallengeFactory.CHALLENGE_NAME_BASE)
         .expiryDate(expiryDate)
-        .subChallenges(ImmutableList.of(ChallengeFactory.SUB_CHALLENGE_1))
+        .subChallenges(ImmutableList.of(ChallengeFactory.subChallenge1()))
         .groupId(validGroup.getId())
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
@@ -204,7 +204,7 @@ public class GroupChallengeTest extends TestBase {
         .name(ChallengeFactory.CHALLENGE_NAME_BASE)
         .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
         .expiryDate(pastExpiryDate)
-        .subChallenges(ImmutableList.of(ChallengeFactory.SUB_CHALLENGE_1))
+        .subChallenges(ImmutableList.of(ChallengeFactory.subChallenge1()))
         .groupId(validGroup.getId())
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
