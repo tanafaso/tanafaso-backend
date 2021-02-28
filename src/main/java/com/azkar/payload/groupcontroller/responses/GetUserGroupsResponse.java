@@ -1,4 +1,4 @@
-package com.azkar.payload.groupcontroller;
+package com.azkar.payload.groupcontroller.responses;
 
 import com.azkar.entities.User.UserGroup;
 import com.azkar.payload.ResponseBase;

@@ -5,6 +5,7 @@ import com.azkar.entities.User;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
+import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.test.web.servlet.ResultActions;
@@ -83,5 +84,9 @@ public class AzkarApi {
       throws Exception {
     return httpClient.performPutRequest(user, String.format("/challenges/personal/%s", challengeId),
         JsonHandler.toJson(body));
+  }
+
+  public ResultActions addGroup(User user, AddGroupRequest body) throws Exception {
+    return httpClient.performPostRequest(user, "/groups", JsonHandler.toJson(body));
   }
 }
