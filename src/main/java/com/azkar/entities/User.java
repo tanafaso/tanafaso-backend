@@ -57,6 +57,8 @@ public class User extends EntityBase {
 
     @NotNull
     private String groupId;
+    @NotNull
+    private String name;
     // Can be null in case of a non-pending group.
     private String invitingUserId;
     private boolean isPending;

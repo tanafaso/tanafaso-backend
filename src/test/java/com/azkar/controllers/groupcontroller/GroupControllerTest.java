@@ -420,9 +420,12 @@ public class GroupControllerTest extends TestBase {
 
   @Test
   public void getGroups_normalScenario_shouldSucceed() throws Exception {
-    Group group1 = azkarApi.addGroupAndReturn(user1, "user1group1name");
-    Group group2 = azkarApi.addGroupAndReturn(user1, "user1group2name");
-    Group group3 = azkarApi.addGroupAndReturn(user2, "user2group1name");
+    String user1Group1Name = "user1group1name";
+    String user1Group2Name = "user1group2name";
+    String user2Group1Name = "user2group1name";
+    Group group1 = azkarApi.addGroupAndReturn(user1, user1Group1Name);
+    Group group2 = azkarApi.addGroupAndReturn(user1, user1Group2Name);
+    Group group3 = azkarApi.addGroupAndReturn(user2, user2Group1Name);
 
     addUserToGroup(user3, /*invitingUser=*/user1, group1.getId());
 
@@ -435,17 +438,20 @@ public class GroupControllerTest extends TestBase {
     List<UserGroup> expectedUserGroups = new ArrayList();
     expectedUserGroups.add(UserGroup.builder()
         .groupId(group1.getId())
+        .name(user1Group1Name)
         .isPending(false)
         .build());
 
     expectedUserGroups.add(UserGroup.builder()
         .groupId(group2.getId())
         .invitingUserId(user1.getId())
+        .name(user1Group2Name)
         .isPending(true)
         .build());
 
     expectedUserGroups.add(UserGroup.builder()
         .groupId(group3.getId())
+        .name(user2Group1Name)
         .isPending(false)
         .build());
 
@@ -459,13 +465,16 @@ public class GroupControllerTest extends TestBase {
 
   @Test
   public void getGroups_ownedGroups_normalScenario_shouldSucceed() throws Exception {
-    Group group1 = azkarApi.addGroupAndReturn(user1, "group1name");
-    Group group2 = azkarApi.addGroupAndReturn(user2, "group2name");
+    String groupName1 = "group1name";
+    String groupName2 = "group2name";
+    Group group1 = azkarApi.addGroupAndReturn(user1, groupName1);
+    Group group2 = azkarApi.addGroupAndReturn(user2, groupName2);
 
     GetUserGroupsResponse expectedUser1Response = new GetUserGroupsResponse();
     List<UserGroup> expectedUser1Groups = new ArrayList();
     expectedUser1Groups.add(UserGroup.builder()
         .groupId(group1.getId())
+        .name(groupName1)
         .isPending(false)
         .build());
     expectedUser1Response.setData(expectedUser1Groups);
@@ -474,6 +483,7 @@ public class GroupControllerTest extends TestBase {
     List<UserGroup> expectedUser2Groups = new ArrayList();
     expectedUser2Groups.add(UserGroup.builder()
         .groupId(group2.getId())
+        .name(groupName2)
         .isPending(false)
         .build());
     expectedUser2Response.setData(expectedUser2Groups);

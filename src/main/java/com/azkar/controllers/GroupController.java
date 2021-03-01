@@ -58,7 +58,8 @@ public class GroupController extends BaseController {
     newGroup = groupRepo.save(newGroup);
 
     currentUser.getUserGroups()
-        .add(UserGroup.builder().groupId(newGroup.getId()).isPending(false).build());
+        .add(UserGroup.builder().groupId(newGroup.getId()).name(newGroup.getName()).isPending(false)
+            .build());
     userRepo.save(currentUser);
 
     response.setData(newGroup);
@@ -120,6 +121,7 @@ public class GroupController extends BaseController {
     invitedUser.get().getUserGroups().add(
         UserGroup.builder()
             .groupId(groupId)
+            .name(group.get().getName())
             .invitingUserId(invitingUser.getId())
             .isPending(true)
             .build());
@@ -163,6 +165,7 @@ public class GroupController extends BaseController {
     // Add the group to the list of this user groups.
     userGroups.add(UserGroup.builder()
         .groupId(groupId)
+        .name(group.get().getName())
         .isPending(false)
         .build());
     userRepo.save(user);
