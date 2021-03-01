@@ -438,20 +438,20 @@ public class GroupControllerTest extends TestBase {
     List<UserGroup> expectedUserGroups = new ArrayList();
     expectedUserGroups.add(UserGroup.builder()
         .groupId(group1.getId())
-        .name(user1Group1Name)
+        .groupName(user1Group1Name)
         .isPending(false)
         .build());
 
     expectedUserGroups.add(UserGroup.builder()
         .groupId(group2.getId())
         .invitingUserId(user1.getId())
-        .name(user1Group2Name)
+        .groupName(user1Group2Name)
         .isPending(true)
         .build());
 
     expectedUserGroups.add(UserGroup.builder()
         .groupId(group3.getId())
-        .name(user2Group1Name)
+        .groupName(user2Group1Name)
         .isPending(false)
         .build());
 
@@ -474,7 +474,7 @@ public class GroupControllerTest extends TestBase {
     List<UserGroup> expectedUser1Groups = new ArrayList();
     expectedUser1Groups.add(UserGroup.builder()
         .groupId(group1.getId())
-        .name(groupName1)
+        .groupName(groupName1)
         .isPending(false)
         .build());
     expectedUser1Response.setData(expectedUser1Groups);
@@ -483,7 +483,7 @@ public class GroupControllerTest extends TestBase {
     List<UserGroup> expectedUser2Groups = new ArrayList();
     expectedUser2Groups.add(UserGroup.builder()
         .groupId(group2.getId())
-        .name(groupName2)
+        .groupName(groupName2)
         .isPending(false)
         .build());
     expectedUser2Response.setData(expectedUser2Groups);
