@@ -7,10 +7,12 @@ import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AcceptGroupInvitationResponse;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
+import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.InviteToGroupResponse;
 import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
 import com.azkar.payload.groupcontroller.responses.RejectGroupInvitationResponse;
+import com.azkar.payload.usercontroller.GetUserResponse;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.base.Strings;
@@ -64,6 +66,29 @@ public class GroupController extends BaseController {
     userRepo.save(currentUser);
 
     response.setData(newGroup);
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping(value = "/{groupId}")
+  public ResponseEntity<GetGroupResponse> getGroup(@PathVariable String groupId) {
+    GetGroupResponse response = new GetGroupResponse();
+    User currentUser = getCurrentUser(userRepo);
+    if (!currentUser.getUserGroups().stream().anyMatch(
+        userGroup ->
+            userGroup.getGroupId().equals(groupId)
+    )) {
+      response.setError(new Error(GetGroupResponse.NOT_MEMBER_IN_GROUP_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    Optional<Group> group = groupRepo.findById(groupId);
+    // Check whether the group is deleted.
+    if (!group.isPresent()) {
+      response.setError(new Error(GetGroupResponse.NOT_MEMBER_IN_GROUP_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    response.setData(group.get());
     return ResponseEntity.ok(response);
   }
 
