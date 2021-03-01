@@ -16,6 +16,7 @@ import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AcceptGroupInvitationResponse;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
+import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.InviteToGroupResponse;
 import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
@@ -458,6 +459,51 @@ public class GroupControllerTest extends TestBase {
     expectedResponse.setData(expectedUserGroups);
     performGetRequest(user3, "/groups/")
         .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
+  }
+
+  @Test
+  public void getGroup_normalScenario_shouldSucceed() throws Exception {
+    azkarApi.addGroup(user1, "group1");
+    Group group2 = azkarApi.addGroupAndReturn(user1, "group2");
+    azkarApi.addGroup(user2, "group3");
+
+    GetGroupResponse expectedResponse = new GetGroupResponse();
+    expectedResponse.setData(group2);
+    azkarApi.getGroup(user1, group2.getId())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
+  }
+
+  @Test
+  public void getGroup_notMember_shouldFail() throws Exception {
+    azkarApi.addGroup(user1, "group1");
+    azkarApi.addGroup(user1, "group2");
+    Group group3 = azkarApi.addGroupAndReturn(user2, "group3");
+
+    GetGroupResponse expectedResponse = new GetGroupResponse();
+    expectedResponse.setError(new Error(GetGroupResponse.NOT_MEMBER_IN_GROUP_ERROR));
+    azkarApi.getGroup(user1, group3.getId())
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
+  }
+
+  @Test
+  public void getGroup_notExistingGroup_shouldFail() throws Exception {
+    azkarApi.addGroup(user1, "group1");
+    azkarApi.addGroup(user1, "group2");
+    azkarApi.addGroup(user2, "group3");
+
+    GetGroupResponse expectedResponse = new GetGroupResponse();
+    expectedResponse.setError(new Error(GetGroupResponse.NOT_MEMBER_IN_GROUP_ERROR));
+    azkarApi.getGroup(user1, "nonExistingGroupId")
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
         .andReturn();

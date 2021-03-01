@@ -97,8 +97,17 @@ public class AzkarApi {
     return response.getData();
   }
 
+  public ResultActions addGroup(User user, String name) throws Exception {
+    return httpClient.performPostRequest(user, "/groups",
+        JsonHandler.toJson(AddGroupRequest.builder().name(name).build()));
+  }
+
   public ResultActions addGroup(User user, AddGroupRequest body) throws Exception {
     return httpClient.performPostRequest(user, "/groups", JsonHandler.toJson(body));
+  }
+
+  public ResultActions getGroup(User user, String groupId) throws Exception {
+    return httpClient.performGetRequest(user, String.format("/groups/%s", groupId));
   }
 
   public ResultActions getGroups(User user) throws Exception {
