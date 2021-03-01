@@ -43,25 +43,30 @@ public class GroupController extends BaseController {
   // @TODO(3bza): Validate AddGroupRequest.
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
     AddGroupResponse response = new AddGroupResponse();
-    String userId = getCurrentUser().getUserId();
     if (Strings.isNullOrEmpty(req.getName())) {
       response.setError(new Error("Cannot create a group with empty name."));
       return ResponseEntity.badRequest().body(response);
     }
+    User currentUser = getCurrentUser(userRepo);
     Group newGroup =
         Group.builder()
             .name(req.getName())
-            .adminId(userId)
+            .adminId(currentUser.getId())
             .isBinary(true)
-            .usersIds(new ArrayList<>(Arrays.asList(userId)))
+            .usersIds(new ArrayList<>(Arrays.asList(currentUser.getId())))
             .build();
-    groupRepo.save(newGroup);
+    newGroup = groupRepo.save(newGroup);
+
+    currentUser.getUserGroups()
+        .add(UserGroup.builder().groupId(newGroup.getId()).isPending(false).build());
+    userRepo.save(currentUser);
+
     response.setData(newGroup);
     return ResponseEntity.ok(response);
   }
 
   @GetMapping
-  public ResponseEntity<GetUserGroupsResponse> get() {
+  public ResponseEntity<GetUserGroupsResponse> getGroups() {
     GetUserGroupsResponse response = new GetUserGroupsResponse();
 
     User user = userRepo.findById(getCurrentUser().getUserId()).get();

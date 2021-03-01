@@ -8,6 +8,8 @@ public class GroupFactory {
 
   static int groupsRequested = 0;
 
+  // Use AzkarApi.addGroup or AzkarApi.addGroupAndReturn instead.
+  @Deprecated
   public static Group getNewGroup(String adminId) {
     groupsRequested++;
 

@@ -10,6 +10,7 @@ public class ChallengeFactory {
   public static final String CHALLENGE_NAME_BASE = "challenge_name";
   public final static String CHALLENGE_MOTIVATION = "challenge_motivation";
   public final static long EXPIRY_DATE_OFFSET = 60 * 60;
+  private static int challengesRequested = 0;
 
   public static SubChallenge subChallenge1() {
     return SubChallenge.builder()
@@ -26,8 +27,6 @@ public class ChallengeFactory {
         .originalRepetitions(5)
         .build();
   }
-
-  private static int challengesRequested = 0;
 
   public static Challenge getNewChallenge(String groupId) {
     return getNewChallenge(/* namePrefix= */ "", groupId);

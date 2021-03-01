@@ -420,12 +420,9 @@ public class GroupControllerTest extends TestBase {
 
   @Test
   public void getGroups_normalScenario_shouldSucceed() throws Exception {
-    Group group1 = GroupFactory.getNewGroup(user1.getId());
-    Group group2 = GroupFactory.getNewGroup(user1.getId());
-    Group group3 = GroupFactory.getNewGroup(user2.getId());
-    groupRepo.save(group1);
-    groupRepo.save(group2);
-    groupRepo.save(group3);
+    Group group1 = azkarApi.addGroupAndReturn(user1, "user1group1name");
+    Group group2 = azkarApi.addGroupAndReturn(user1, "user1group2name");
+    Group group3 = azkarApi.addGroupAndReturn(user2, "user2group1name");
 
     addUserToGroup(user3, /*invitingUser=*/user1, group1.getId());
 
@@ -457,6 +454,39 @@ public class GroupControllerTest extends TestBase {
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
+  }
+
+  @Test
+  public void getGroups_ownedGroups_normalScenario_shouldSucceed() throws Exception {
+    Group group1 = azkarApi.addGroupAndReturn(user1, "group1name");
+    Group group2 = azkarApi.addGroupAndReturn(user2, "group2name");
+
+    GetUserGroupsResponse expectedUser1Response = new GetUserGroupsResponse();
+    List<UserGroup> expectedUser1Groups = new ArrayList();
+    expectedUser1Groups.add(UserGroup.builder()
+        .groupId(group1.getId())
+        .isPending(false)
+        .build());
+    expectedUser1Response.setData(expectedUser1Groups);
+
+    GetUserGroupsResponse expectedUser2Response = new GetUserGroupsResponse();
+    List<UserGroup> expectedUser2Groups = new ArrayList();
+    expectedUser2Groups.add(UserGroup.builder()
+        .groupId(group2.getId())
+        .isPending(false)
+        .build());
+    expectedUser2Response.setData(expectedUser2Groups);
+
+    azkarApi.getGroups(user1)
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedUser1Response)))
+        .andReturn();
+    azkarApi.getGroups(user2)
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedUser2Response)))
         .andReturn();
   }
 
