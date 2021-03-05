@@ -12,7 +12,6 @@ import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.InviteToGroupResponse;
 import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
 import com.azkar.payload.groupcontroller.responses.RejectGroupInvitationResponse;
-import com.azkar.payload.usercontroller.GetUserResponse;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.base.Strings;

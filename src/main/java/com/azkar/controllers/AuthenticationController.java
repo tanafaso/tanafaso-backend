@@ -214,10 +214,15 @@ public class AuthenticationController extends BaseController {
 
     String jwtToken;
     try {
+      // Case 2
       User user =
-          userRepo.findByUserFacebookData_UserId(facebookResponse.getId()) // Case 2
-              .orElse(userService.buildNewUser(facebookResponse.email, // Case 1
-                  facebookResponse.name));
+          userRepo.findByUserFacebookData_UserId(facebookResponse.getId()).orElse(null);
+      if (user == null) {
+        // Case 1
+        user = userService.buildNewUser(facebookResponse.email, facebookResponse.name);
+        user = userService.addNewUser(user);
+      }
+
       UserFacebookData userFacebookData = UserFacebookData.builder()
           .accessToken(requestBody.getToken())
           .userId(facebookResponse.id)
