@@ -26,7 +26,7 @@ public class AddChallengeRequest extends RequestBodyBase {
 
   @Override
   public void validate() throws BadRequestException {
-    checkNotNull(challenge.getMotivation(),
+    checkNotNull(
         challenge.getName(),
         challenge.getSubChallenges(),
         challenge.getGroupId());
