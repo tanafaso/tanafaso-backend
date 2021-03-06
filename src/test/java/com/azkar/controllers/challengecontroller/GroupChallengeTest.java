@@ -23,7 +23,6 @@ import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
-import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
@@ -173,28 +172,28 @@ public class GroupChallengeTest extends TestBase {
   }
 
   @Test
-  public void addChallenge_missingMotivationField_shouldNotSucceed() throws Exception {
+  public void addChallenge_missingMotivationField_shouldSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
     Challenge challenge = Challenge.builder()
         .name(ChallengeFactory.CHALLENGE_NAME_BASE)
         .expiryDate(expiryDate)
         .subChallenges(ImmutableList.of(ChallengeFactory.subChallenge1()))
         .groupId(validGroup.getId())
+        .isOngoing(true)
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
-    expectedResponse.setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
+    expectedResponse.setData(challenge);
 
     azkarApi.createChallenge(user1, challenge)
-        .andExpect(status().isBadRequest())
+        .andExpect(status().isOk())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<ChallengeProgress> challengesProgress = userRepo.findById(user1.getId()).get()
         .getChallengesProgress();
-    assertTrue("UserChallenges list is expected to be empty but it is not.",
-        challengesProgress.isEmpty());
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
-    assertTrue("GroupChallenges list is expected to be empty but it is not.",
-        groupChallenges.isEmpty());
+    assertThat(challengesProgress.size(), is(1));
+    assertThat(challengesProgress.get(0).isOngoing(), is(true));
+    assertThat(groupChallenges.size(), is(1));
   }
 
   @Test

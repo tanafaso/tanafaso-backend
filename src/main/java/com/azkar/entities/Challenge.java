@@ -31,7 +31,6 @@ public class Challenge extends EntityBase {
   private String groupId;
   @NonNull
   private String creatingUserId;
-  @NonNull
   private String motivation;
   @NonNull
   private String name;
