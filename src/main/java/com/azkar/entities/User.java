@@ -1,19 +1,15 @@
 package com.azkar.entities;
 
-import com.azkar.entities.Challenge.SubChallenge;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -30,17 +26,20 @@ public class User extends EntityBase {
   private String email;
   @JsonIgnore
   private String encodedPassword;
+  // These Challenge instances are not documents in the challenges collection.
   @Indexed(name = "username_index", unique = true)
   @Default
-  private List<PersonalChallenge> personalChallenges = new ArrayList<>();
+  private List<Challenge> personalChallenges = new ArrayList<>();
   private String username;
   @NonNull
   private String name;
   private UserFacebookData userFacebookData;
   @Default
   private List<UserGroup> userGroups = new ArrayList();
+  // Every Challenge instance in this list is a user-customized-copy of a Challenge document in
+  // the challenges collection.
   @Default
-  private List<ChallengeProgress> challengesProgress = new ArrayList();
+  private List<Challenge> userChallenges = new ArrayList();
   @JsonIgnore
   @CreatedDate
   private long createdAt;
@@ -65,73 +64,6 @@ public class User extends EntityBase {
     private int monthScore = 0;
     @Default
     private int totalScore = 0;
-  }
-
-  @Builder(toBuilder = true)
-  @Getter
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Setter
-  public static class ChallengeProgress {
-
-    @JsonIgnore
-    @NonNull
-    String challengeId;
-    @JsonIgnore
-    String groupId;
-    @NonNull
-    List<SubChallengeProgress> subChallenges;
-  }
-
-  public static class SubChallengeProgress {
-
-    private SubChallenge subChallenge;
-    @Getter
-    @Setter
-    private int leftRepetitions;
-
-    public SubChallengeProgress() {
-      this.subChallenge = new SubChallenge();
-    }
-
-    private SubChallengeProgress(SubChallenge subChallenge, int leftRepetitions) {
-      this.subChallenge = subChallenge;
-      this.leftRepetitions = leftRepetitions;
-    }
-
-    public static SubChallengeProgress getInstance(SubChallenge subChallenge) {
-      return new SubChallengeProgress(subChallenge, subChallenge.getOriginalRepetitions());
-    }
-
-    public static List<SubChallengeProgress> fromSubChallengesCollection(
-        List<SubChallenge> subChallenges) {
-      return subChallenges.stream().map(SubChallengeProgress::getInstance)
-          .collect(Collectors.toList());
-    }
-
-    public String getZekrId() {
-      return subChallenge.getZekrId();
-    }
-
-    public void setZekrId(String zekrId) {
-      subChallenge.setZekrId(zekrId);
-    }
-
-    public String getZekr() {
-      return subChallenge.getZekr();
-    }
-
-    public void setZekr(String zekr) {
-      subChallenge.setZekr(zekr);
-    }
-
-    public int getOriginalRepetitions() {
-      return subChallenge.getOriginalRepetitions();
-    }
-
-    public void setOriginalRepetitions(int originalRepetitions) {
-      subChallenge.setOriginalRepetitions(originalRepetitions);
-    }
   }
 
   @Builder(toBuilder = true)

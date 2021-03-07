@@ -2,7 +2,6 @@ package com.azkar.controllers.challengecontroller;
 
 import com.azkar.entities.Challenge;
 import com.azkar.entities.User;
-import com.azkar.entities.User.ChallengeProgress;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import org.junit.Before;
@@ -18,10 +17,10 @@ public class UpdatePersonalChallengeTest extends UpdateChallengeTestBase {
   // TODO(#129): This is a hack to return a challenge using challenge index in the personal
   //  challenges array just to make tests pass for now. This should be changed once
   //  getPersonalChallenge is implemented.
-  private ChallengeProgress getChallengeProgressFromApi(Challenge challenge, int challengeIdx)
+  private Challenge getChallengeProgressFromApi(Challenge challenge, int challengeIdx)
       throws Exception {
     return getResponse(azkarApi.getPersonalChallenges(user),
-        GetChallengesResponse.class).getData().get(challengeIdx).getChallengeProgress();
+        GetChallengesResponse.class).getData().get(challengeIdx);
   }
 
   @Override
@@ -31,7 +30,7 @@ public class UpdatePersonalChallengeTest extends UpdateChallengeTestBase {
   }
 
   @Override
-  protected ChallengeProgress getChallengeProgressFromApi(Challenge challenge)
+  protected Challenge getChallengeProgressFromApi(Challenge challenge)
       throws Exception {
     return getChallengeProgressFromApi(challenge, 0);
   }

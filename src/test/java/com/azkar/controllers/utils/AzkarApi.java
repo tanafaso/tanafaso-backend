@@ -6,6 +6,7 @@ import com.azkar.entities.User;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
+import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,13 @@ public class AzkarApi {
 
   public ResultActions getChallenge(User user, String challengeId) throws Exception {
     return httpClient.performGetRequest(user, String.format("/challenges/%s", challengeId));
+  }
+
+  public Challenge createChallengeAndReturn(User user, Challenge challenge) throws Exception {
+    MvcResult result = createChallenge(user, challenge).andReturn();
+    AddChallengeResponse response = JsonHandler.fromJson(result.getResponse().getContentAsString(),
+        AddChallengeResponse.class);
+    return response.getData();
   }
 
   public ResultActions createChallenge(User user, Challenge challenge) throws Exception {

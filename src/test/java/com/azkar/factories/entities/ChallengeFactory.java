@@ -16,7 +16,7 @@ public class ChallengeFactory {
     return SubChallenge.builder()
         .zekrId("1")
         .zekr("zekr")
-        .originalRepetitions(3)
+        .repetitions(3)
         .build();
   }
 
@@ -24,7 +24,7 @@ public class ChallengeFactory {
     return SubChallenge.builder()
         .zekrId("2")
         .zekr("zekr2")
-        .originalRepetitions(5)
+        .repetitions(5)
         .build();
   }
 
