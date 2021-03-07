@@ -201,7 +201,7 @@ public class GroupController extends BaseController {
     // Add all group challenges to this user.
     group.get().getChallengesIds().stream()
         .map((challengeId) -> challengeRepo.findById(challengeId).get())
-        .forEach(challenge -> ChallengeControllerUtil.addChallengeToUser(user, challenge));
+        .forEach(challenge -> user.getUserChallenges().add(challenge));
     userRepo.save(user);
 
     return ResponseEntity.ok(response);

@@ -8,14 +8,11 @@ import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
-import com.azkar.entities.User.ChallengeProgress;
-import com.azkar.entities.User.SubChallengeProgress;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
-import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserChallenge;
 import com.azkar.repos.GroupRepo;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,25 +37,21 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void getChallenge_normalScenario_shouldSucceed() throws Exception {
-    UserChallenge queriedChallenge = createGroupChallenge(user, group);
-    UserChallenge anotherChallenge = createGroupChallenge(user, group);
+    Challenge queriedChallenge = createGroupChallenge(user, group);
+    Challenge anotherChallenge = createGroupChallenge(user, group);
     GetChallengeResponse response = new GetChallengeResponse();
     response.setData(queriedChallenge);
 
-    azkarApi.getChallenge(user, queriedChallenge.getChallengeInfo().getId())
+    azkarApi.getChallenge(user, queriedChallenge.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(response)));
   }
 
-  private UserChallenge createGroupChallenge(User user, Group group)
+  private Challenge createGroupChallenge(User user, Group group)
       throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
-    azkarApi.createChallenge(user, challenge).andExpect(status().isOk());
-    ChallengeProgress challengeProgress = new ChallengeProgress(challenge.getId(),
-        group.getId(),
-        SubChallengeProgress.fromSubChallengesCollection(challenge.getSubChallenges()));
-    return new UserChallenge(challenge, challengeProgress);
+    return azkarApi.createChallengeAndReturn(user, challenge);
   }
 
   @Test

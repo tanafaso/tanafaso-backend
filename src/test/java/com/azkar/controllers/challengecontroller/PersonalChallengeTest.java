@@ -11,14 +11,12 @@ import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.User;
-import com.azkar.entities.User.ChallengeProgress;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
-import com.azkar.payload.challengecontroller.responses.GetChallengesResponse.UserChallenge;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
@@ -142,7 +140,7 @@ public class PersonalChallengeTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andReturn().getResponse().getContentAsString();
 
-    List<UserChallenge> data = JsonHandler.fromJson(response, GetChallengesResponse.class)
+    List<Challenge> data = JsonHandler.fromJson(response, GetChallengesResponse.class)
         .getData();
     assertThat(data, hasSize(2));
     assertUserChallengeConsistentWithRequest(data.get(0), request1);
@@ -150,11 +148,9 @@ public class PersonalChallengeTest extends TestBase {
   }
 
   private void assertUserChallengeConsistentWithRequest(
-      UserChallenge userChallenge,
+      Challenge challenge,
       AddPersonalChallengeRequest request) {
-    Challenge challengeInfo = userChallenge.getChallengeInfo();
-    ChallengeProgress challengeProgress = userChallenge.getChallengeProgress();
-    assertThat(challengeInfo.getName(), is(request.getName()));
-    assertThat(challengeInfo.getCreatingUserId(), is(USER.getId()));
+    assertThat(challenge.getName(), is(request.getName()));
+    assertThat(challenge.getCreatingUserId(), is(USER.getId()));
   }
 }

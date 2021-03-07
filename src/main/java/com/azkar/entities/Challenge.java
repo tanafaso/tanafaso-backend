@@ -24,6 +24,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "challenges")
 public class Challenge extends EntityBase {
 
+  /**
+   * Personal challenges are represented the same way as normal challenges. One difference is that
+   * personal challenges are not saved in a particular group. The solution here is to not get rid of
+   * the NonNull annotation over the groupId to make sure that we can get the group for every
+   * in-group-challenge. To leave the NonNull annotation we have to provide group IDs also for
+   * personal challenges.
+   */
+  public static final String PERSONAL_CHALLENGES_NON_EXISTING_GROUP_ID
+      = "non-existing-personal-challenge-group-id";
+
   @Id
   private String id;
   @NonNull
@@ -59,7 +69,10 @@ public class Challenge extends EntityBase {
     String zekrId;
     @NonNull
     private String zekr;
-    // TODO: Rename to repetition.
-    private int originalRepetitions;
+    // Note: This field may have two meanings depending on the context of this SubChallenge. If
+    // it is part of a generic Challenge that is saved in the ChallengeRepo then this field means
+    // the number of the original repetitions entered on creation. If this is part of the user
+    // copy of challenges then it means how many repetitions are left for this zekr for this user.
+    private int repetitions;
   }
 }

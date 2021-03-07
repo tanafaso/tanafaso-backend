@@ -11,7 +11,6 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
-import com.azkar.entities.User.ChallengeProgress;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
@@ -30,11 +29,11 @@ import org.springframework.test.web.servlet.ResultActions;
 public abstract class UpdateChallengeTestBase extends TestBase {
 
   public static final int OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS = ChallengeFactory.subChallenge1()
-      .getOriginalRepetitions();
+      .getRepetitions();
   public static final int NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS =
       OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS - 1;
   public static final int OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS = ChallengeFactory.subChallenge2()
-      .getOriginalRepetitions();
+      .getRepetitions();
   public static final int NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS =
       OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS - 2;
   protected User user;
@@ -58,16 +57,16 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   public void updateChallenge_updateOneSubChallenge_shouldSucceed() throws Exception {
     Challenge challenge = createNewChallenge(user);
     challenge.getSubChallenges().get(1)
-        .setOriginalRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
+        .setRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk());
 
-    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
-    assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(), is(
+    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(), is(
         OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
-    assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(), is(
+    assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(), is(
         NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS));
 
   }
@@ -76,34 +75,34 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   public void updateChallenge_updateMultipleSubChallenges_shouldSucceed() throws Exception {
     Challenge challenge = createNewChallenge(user);
     challenge.getSubChallenges().get(0)
-        .setOriginalRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
+        .setRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
     challenge.getSubChallenges().get(1)
-        .setOriginalRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
+        .setRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk());
 
-    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
-    assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(),
+    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(),
         is(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS));
-    assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(),
+    assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(),
         is(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS));
   }
 
   @Test
   public void updateChallenge_NegativeLeftRepetitions_shouldUpdateWithZero() throws Exception {
     Challenge challenge = createNewChallenge(user);
-    challenge.getSubChallenges().get(0).setOriginalRepetitions(-1);
+    challenge.getSubChallenges().get(0).setRepetitions(-1);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk());
 
-    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
-    assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(),
+    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(),
         is(0));
-    assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(),
+    assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(),
         is(OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS));
 
   }
@@ -112,7 +111,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   public void updateChallenge_IncrementLeftRepetitions_shouldFail() throws Exception {
     Challenge challenge = createNewChallenge(user);
     challenge.getSubChallenges().get(0)
-        .setOriginalRepetitions(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS + 1);
+        .setRepetitions(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS + 1);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse expectedResponse = new UpdateChallengeResponse();
     expectedResponse
@@ -123,10 +122,10 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
-    assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(),
+    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(),
         is(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
-    assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(),
+    assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(),
         is(OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS));
 
   }
@@ -146,10 +145,10 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
-    assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(),
+    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(),
         is(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
-    assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(),
+    assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(),
         is(OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS));
 
   }
@@ -173,7 +172,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         challenge.getSubChallenges().get(0),
         challenge.getSubChallenges().get(0),
         challenge.getSubChallenges().get(1));
-    updatedSubChallenges.get(2).setOriginalRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
+    updatedSubChallenges.get(2).setRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
     challenge.setSubChallenges(updatedSubChallenges);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse response = new UpdateChallengeResponse();
@@ -183,10 +182,10 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().json(JsonHandler.toJson(response)));
 
-    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
-    assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(), is(
+    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(), is(
         OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
-    assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(), is(
+    assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(), is(
         OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS));
   }
 
@@ -195,7 +194,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     Challenge challenge = createNewChallenge(user);
     List<SubChallenge> updatedSubChallenges = ImmutableList.of(
         challenge.getSubChallenges().get(0));
-    updatedSubChallenges.get(0).setOriginalRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
+    updatedSubChallenges.get(0).setRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
     challenge.setSubChallenges(updatedSubChallenges);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse response = new UpdateChallengeResponse();
@@ -205,10 +204,10 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().json(JsonHandler.toJson(response)));
 
-    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
-    assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(), is(
+    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(), is(
         OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
-    assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(), is(
+    assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(), is(
         OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS));
   }
 
@@ -218,8 +217,8 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     List<SubChallenge> updatedSubChallenges = ImmutableList.of(
         challenge.getSubChallenges().get(0),
         challenge.getSubChallenges().get(0));
-    updatedSubChallenges.get(0).setOriginalRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
-    updatedSubChallenges.get(1).setOriginalRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
+    updatedSubChallenges.get(0).setRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
+    updatedSubChallenges.get(1).setRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
     challenge.setSubChallenges(updatedSubChallenges);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse response = new UpdateChallengeResponse();
@@ -229,10 +228,10 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().json(JsonHandler.toJson(response)));
 
-    ChallengeProgress updatedChallenge = getChallengeProgressFromApi(challenge);
-    assertThat(updatedChallenge.getSubChallenges().get(0).getLeftRepetitions(), is(
+    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(), is(
         OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
-    assertThat(updatedChallenge.getSubChallenges().get(1).getLeftRepetitions(), is(
+    assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(), is(
         OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS));
   }
 
@@ -241,6 +240,6 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   protected abstract ResultActions updateChallenge(User user, String challengeId,
       UpdateChallengeRequest requestBody) throws Exception;
 
-  protected abstract ChallengeProgress getChallengeProgressFromApi(Challenge challenge)
+  protected abstract Challenge getChallengeProgressFromApi(Challenge challenge)
       throws Exception;
 }
