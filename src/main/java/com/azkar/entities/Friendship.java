@@ -46,6 +46,7 @@ public class Friendship extends EntityBase {
 
     @NonNull
     private String userId;
+    private String groupId;
     @NonNull
     private String username;
     @NonNull
