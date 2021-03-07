@@ -2,6 +2,7 @@ package com.azkar.controllers.friendshipcontroller;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -172,6 +173,8 @@ public class FriendshipTest extends TestBase {
     assertThat(group.getUsersIds().contains(user1.getId()), is(true));
     assertThat(group.getUsersIds().contains(user2.getId()), is(true));
 
+    assertThat(user1Friend.getGroupId(), notNullValue());
+    assertThat(user1Friend.getGroupId(), equalTo(user2Friend.getGroupId()));
   }
 
   @Test

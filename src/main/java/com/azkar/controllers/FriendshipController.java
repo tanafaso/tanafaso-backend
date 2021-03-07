@@ -133,7 +133,11 @@ public class FriendshipController extends BaseController {
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
+    Group binaryGroup = generateBinaryGroup(currentUser, friend.get());
+    groupRepo.save(binaryGroup);
+
     friend.get().setPending(false);
+    friend.get().setGroupId(binaryGroup.getId());
     Friendship otherUserFriendship = friendshipRepo.findByUserId(otherUserId);
 
     otherUserFriendship.getFriends().add(
@@ -142,13 +146,12 @@ public class FriendshipController extends BaseController {
             .username(currentUser.getUsername())
             .name(currentUser.getName())
             .isPending(false)
+            .groupId(binaryGroup.getId())
             .build()
     );
 
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);
-    Group binaryGroup = generateBinaryGroup(currentUser, friend.get());
-    groupRepo.save(binaryGroup);
 
     return ResponseEntity.ok(response);
   }
