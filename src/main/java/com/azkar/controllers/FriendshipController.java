@@ -2,6 +2,7 @@ package com.azkar.controllers;
 
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
+import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.usercontroller.AddFriendResponse;
@@ -9,7 +10,9 @@ import com.azkar.payload.usercontroller.DeleteFriendResponse;
 import com.azkar.payload.usercontroller.GetFriendsResponse;
 import com.azkar.payload.usercontroller.ResolveFriendRequestResponse;
 import com.azkar.repos.FriendshipRepo;
+import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +35,9 @@ public class FriendshipController extends BaseController {
 
   @Autowired
   UserRepo userRepo;
+
+  @Autowired
+  GroupRepo groupRepo;
 
   @GetMapping
   public ResponseEntity<GetFriendsResponse> getFriends() {
@@ -141,7 +147,20 @@ public class FriendshipController extends BaseController {
 
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);
+    Group binaryGroup = generateBinaryGroup(currentUser, friend.get());
+    groupRepo.save(binaryGroup);
+
     return ResponseEntity.ok(response);
+  }
+
+  private Group generateBinaryGroup(User currentUser, Friend friend) {
+    String groupName = "binary-generated-" + currentUser.getId() + "-" + friend.getUserId();
+    // The adminId should not be used in case of binary groups because both users should have the
+    // same capabilities.
+    // TODO(issue#148): Make Group.adminId a list
+    Group group = Group.builder().name(groupName).usersIds(Arrays.asList(currentUser.getId(),
+        friend.getUserId())).adminId(friend.getUserId()).isBinary(true).build();
+    return group;
   }
 
   @PutMapping(path = "/{id}/reject")
