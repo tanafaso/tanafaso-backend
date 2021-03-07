@@ -32,5 +32,5 @@ jobs:
           java-version: 1.8
       - name: Run MongoDb in a container
         run:  docker run --name mongo -d -p 27017:27017 mongo
-      - name: Build with Maven
+      - name: Build and test with Maven
         run: ./mvnw -B package --file pom.xml
