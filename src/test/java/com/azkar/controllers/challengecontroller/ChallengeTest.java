@@ -40,8 +40,8 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void getChallenge_normalScenario_shouldSucceed() throws Exception {
-    UserChallenge queriedChallenge = createOngoingGroupChallenge(user, group);
-    UserChallenge anotherChallenge = createOngoingGroupChallenge(user, group);
+    UserChallenge queriedChallenge = createGroupChallenge(user, group);
+    UserChallenge anotherChallenge = createGroupChallenge(user, group);
     GetChallengeResponse response = new GetChallengeResponse();
     response.setData(queriedChallenge);
 
@@ -51,14 +51,11 @@ public class ChallengeTest extends TestBase {
         .andExpect(content().json(JsonHandler.toJson(response)));
   }
 
-  private UserChallenge createOngoingGroupChallenge(User user, Group group)
+  private UserChallenge createGroupChallenge(User user, Group group)
       throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
     azkarApi.createChallenge(user, challenge).andExpect(status().isOk());
-    challenge.setOngoing(true);
     ChallengeProgress challengeProgress = new ChallengeProgress(challenge.getId(),
-        /* isAccepted= */true,
-        challenge.isOngoing(),
         group.getId(),
         SubChallengeProgress.fromSubChallengesCollection(challenge.getSubChallenges()));
     return new UserChallenge(challenge, challengeProgress);

@@ -12,6 +12,7 @@ import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.InviteToGroupResponse;
 import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
 import com.azkar.payload.groupcontroller.responses.RejectGroupInvitationResponse;
+import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.base.Strings;
@@ -36,6 +37,9 @@ public class GroupController extends BaseController {
 
   @Autowired
   private GroupRepo groupRepo;
+
+  @Autowired
+  private ChallengeRepo challengeRepo;
 
   @Autowired
   private UserRepo userRepo;
@@ -193,6 +197,11 @@ public class GroupController extends BaseController {
         .groupName(group.get().getName())
         .isPending(false)
         .build());
+
+    // Add all group challenges to this user.
+    group.get().getChallengesIds().stream()
+        .map((challengeId) -> challengeRepo.findById(challengeId).get())
+        .forEach(challenge -> ChallengeControllerUtil.addChallengeToUser(user, challenge));
     userRepo.save(user);
 
     return ResponseEntity.ok(response);
