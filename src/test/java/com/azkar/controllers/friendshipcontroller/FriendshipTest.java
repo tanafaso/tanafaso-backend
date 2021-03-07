@@ -10,6 +10,7 @@ import com.azkar.TestBase;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
+import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
@@ -18,6 +19,8 @@ import com.azkar.payload.usercontroller.DeleteFriendResponse;
 import com.azkar.payload.usercontroller.GetFriendsResponse;
 import com.azkar.payload.usercontroller.ResolveFriendRequestResponse;
 import com.azkar.repos.FriendshipRepo;
+import com.azkar.repos.GroupRepo;
+import com.google.common.collect.Iterators;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,6 +44,9 @@ public class FriendshipTest extends TestBase {
   @Autowired
   FriendshipRepo friendshipRepo;
 
+  @Autowired
+  GroupRepo groupRepo;
+
   @Before
   public void before() {
     addNewUser(user1);
@@ -53,6 +59,7 @@ public class FriendshipTest extends TestBase {
   @Test
   public void addFriend_normalScenario_shouldSucceed() throws Exception {
     AddFriendResponse expectedResponse = new AddFriendResponse();
+    assertThat(groupRepo.count(), equalTo(0L));
 
     sendFriendRequest(user1, user2)
         .andExpect(status().isOk())
@@ -67,10 +74,14 @@ public class FriendshipTest extends TestBase {
 
     Friend user2Friend = user2Friendship.getFriends().get(0);
     assertFriendship(user2Friend, user1, /*isPending=*/true);
+
+    assertThat(groupRepo.count(), equalTo(0L));
   }
 
   @Test
   public void addFriend_requesterRequestedBefore_shouldNotSucceed() throws Exception {
+    assertThat(groupRepo.count(), equalTo(0L));
+
     sendFriendRequest(user1, user2);
 
     AddFriendResponse expectedResponse = new AddFriendResponse();
@@ -80,6 +91,8 @@ public class FriendshipTest extends TestBase {
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+
+    assertThat(groupRepo.count(), equalTo(0L));
   }
 
 
@@ -131,6 +144,8 @@ public class FriendshipTest extends TestBase {
 
   @Test
   public void acceptFriendRequest_normalScenario_shouldSucceed() throws Exception {
+    assertThat(groupRepo.count(), equalTo(0L));
+
     sendFriendRequest(user1, user2);
 
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
@@ -150,10 +165,19 @@ public class FriendshipTest extends TestBase {
 
     Friend user2Friend = user2Friendship.getFriends().get(0);
     assertFriendship(user2Friend, user1, /*isPending=*/false);
+
+    assertThat(groupRepo.count(), equalTo(1L));
+    Group group = Iterators.getOnlyElement(groupRepo.findAll().iterator());
+    assertThat(group.getUsersIds().size(), equalTo(2));
+    assertThat(group.getUsersIds().contains(user1.getId()), is(true));
+    assertThat(group.getUsersIds().contains(user2.getId()), is(true));
+
   }
 
   @Test
   public void rejectFriendRequest_normalScenario_shouldSucceed() throws Exception {
+    assertThat(groupRepo.count(), equalTo(0L));
+
     sendFriendRequest(user1, user2);
 
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
@@ -167,6 +191,7 @@ public class FriendshipTest extends TestBase {
 
     assertThat(user1Friendship.getFriends().size(), is(0));
     assertThat(user2Friendship.getFriends().size(), is(0));
+    assertThat(groupRepo.count(), equalTo(0L));
   }
 
   @Test
