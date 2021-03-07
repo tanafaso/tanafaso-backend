@@ -1,5 +1,7 @@
 package com.azkar.controllers;
 
+import static com.azkar.controllers.ChallengeControllerUtil.addChallengeToUser;
+
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
@@ -21,7 +23,6 @@ import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
-import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,14 +63,12 @@ public class ChallengeController extends BaseController {
   @Autowired
   GroupRepo groupRepo;
 
-  private static Predicate<ChallengeProgress> withIsOngoing(boolean isOngoing) {
-    return (userChallengeStatus -> userChallengeStatus.isOngoing() == isOngoing);
+  private static Predicate<ChallengeProgress> all() {
+    return (userChallengeStatus -> true);
   }
 
-  private static Predicate<ChallengeProgress> withIsOngoingAndInGroup(boolean isOngoing,
-      Group group) {
-    return withIsOngoing(isOngoing)
-        .and(userChallengeStatus -> userChallengeStatus.getGroupId().equals(group.getId()));
+  private static Predicate<ChallengeProgress> withInGroup(Group group) {
+    return (userChallengeStatus -> userChallengeStatus.getGroupId().equals(group.getId()));
   }
 
   @PostMapping(path = "/personal", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -89,8 +88,6 @@ public class ChallengeController extends BaseController {
         .motivation(request.getMotivation())
         .expiryDate(request.getExpiryDate())
         .subChallenges(request.getSubChallenges())
-        .usersAccepted(ImmutableList.of(getCurrentUser().getUserId()))
-        .isOngoing(true)
         .creatingUserId(getCurrentUser().getUserId())
         .createdAt(Instant.now().getEpochSecond())
         .modifiedAt(Instant.now().getEpochSecond())
@@ -114,7 +111,7 @@ public class ChallengeController extends BaseController {
 
   private UserChallenge constructPersonalUserChallenge(PersonalChallenge challenge) {
     ChallengeProgress challengeProgress = ChallengeProgress.builder()
-        .challengeId(challenge.getId()).isAccepted(true).isOngoing(true)
+        .challengeId(challenge.getId())
         .subChallenges(challenge.getSubChallengesProgress())
         .build();
     return new UserChallenge(challenge.getChallenge(), challengeProgress);
@@ -252,18 +249,15 @@ public class ChallengeController extends BaseController {
       response.setError(new Error(AddChallengeResponse.NOT_GROUP_MEMBER_ERROR));
       return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
-    List<String> groupUsersIds = group.get().getUsersIds();
-    ArrayList<String> usersAccepted = new ArrayList(Arrays.asList(getCurrentUser().getUserId()));
     Challenge challenge = req.getChallenge().toBuilder()
         .creatingUserId(getCurrentUser().getUserId())
-        .isOngoing(groupUsersIds.size() == 1)
-        .usersAccepted(usersAccepted)
         .build();
     challengeRepo.save(challenge);
 
     group.get().getChallengesIds().add(challenge.getId());
     groupRepo.save(group.get());
 
+    List<String> groupUsersIds = group.get().getUsersIds();
     Iterable<User> affectedUsers = userRepo.findAllById(groupUsersIds);
     affectedUsers.forEach(user -> addChallengeToUser(user, challenge));
     userRepo.saveAll(affectedUsers);
@@ -276,48 +270,25 @@ public class ChallengeController extends BaseController {
     return group.getUsersIds().contains(getCurrentUser().getUserId());
   }
 
-  private void addChallengeToUser(User user, Challenge challenge) {
-    ChallengeProgress challengeProgress = ChallengeProgress.builder()
-        .challengeId(challenge.getId())
-        .isAccepted(user.getId().equals(getCurrentUser().getUserId()))
-        .subChallenges(
-            SubChallengeProgress.fromSubChallengesCollection(challenge.getSubChallenges()))
-        .isOngoing(challenge.isOngoing())
-        .groupId(challenge.getGroupId())
-        .build();
-    user.getChallengesProgress().add(challengeProgress);
+  @GetMapping(path = "/")
+  public ResponseEntity<GetChallengesResponse> getAllChallenges() {
+    return getChallenges(/*userChallengeStatusesFilter=*/all());
   }
 
-  @GetMapping(path = "/ongoing")
-  public ResponseEntity<GetChallengesResponse> getOngoingChallenges() {
-    return getChallenges(withIsOngoing(true));
-  }
-
-  @GetMapping(path = "/proposed")
-  public ResponseEntity<GetChallengesResponse> getProposedChallenges() {
-    return getChallenges(withIsOngoing(false));
-  }
-
-  @GetMapping(path = "/groups/{groupId}/ongoing")
-  public ResponseEntity<GetChallengesResponse> getGroupOngoingChallenges(
+  @GetMapping(path = "/groups/{groupId}/")
+  public ResponseEntity<GetChallengesResponse> getAllChallengesInGroup(
       @PathVariable(value = "groupId") String groupId) {
-    return getGroupChallenge(groupId, /* isOngoing= */ true);
+    return getGroupChallenges(groupId);
   }
 
-  @GetMapping(path = "/groups/{groupId}/proposed")
-  public ResponseEntity<GetChallengesResponse> getGroupProposedChallenges(
-      @PathVariable(value = "groupId") String groupId) {
-    return getGroupChallenge(groupId, /* isOngoing= */ false);
-  }
-
-  private ResponseEntity<GetChallengesResponse> getGroupChallenge(
-      @PathVariable("groupId") String groupId, boolean isOngoing) {
+  private ResponseEntity<GetChallengesResponse> getGroupChallenges(
+      @PathVariable("groupId") String groupId) {
     Optional<Group> optionalGroup = groupRepo.findById(groupId);
     ResponseEntity<GetChallengesResponse> error = validateGroupAndReturnErrors(optionalGroup);
     if (error != null) {
       return error;
     }
-    return getChallenges(withIsOngoingAndInGroup(isOngoing, optionalGroup.get()));
+    return getChallenges(withInGroup(optionalGroup.get()));
   }
 
   private ResponseEntity<GetChallengesResponse> validateGroupAndReturnErrors(

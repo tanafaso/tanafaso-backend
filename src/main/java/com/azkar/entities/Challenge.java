@@ -35,9 +35,6 @@ public class Challenge extends EntityBase {
   @NonNull
   private String name;
   private long expiryDate;
-  private boolean isOngoing;
-  @NonNull
-  private List<String> usersAccepted;
   @Default
   private List<String> usersFinished = new ArrayList<>();
   @NonNull

@@ -78,9 +78,7 @@ public class PersonalChallengeTest extends TestBase {
         .subChallenges(SUB_CHALLENGES)
         .expiryDate(expiryDate)
         .motivation(CHALLENGE_MOTIVATION)
-        .isOngoing(true)
         .creatingUserId(USER.getId())
-        .usersAccepted(ImmutableList.of(USER.getId()))
         .build();
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setData(expectedChallenge);
@@ -157,8 +155,6 @@ public class PersonalChallengeTest extends TestBase {
     Challenge challengeInfo = userChallenge.getChallengeInfo();
     ChallengeProgress challengeProgress = userChallenge.getChallengeProgress();
     assertThat(challengeInfo.getName(), is(request.getName()));
-    assertThat(challengeInfo.isOngoing(), is(true));
     assertThat(challengeInfo.getCreatingUserId(), is(USER.getId()));
-    assertThat(challengeProgress.isAccepted(), is(true));
   }
 }

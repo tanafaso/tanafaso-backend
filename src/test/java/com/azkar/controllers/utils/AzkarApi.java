@@ -52,24 +52,14 @@ public class AzkarApi {
         httpClient.performPostRequest(user, "/challenges/personal", JsonHandler.toJson(request));
   }
 
-  public ResultActions getOngoingChallenges(User user, String groupId) throws Exception {
+  public ResultActions getAllChallengesInGroup(User user, String groupId) throws Exception {
     return httpClient
-        .performGetRequest(user, String.format("/challenges/groups/%s/ongoing/", groupId));
+        .performGetRequest(user, String.format("/challenges/groups/%s/", groupId));
   }
 
-  public ResultActions getProposedChallenges(User user, String groupId) throws Exception {
+  public ResultActions getAllChallenges(User user) throws Exception {
     return httpClient
-        .performGetRequest(user, String.format("/challenges/groups/%s/proposed/", groupId));
-  }
-
-  public ResultActions getOngoingChallenges(User user) throws Exception {
-    return httpClient
-        .performGetRequest(user, "/challenges/ongoing/");
-  }
-
-  public ResultActions getProposedChallenges(User user) throws Exception {
-    return httpClient
-        .performGetRequest(user, "/challenges/proposed/");
+        .performGetRequest(user, "/challenges/");
   }
 
   public ResultActions updateChallenge(User user, String challengeId,
