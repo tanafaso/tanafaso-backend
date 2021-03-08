@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -31,7 +30,7 @@ public class User extends EntityBase {
   @Default
   private List<Challenge> personalChallenges = new ArrayList<>();
   private String username;
-  @NonNull
+  @NotNull
   private String name;
   private UserFacebookData userFacebookData;
   @Default
@@ -75,7 +74,7 @@ public class User extends EntityBase {
     String userId;
     String accessToken;
     String email;
-    @NonNull
+    @NotNull
     String name;
   }
 }
