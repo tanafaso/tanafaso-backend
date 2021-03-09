@@ -63,9 +63,7 @@ public class Challenge extends EntityBase {
   @Builder(toBuilder = true)
   public static class SubChallenge {
 
-    // TODO: This uses lombok.NonNull because using mongodb.NonNull does not have effect here.
-    // The NonNull annotations usage can be improved to be more consistent and cleaner.
-    @lombok.NonNull
+    @NotNull
     String zekrId;
     @NotNull
     private String zekr;
