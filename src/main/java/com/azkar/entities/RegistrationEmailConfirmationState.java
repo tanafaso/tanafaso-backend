@@ -1,9 +1,9 @@
 package com.azkar.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -17,13 +17,13 @@ public class RegistrationEmailConfirmationState extends EntityBase {
 
   @Id
   private String id;
-  @NonNull
+  @NotNull
   @Indexed(name = "email_index", unique = true)
   private String email;
-  @NonNull
+  @NotNull
   private String password;
   private int pin;
-  @NonNull
+  @NotNull
   private String name;
 
   @JsonIgnore

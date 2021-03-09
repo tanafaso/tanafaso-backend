@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -26,11 +26,11 @@ public class Group extends EntityBase {
   private String id;
   @JsonProperty("binary")
   private boolean isBinary;
-  @NonNull
+  @NotNull
   private String name;
-  @NonNull
+  @NotNull
   private String adminId;
-  @NonNull
+  @NotNull
   private List<String> usersIds;
   @Default
   private List<String> challengesIds = new ArrayList<>();

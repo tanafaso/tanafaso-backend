@@ -1,9 +1,9 @@
 package com.azkar.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.mongodb.lang.NonNull;
 import java.util.ArrayList;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -36,18 +36,18 @@ public class Challenge extends EntityBase {
 
   @Id
   private String id;
-  @NonNull
+  @NotNull
   @Indexed(name = "groupId_index")
   private String groupId;
-  @NonNull
+  @NotNull
   private String creatingUserId;
   private String motivation;
-  @NonNull
+  @NotNull
   private String name;
   private long expiryDate;
   @Default
   private List<String> usersFinished = new ArrayList<>();
-  @NonNull
+  @NotNull
   private List<SubChallenge> subChallenges;
   @JsonIgnore
   @CreatedDate
@@ -63,11 +63,9 @@ public class Challenge extends EntityBase {
   @Builder(toBuilder = true)
   public static class SubChallenge {
 
-    // TODO: This uses lombok.NonNull because using mongodb.NonNull does not have effect here.
-    // The NonNull annotations usage can be improved to be more consistent and cleaner.
-    @lombok.NonNull
+    @NotNull
     String zekrId;
-    @NonNull
+    @NotNull
     private String zekr;
     // Note: This field may have two meanings depending on the context of this SubChallenge. If
     // it is part of a generic Challenge that is saved in the ChallengeRepo then this field means
