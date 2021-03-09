@@ -17,7 +17,6 @@ import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
-import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
@@ -48,11 +47,11 @@ public class PersonalChallengeTest extends TestBase {
 
   public static AddPersonalChallengeRequest createPersonalChallengeRequest(String name,
       long expiryDate) {
-    return AddPersonalChallengeRequest.builder()
-        .name(name)
-        .subChallenges(SUB_CHALLENGES)
-        .expiryDate(expiryDate)
-        .motivation(CHALLENGE_MOTIVATION).build();
+    Challenge challenge =
+        Challenge.builder().name(name).subChallenges(SUB_CHALLENGES).expiryDate(expiryDate)
+            .motivation(CHALLENGE_MOTIVATION).build();
+    return AddPersonalChallengeRequest.addPersonalChallengeRequestBuilder()
+        .challenge(challenge).build();
   }
 
   @Before
@@ -99,18 +98,29 @@ public class PersonalChallengeTest extends TestBase {
   }
 
   @Test
-  public void addPersonalChallenge_challengeMissingMotivationField_shouldFail() throws Exception {
-    AddPersonalChallengeRequest requestBody = AddPersonalChallengeRequest.builder()
-        .name(CHALLENGE_NAME)
-        .subChallenges(SUB_CHALLENGES)
-        .expiryDate(Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS).build();
-    AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
-    expectedResponse.setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
+  public void addPersonalChallenge_challengeMissingMotivationField_shouldSucceed()
+      throws Exception {
+    Challenge challenge =
+        Challenge.builder().name(CHALLENGE_NAME).subChallenges(SUB_CHALLENGES)
+            .expiryDate(Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS).build();
+    AddPersonalChallengeRequest requestBody =
+        AddPersonalChallengeRequest.addPersonalChallengeRequestBuilder()
+            .challenge(challenge).build();
 
-    azkarApi.createPersonalChallenge(USER, requestBody)
-        .andExpect(status().isBadRequest())
+    Challenge expectedChallenge = challenge.toBuilder()
+        .creatingUserId(USER.getId())
+        .build();
+    AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
+    expectedResponse.setData(expectedChallenge);
+    MvcResult result = azkarApi.createPersonalChallenge(USER, requestBody)
+        .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andReturn();
+
+    assertThat(userRepo.findById(USER.getId()).get().getPersonalChallenges().size(), is(1));
+    String actualResponseJson = result.getResponse().getContentAsString();
+    JSONAssert.assertEquals(JsonHandler.toJson(expectedResponse), actualResponseJson, /* strict= */
+        false);
   }
 
   @Test
@@ -150,7 +160,7 @@ public class PersonalChallengeTest extends TestBase {
   private void assertUserChallengeConsistentWithRequest(
       Challenge challenge,
       AddPersonalChallengeRequest request) {
-    assertThat(challenge.getName(), is(request.getName()));
+    assertThat(challenge.getName(), is(request.getChallenge().getName()));
     assertThat(challenge.getCreatingUserId(), is(USER.getId()));
   }
 }
