@@ -12,12 +12,12 @@ import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.ChallengeFactory;
-import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.repos.GroupRepo;
+import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.junit.Before;
@@ -40,17 +40,18 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   @Autowired
   protected GroupRepo groupRepo;
   protected Group group;
+  @Autowired
+  protected UserRepo userRepo;
 
   static UpdateChallengeRequest createUpdateChallengeRequest(Challenge newChallenge) {
     return UpdateChallengeRequest.builder().newChallenge(newChallenge).build();
   }
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     user = UserFactory.getNewUser();
     addNewUser(user);
-    group = GroupFactory.getNewGroup(user.getId());
-    groupRepo.save(group);
+    group = azkarApi.addGroupAndReturn(user, "group_name");
   }
 
   @Test
@@ -68,7 +69,6 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(), is(
         NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS));
-
   }
 
   @Test

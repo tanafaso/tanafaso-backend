@@ -7,6 +7,7 @@ import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,14 @@ public class AzkarApi {
 
   public ResultActions getChallenge(User user, String challengeId) throws Exception {
     return httpClient.performGetRequest(user, String.format("/challenges/%s", challengeId));
+  }
+
+  public Challenge getChallengeAndReturn(User user, String challengeId) throws Exception {
+    MvcResult result = httpClient.performGetRequest(user, String.format("/challenges/%s",
+        challengeId)).andReturn();
+    GetChallengeResponse response =
+        JsonHandler.fromJson(result.getResponse().getContentAsString(), GetChallengeResponse.class);
+    return response.getData();
   }
 
   public Challenge createChallengeAndReturn(User user, Challenge challenge) throws Exception {
@@ -110,5 +119,28 @@ public class AzkarApi {
 
   public ResultActions getGroups(User user) throws Exception {
     return httpClient.performGetRequest(user, "/groups");
+  }
+
+  public ResultActions getGroupLeaderboard(User user, String groupId) throws Exception {
+    return httpClient.performGetRequest(user, String.format("/groups/%s/leaderboard", groupId));
+  }
+
+  public ResultActions inviteUserToGroup(User invitingUser, User invitedUser, String groupId)
+      throws Exception {
+    return httpClient.performPutRequest(invitingUser, String.format("/groups/%s/invite/%s", groupId,
+        invitedUser.getId()),
+        /*body=*/ null);
+  }
+
+  public ResultActions acceptInvitationToGroup(User user, String groupId)
+      throws Exception {
+    return httpClient.performPutRequest(user, String.format("/groups/%s/accept/", groupId),
+        /*body=*/ null);
+  }
+
+  public ResultActions addUserToGroup(User user, User invitingUser, String groupId)
+      throws Exception {
+    inviteUserToGroup(invitingUser, user, groupId);
+    return acceptInvitationToGroup(user, groupId);
   }
 }

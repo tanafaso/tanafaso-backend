@@ -7,6 +7,8 @@ import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AcceptGroupInvitationResponse;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
+import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse;
+import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse.UserScore;
 import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.InviteToGroupResponse;
@@ -18,8 +20,11 @@ import com.azkar.repos.UserRepo;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +39,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "/groups", produces = MediaType.APPLICATION_JSON_VALUE)
 public class GroupController extends BaseController {
+
+  private static final Logger logger = LoggerFactory.getLogger(GroupController.class);
 
   @Autowired
   private GroupRepo groupRepo;
@@ -103,6 +110,60 @@ public class GroupController extends BaseController {
     response.setData(user.getUserGroups());
 
     return ResponseEntity.ok(response);
+  }
+
+  @GetMapping(value = "/{groupId}/leaderboard")
+  public ResponseEntity<GetGroupLeaderboardResponse> getGroupLeaderboard(
+      @PathVariable String groupId) {
+    GetGroupLeaderboardResponse response = new GetGroupLeaderboardResponse();
+    User currentUser = getCurrentUser(userRepo);
+    if (!currentUser.getUserGroups().stream().anyMatch(
+        userGroup ->
+            userGroup.getGroupId().equals(groupId)
+    )) {
+      response.setError(new Error(GetGroupResponse.NOT_MEMBER_IN_GROUP_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    Optional<Group> group = groupRepo.findById(groupId);
+    if (!group.isPresent()) {
+      throw new RuntimeException(String.format("User with id: %s, trying to get leaderboard of a "
+          + "non-existing group", currentUser.getId()));
+    }
+
+    List<UserScore> userScores = new ArrayList<>();
+    for (String groupMemberId : group.get().getUsersIds()) {
+      Optional<UserScore> userScore = getUserScoreInGroup(groupMemberId, group.get());
+      if (!userScore.isPresent()) {
+        logger.warn(String.format("Dangling group member: %s in group: %s", groupMemberId,
+            group.get().getId()));
+        continue;
+      }
+      userScores.add(userScore.get());
+    }
+
+    Collections.sort(userScores,
+        (u1, u2) -> Integer.compare(u2.getTotalScore(), u1.getTotalScore()));
+    response.setData(userScores);
+    return ResponseEntity.ok(response);
+  }
+
+  private Optional<UserScore> getUserScoreInGroup(String userId, Group group) {
+    Optional<User> user = userRepo.findById(userId);
+    if (!user.isPresent()) {
+      return Optional.empty();
+    }
+
+    Optional<UserGroup> userGroup =
+        user.get().getUserGroups().stream()
+            .filter(userGroup1 -> userGroup1.getGroupId().equals(group.getId())).findFirst();
+    if (!userGroup.isPresent()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+        UserScore.builder().name(user.get().getName()).username(user.get().getUsername())
+            .totalScore(userGroup.get().getTotalScore()).build());
   }
 
   @PutMapping(value = "/{groupId}/invite/{userId}")

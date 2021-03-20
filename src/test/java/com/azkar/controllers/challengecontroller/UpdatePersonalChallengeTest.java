@@ -10,7 +10,7 @@ import org.springframework.test.web.servlet.ResultActions;
 public class UpdatePersonalChallengeTest extends UpdateChallengeTestBase {
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     super.setup();
   }
 

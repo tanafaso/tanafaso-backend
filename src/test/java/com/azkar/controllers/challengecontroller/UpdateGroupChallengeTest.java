@@ -1,19 +1,124 @@
 package com.azkar.controllers.challengecontroller;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.entities.Challenge;
+import com.azkar.entities.Challenge.SubChallenge;
+import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.entities.User.UserGroup;
+import com.azkar.factories.entities.ChallengeFactory;
+import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
+import java.util.List;
 import org.junit.Before;
+import org.junit.Test;
 import org.springframework.test.web.servlet.ResultActions;
 
 public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     super.setup();
+  }
+
+  @Test
+  public void updateChallenge_finishChallenge_shouldUpdateScore() throws Exception {
+    User user1 = UserFactory.getNewUser();
+    addNewUser(user1);
+
+    Group group1 = azkarApi.addGroupAndReturn(user1, "group1");
+    Group group2 = azkarApi.addGroupAndReturn(user1, "group2");
+    User user2InGroup1 = UserFactory.getNewUser();
+    addNewUser(user2InGroup1);
+    azkarApi.addUserToGroup(/*user=*/user2InGroup1, /*invitingUser*/user1, group1.getId());
+
+    Challenge challenge = createGroupChallenge(user1, group1.getId());
+    for (SubChallenge subChallenge : challenge.getSubChallenges()) {
+      subChallenge.setRepetitions(0);
+    }
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
+
+    updateChallenge(user1, challenge.getId(), requestBody)
+        .andExpect(status().isOk());
+
+    Challenge updatedChallenge = azkarApi.getChallengeAndReturn(user1, challenge.getId());
+    assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(), is(
+        0));
+    assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(), is(
+        0));
+    User updatedUser1 = userRepo.findById(user1.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), is(2));
+    User updatedUser2 = userRepo.findById(user2InGroup1.getId()).get();
+    assertThat(updatedUser2.getUserGroups().size(), is(1));
+
+    List<UserGroup> user1Groups = updatedUser1.getUserGroups();
+    UserGroup userGroup1ForUser1 =
+        user1Groups.stream().filter(userGroup -> userGroup.getGroupId().equals(group1.getId()))
+            .findAny().get();
+    UserGroup userGroup2ForUser1 =
+        user1Groups.stream().filter(userGroup -> userGroup.getGroupId().equals(group2.getId()))
+            .findAny().get();
+
+    assertThat(userGroup1ForUser1.getTotalScore(), is(1));
+    assertThat(userGroup2ForUser1.getTotalScore(), is(0));
+
+    List<UserGroup> user2Groups = updatedUser2.getUserGroups();
+    UserGroup userGroup1ForUser2 =
+        user2Groups.stream().filter(userGroup -> userGroup.getGroupId().equals(group1.getId()))
+            .findAny().get();
+    assertThat(userGroup1ForUser2.getTotalScore(), is(0));
+  }
+
+  @Test
+  public void updateChallenge_finishChallengeTwice_shouldUpdateScoreOnce() throws Exception {
+    assertThat(userRepo.findById(user.getId()).get().getUserGroups().get(0).getTotalScore(), is(0));
+
+    Challenge challenge = createGroupChallenge(user, group.getId());
+    for (SubChallenge subChallenge : challenge.getSubChallenges()) {
+      subChallenge.setRepetitions(0);
+    }
+
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
+    updateChallenge(user, challenge.getId(), requestBody)
+        .andExpect(status().isOk());
+
+    updateChallenge(user, challenge.getId(), requestBody)
+        .andExpect(status().isOk());
+
+    User updatedUser = userRepo.findById(user.getId()).get();
+    assertThat(updatedUser.getUserGroups().size(), is(1));
+
+    UserGroup userGroup = updatedUser.getUserGroups().get(0);
+    assertThat(userGroup.getTotalScore(), is(1));
+  }
+
+  @Test
+  public void updateChallenge_partiallyFinishedChallenge_shouldNotUpdateScore() throws Exception {
+    assertThat(userRepo.findById(user.getId()).get().getUserGroups().get(0).getTotalScore(), is(0));
+
+    Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
+    assertThat(challenge.getSubChallenges().size(), not(0));
+    challenge.getSubChallenges().get(0).setRepetitions(2);
+
+    Challenge createdChallenge = createGroupChallenge(user, challenge);
+    for (SubChallenge subChallenge : createdChallenge.getSubChallenges()) {
+      subChallenge.setRepetitions(1);
+    }
+
+    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(createdChallenge);
+    updateChallenge(user, createdChallenge.getId(), requestBody)
+        .andExpect(status().isOk());
+
+    User updatedUser = userRepo.findById(user.getId()).get();
+    assertThat(updatedUser.getUserGroups().size(), is(1));
+
+    UserGroup userGroup = updatedUser.getUserGroups().get(0);
+    assertThat(userGroup.getTotalScore(), is(0));
   }
 
   @Override
@@ -22,6 +127,8 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
     return azkarApi.updateChallenge(user, challengeId, requestBody);
   }
 
+  // Use azkarApi.getChallengeAndReturn instead.
+  @Deprecated
   @Override
   protected Challenge getChallengeProgressFromApi(Challenge challenge)
       throws Exception {

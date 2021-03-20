@@ -4,6 +4,7 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.entities.User.UserGroup;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
@@ -67,7 +68,7 @@ public class ChallengeController extends BaseController {
       return Optional.of(ResponseEntity.unprocessableEntity().body(response));
     }
 
-    // Kept to make sure that the zekr IDs of both old and modified sub-challenges are identical.
+    // Set to make sure that the zekr IDs of both old and modified sub-challenges are identical.
     Set<String> newZekrIds = new HashSet<>();
     for (SubChallenge newSubChallenge : newSubChallenges) {
       newZekrIds.add(newSubChallenge.getZekrId());
@@ -88,6 +89,17 @@ public class ChallengeController extends BaseController {
       return Optional.of(ResponseEntity.unprocessableEntity().body(response));
     }
     return Optional.empty();
+  }
+
+  private static void updateScore(User user, String groupId) {
+    Optional<UserGroup> group =
+        user.getUserGroups().stream().filter(userGroup -> userGroup.getGroupId().equals(groupId))
+            .findAny();
+    if (!group.isPresent()) {
+      throw new RuntimeException("The updated challenge is not in a group.");
+    }
+    int oldScore = group.get().getTotalScore();
+    group.get().setTotalScore(oldScore + 1);
   }
 
   private static Optional<SubChallenge> findSubChallenge(
@@ -297,10 +309,17 @@ public class ChallengeController extends BaseController {
     }
 
     List<SubChallenge> oldSubChallenges = currentUserChallenge.get().getSubChallenges();
+    boolean oldSubChallengesFinished =
+        oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
     Optional<ResponseEntity<UpdateChallengeResponse>> errorResponse = updateOldSubChallenges(
         oldSubChallenges, request.getNewChallenge().getSubChallenges());
     if (errorResponse.isPresent()) {
       return errorResponse.get();
+    }
+    boolean newSubChallengesFinished =
+        oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
+    if (newSubChallengesFinished && !oldSubChallengesFinished) {
+      updateScore(currentUser, currentUserChallenge.get().getGroupId());
     }
     userRepo.save(currentUser);
     return ResponseEntity.ok().build();
