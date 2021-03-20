@@ -12,7 +12,6 @@ import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.ChallengeFactory;
-import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;

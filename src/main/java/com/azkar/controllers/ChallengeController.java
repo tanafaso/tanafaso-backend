@@ -19,7 +19,6 @@ import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -93,10 +92,11 @@ public class ChallengeController extends BaseController {
   }
 
   private static void updateScore(User user, String groupId) {
-    Optional<UserGroup> group = user.getUserGroups().stream().filter(userGroup -> userGroup.getGroupId().equals(groupId)).findAny();
+    Optional<UserGroup> group =
+        user.getUserGroups().stream().filter(userGroup -> userGroup.getGroupId().equals(groupId))
+            .findAny();
     if (!group.isPresent()) {
-      logger.error("The updated challenge is not in a group.");
-      throw new RuntimeException("");
+      throw new RuntimeException("The updated challenge is not in a group.");
     }
     int oldScore = group.get().getTotalScore();
     group.get().setTotalScore(oldScore + 1);
@@ -309,13 +309,15 @@ public class ChallengeController extends BaseController {
     }
 
     List<SubChallenge> oldSubChallenges = currentUserChallenge.get().getSubChallenges();
-    boolean oldSubChallengesFinished = oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
+    boolean oldSubChallengesFinished =
+        oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
     Optional<ResponseEntity<UpdateChallengeResponse>> errorResponse = updateOldSubChallenges(
         oldSubChallenges, request.getNewChallenge().getSubChallenges());
     if (errorResponse.isPresent()) {
       return errorResponse.get();
     }
-    boolean newSubChallengesFinished = oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
+    boolean newSubChallengesFinished =
+        oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
     if (newSubChallengesFinished && !oldSubChallengesFinished) {
       updateScore(currentUser, currentUserChallenge.get().getGroupId());
     }

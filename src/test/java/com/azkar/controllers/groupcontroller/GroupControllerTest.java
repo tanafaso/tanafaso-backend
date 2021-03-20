@@ -16,6 +16,8 @@ import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AcceptGroupInvitationResponse;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
+import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse;
+import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse.UserScore;
 import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.InviteToGroupResponse;
@@ -546,6 +548,68 @@ public class GroupControllerTest extends TestBase {
         .andReturn();
   }
 
+  @Test
+  public void getGroupLeaderboard_normalScenario_returnsSortedScores() throws Exception {
+    User user1 = UserFactory.getNewUser();
+    addNewUser(user1);
+    User user2 = UserFactory.getNewUser();
+    addNewUser(user2);
+    Group group = azkarApi.addGroupAndReturn(user1, "group");
+    azkarApi.addGroup(user1, "irrelevant group");
+    azkarApi.addUserToGroup(/*user=*/user2, /*invitingUser=*/user1, group.getId());
+
+    User user1InDb = userRepo.findById(user1.getId()).get();
+    User user2InDb = userRepo.findById(user2.getId()).get();
+    user1InDb.getUserGroups().get(0).setTotalScore(5);
+    user2InDb.getUserGroups().get(0).setTotalScore(10);
+    userRepo.save(user1InDb);
+    userRepo.save(user2InDb);
+    GetGroupLeaderboardResponse expectedResponse = new GetGroupLeaderboardResponse();
+    List<UserScore> expectedUserScores = new ArrayList<>();
+    expectedUserScores.add(
+        UserScore.builder().name(user2.getName()).username(user2.getUsername()).totalScore(10)
+            .build());
+    expectedUserScores.add(
+        UserScore.builder().name(user1.getName()).username(user1.getUsername()).totalScore(5)
+            .build());
+    expectedResponse.setData(expectedUserScores);
+
+    azkarApi.getGroupLeaderboard(user1, group.getId())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
+    azkarApi.getGroupLeaderboard(user2, group.getId())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
+  }
+
+  @Test
+  public void getGroupLeaderboard_userNotInGroup_shouldFail() throws Exception {
+    User user = UserFactory.getNewUser();
+    addNewUser(user);
+    User nonGroupUser = UserFactory.getNewUser();
+    addNewUser(nonGroupUser);
+    Group group = azkarApi.addGroupAndReturn(user, "group");
+
+    User user1InDb = userRepo.findById(user.getId()).get();
+    user1InDb.getUserGroups().get(0).setTotalScore(5);
+    userRepo.save(user1InDb);
+
+    GetGroupLeaderboardResponse expectedResponse = new GetGroupLeaderboardResponse();
+    expectedResponse.setError(new Error(GetGroupLeaderboardResponse.NOT_MEMBER_IN_GROUP_ERROR));
+
+    azkarApi.getGroupLeaderboard(nonGroupUser, group.getId())
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
+  }
+
+  // Use methods in AzkarApi instead.
+  @Deprecated
   private ResultActions inviteUserToGroup(User invitingUser, User invitedUser, String groupId)
       throws Exception {
     return performPutRequest(invitingUser, String.format("/groups/%s/invite/%s", groupId,
@@ -553,6 +617,8 @@ public class GroupControllerTest extends TestBase {
         /*body=*/ null);
   }
 
+  // Use methods in AzkarApi instead.
+  @Deprecated
   private ResultActions acceptInvitationToGroup(User user, String groupId)
       throws Exception {
     return performPutRequest(user, String.format("/groups/%s/accept/", groupId), /*body=*/ null);
@@ -567,6 +633,8 @@ public class GroupControllerTest extends TestBase {
     return performPutRequest(user, String.format("/groups/%s/leave/", groupId), /*body=*/ null);
   }
 
+  // Use methods in AzkarApi instead.
+  @Deprecated
   private void addUserToGroup(User user, User invitingUser, String groupId)
       throws Exception {
     inviteUserToGroup(invitingUser, user, groupId);
