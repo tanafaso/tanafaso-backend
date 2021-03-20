@@ -117,4 +117,6 @@ public abstract class TestBase {
         .andExpect(status().isOk());
     return getResponse(response, AddPersonalChallengeResponse.class).getData();
   }
+
+
 }
