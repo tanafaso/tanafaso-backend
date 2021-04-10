@@ -4,6 +4,7 @@ import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.entities.User.UserGroup;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.usercontroller.AddFriendResponse;
 import com.azkar.payload.usercontroller.DeleteFriendResponse;
@@ -150,8 +151,18 @@ public class FriendshipController extends BaseController {
             .build()
     );
 
+    UserGroup userGroup =
+        UserGroup.builder().groupId(binaryGroup.getId()).groupName(binaryGroup.getName())
+            .invitingUserId(binaryGroup.getAdminId()).isPending(false).monthScore(0).totalScore(0)
+            .build();
+    currentUser.getUserGroups().add(userGroup);
+    User otherUser = userRepo.findById(otherUserId).get();
+    otherUser.getUserGroups().add(userGroup);
+
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);
+    userRepo.save(currentUser);
+    userRepo.save(otherUser);
 
     return ResponseEntity.ok(response);
   }
@@ -218,9 +229,19 @@ public class FriendshipController extends BaseController {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    String groupId = currentUserFriendship.getFriends().get(otherUserAsFriendIndex).getGroupId();
+
     currentUserFriendship.getFriends().remove(otherUserAsFriendIndex);
     otherUserFriendship.getFriends().remove(currentUserAsFriendIndex);
 
+    // Remove Group
+    User currentUser = userRepo.findById(getCurrentUser().getUserId()).get();
+    currentUser.getUserGroups().removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
+    otherUser.get().getUserGroups().removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
+    groupRepo.deleteById(groupId);
+
+    userRepo.save(currentUser);
+    userRepo.save(otherUser.get());
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);
     return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
