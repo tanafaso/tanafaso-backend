@@ -21,6 +21,7 @@ import com.azkar.payload.usercontroller.GetFriendsResponse;
 import com.azkar.payload.usercontroller.ResolveFriendRequestResponse;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
+import com.azkar.repos.UserRepo;
 import com.google.common.collect.Iterators;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,6 +48,9 @@ public class FriendshipTest extends TestBase {
 
   @Autowired
   GroupRepo groupRepo;
+
+  @Autowired
+  UserRepo userRepo;
 
   @Before
   public void before() {
@@ -146,6 +150,8 @@ public class FriendshipTest extends TestBase {
   @Test
   public void acceptFriendRequest_normalScenario_shouldSucceed() throws Exception {
     assertThat(groupRepo.count(), equalTo(0L));
+    assertThat(user1.getUserGroups().size(), equalTo(0));
+    assertThat(user2.getUserGroups().size(), equalTo(0));
 
     sendFriendRequest(user1, user2);
 
@@ -175,6 +181,13 @@ public class FriendshipTest extends TestBase {
 
     assertThat(user1Friend.getGroupId(), notNullValue());
     assertThat(user1Friend.getGroupId(), equalTo(user2Friend.getGroupId()));
+
+    User updatedUser1 = userRepo.findById(user1.getId()).get();
+    User updatedUser2 = userRepo.findById(user2.getId()).get();
+    assertThat(Iterators.getOnlyElement(updatedUser1.getUserGroups().iterator()).getGroupId(),
+        equalTo(group.getId()));
+    assertThat(Iterators.getOnlyElement(updatedUser2.getUserGroups().iterator()).getGroupId(),
+        equalTo(group.getId()));
   }
 
   @Test
@@ -321,6 +334,11 @@ public class FriendshipTest extends TestBase {
   @Test
   public void deleteFriend_normalScenario_shouldSucceed() throws Exception {
     makeFriends(user1, user2);
+    assertThat(groupRepo.count(), equalTo(1L));
+    User updatedUser1 = userRepo.findById(user1.getId()).get();
+    User updatedUser2 = userRepo.findById(user2.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), equalTo(1));
+    assertThat(updatedUser2.getUserGroups().size(), equalTo(1));
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     deleteFriend(user1, user2)
@@ -333,6 +351,12 @@ public class FriendshipTest extends TestBase {
 
     assertThat(user1Friendship.getFriends().size(), is(0));
     assertThat(user2Friendship.getFriends().size(), is(0));
+
+    assertThat(groupRepo.count(), equalTo(0L));
+    updatedUser1 = userRepo.findById(user1.getId()).get();
+    updatedUser2 = userRepo.findById(user2.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), equalTo(0));
+    assertThat(updatedUser2.getUserGroups().size(), equalTo(0));
   }
 
   @Test
