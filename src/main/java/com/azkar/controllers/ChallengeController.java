@@ -69,9 +69,9 @@ public class ChallengeController extends BaseController {
     }
 
     // Set to make sure that the zekr IDs of both old and modified sub-challenges are identical.
-    Set<String> newZekrIds = new HashSet<>();
+    Set<Integer> newZekrIds = new HashSet<>();
     for (SubChallenge newSubChallenge : newSubChallenges) {
-      newZekrIds.add(newSubChallenge.getZekrId());
+      newZekrIds.add(newSubChallenge.getZekr().getId());
       Optional<SubChallenge> subChallenge = findSubChallenge(oldSubChallenges, newSubChallenge);
       if (!subChallenge.isPresent()) {
         response.setError(new Error(UpdateChallengeResponse.NON_EXISTENT_SUB_CHALLENGE_ERROR));
@@ -106,7 +106,7 @@ public class ChallengeController extends BaseController {
       List<SubChallenge> oldSubChallenges,
       SubChallenge newSubChallenge) {
     for (SubChallenge subChallenge : oldSubChallenges) {
-      if (subChallenge.getZekrId().equals(newSubChallenge.getZekrId())) {
+      if (subChallenge.getZekr().getId().equals(newSubChallenge.getZekr().getId())) {
         return Optional.of(subChallenge);
       }
     }

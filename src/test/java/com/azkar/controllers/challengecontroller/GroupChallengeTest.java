@@ -15,6 +15,7 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.entities.Zekr;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
@@ -107,8 +108,9 @@ public class GroupChallengeTest extends TestBase {
   @Test
   public void addChallenge_zeroSubChallengeRepetitions_shouldNotSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
-    SubChallenge zeroRepetitionSubChallenge = SubChallenge.builder().zekrId("1").zekr("zekr")
-        .build();
+    SubChallenge zeroRepetitionSubChallenge =
+        SubChallenge.builder().zekr(Zekr.builder().id(1).zekr("zekr").build())
+            .build();
     Challenge challenge = Challenge.builder()
         .name(ChallengeFactory.CHALLENGE_NAME_BASE)
         .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)

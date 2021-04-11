@@ -63,14 +63,12 @@ public class Challenge extends EntityBase {
   @Builder(toBuilder = true)
   public static class SubChallenge {
 
-    @NotNull
-    String zekrId;
-    @NotNull
-    private String zekr;
+    private Zekr zekr;
     // Note: This field may have two meanings depending on the context of this SubChallenge. If
     // it is part of a generic Challenge that is saved in the ChallengeRepo then this field means
     // the number of the original repetitions entered on creation. If this is part of the user
     // copy of challenges then it means how many repetitions are left for this zekr for this user.
     private int repetitions;
+
   }
 }
