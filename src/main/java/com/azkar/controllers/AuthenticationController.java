@@ -20,6 +20,7 @@ import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 import java.util.Random;
@@ -312,7 +313,6 @@ public class AuthenticationController extends BaseController {
   }
 
   private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationRequest body) {
-    // TODO(Omar): Check that this still works after changing name to first_name and last_name
     String facebookGraphApiUril =
         "https://graph.facebook.com/v7.0/me?fields=id,first_name,last_name,email&access_token="
             + body.getToken();
@@ -332,7 +332,9 @@ public class AuthenticationController extends BaseController {
   public static class FacebookBasicProfileResponse {
 
     String id;
+    @JsonProperty("first_name")
     String firstName;
+    @JsonProperty("last_name")
     String lastName;
     String email;
   }
