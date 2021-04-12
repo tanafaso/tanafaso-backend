@@ -11,6 +11,7 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.entities.Zekr;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Error;
@@ -132,9 +133,9 @@ public abstract class UpdateChallengeTestBase extends TestBase {
 
   @Test
   public void updateChallenge_invalidZekrId_shouldFail() throws Exception {
-    String invalidZekrId = "777";
+    int invalidZekrId = 777;
     Challenge challenge = createNewChallenge(user);
-    challenge.getSubChallenges().get(1).setZekrId(invalidZekrId);
+    challenge.getSubChallenges().get(1).setZekr(Zekr.builder().id(invalidZekrId).build());
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse expectedResponse = new UpdateChallengeResponse();
     expectedResponse
