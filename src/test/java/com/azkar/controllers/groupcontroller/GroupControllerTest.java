@@ -567,10 +567,12 @@ public class GroupControllerTest extends TestBase {
     GetGroupLeaderboardResponse expectedResponse = new GetGroupLeaderboardResponse();
     List<UserScore> expectedUserScores = new ArrayList<>();
     expectedUserScores.add(
-        UserScore.builder().name(user2.getName()).username(user2.getUsername()).totalScore(10)
+        UserScore.builder().firstName(user2.getFirstName()).lastName(user2.getLastName())
+            .username(user2.getUsername()).totalScore(10)
             .build());
     expectedUserScores.add(
-        UserScore.builder().name(user1.getName()).username(user1.getUsername()).totalScore(5)
+        UserScore.builder().firstName(user1.getFirstName()).lastName(user1.getLastName())
+            .username(user1.getUsername()).totalScore(5)
             .build());
     expectedResponse.setData(expectedUserScores);
 

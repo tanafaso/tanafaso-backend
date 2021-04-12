@@ -50,7 +50,9 @@ public class Friendship extends EntityBase {
     @NotNull
     private String username;
     @NotNull
-    private String name;
+    private String firstName;
+    @NotNull
+    private String lastName;
     private boolean isPending;
   }
 }

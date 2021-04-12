@@ -24,49 +24,56 @@ public class UserServiceTest extends TestBase {
   @Test
   public void buildAndAddNewUser_normalScenario_shouldSucceed() {
     String email = "example_email@example_domain.com";
-    String name = "example_name";
+    String firstName = "example_first_name";
+    String lastName = "example_second_name";
 
-    userService.addNewUser(userService.buildNewUser(email, name));
+    userService.addNewUser(userService.buildNewUser(email, firstName, lastName));
 
     User user = Iterators.getOnlyElement(userRepo.findAll().iterator());
     assertThat(user.getEmail(), equalTo(email));
-    assertThat(user.getName(), equalTo(name));
+    assertThat(user.getFirstName(), equalTo(firstName));
+    assertThat(user.getLastName(), equalTo(lastName));
     assertThatUsernameIsValid(user.getUsername());
   }
 
   @Test
   public void buildAndAddNewUser_nameHasUpperCaseChars_usernameShouldNotHaveUpperCaseChars() {
     String email = "example_email@example_domain.com";
-    String name = "eXample_name";
+    String firstName = "eXample_first_name";
+    String lastName = "example_second_namE";
 
-    userService.addNewUser(userService.buildNewUser(email, name));
+    userService.addNewUser(userService.buildNewUser(email, firstName, lastName));
 
     User user = Iterators.getOnlyElement(userRepo.findAll().iterator());
     assertThat(user.getEmail(), equalTo(email));
-    assertThat(user.getName(), equalTo(name));
+    assertThat(user.getFirstName(), equalTo(firstName));
+    assertThat(user.getLastName(), equalTo(lastName));
     assertThatUsernameIsValid(user.getUsername());
   }
 
   @Test
   public void buildAndAddNewUser_nameHasSpaces_usernameShouldNotHaveSpaces() {
     String email = "example_email@example_domain.com";
-    String name = "Example Name";
+    String firstName = "Example First Name";
+    String lastName = "Example Second Name";
 
-    userService.addNewUser(userService.buildNewUser(email, name));
+    userService.addNewUser(userService.buildNewUser(email, firstName, lastName));
 
     User user = Iterators.getOnlyElement(userRepo.findAll().iterator());
     assertThat(user.getEmail(), equalTo(email));
-    assertThat(user.getName(), equalTo(name));
+    assertThat(user.getFirstName(), equalTo(firstName));
+    assertThat(user.getLastName(), equalTo(lastName));
     assertThatUsernameIsValid(user.getUsername());
   }
 
   @Test
   public void buildAndAddNewUser_HundredUsersWithSameName_usernamesShouldBeUnique() {
     String email = "example_email@example_domain.com";
-    String name = "Example Name";
+    String firstName = "Example First Name";
+    String lastName = "Example Last Name";
 
     for (int i = 0; i < 100; i++) {
-      userService.addNewUser(userService.buildNewUser(email + "i", name));
+      userService.addNewUser(userService.buildNewUser(email + "i", firstName, lastName));
     }
 
     assertThat(userRepo.count(), is(100L));
@@ -80,13 +87,46 @@ public class UserServiceTest extends TestBase {
     }
   }
 
+  @Test
+  public void buildAndAddNewUser_nameHasNonEnglishCharacters_usernameShouldContainOnlyEnglishCharacters()
+      throws Exception {
+    String email = "example_email@example_domain.com";
+    String firstName = "مثال اسم";
+    String lastName = "Example Last Name";
+
+    userService.addNewUser(userService.buildNewUser(email, firstName, lastName));
+
+    User user = Iterators.getOnlyElement(userRepo.findAll().iterator());
+    assertThat(user.getEmail(), equalTo(email));
+    assertThat(user.getFirstName(), equalTo(firstName));
+    assertThat(user.getLastName(), equalTo(lastName));
+    assertThatUsernameIsValid(user.getUsername());
+  }
+
+  @Test
+  public void buildAndAddNewUser_nameHasOnlyEnglishCharacters_usernameShouldHaveNameAsPrefix()
+      throws Exception {
+    String email = "example_email@example_domain.com";
+    String firstName = "Example first Name";
+    String lastName = "Example Last Name";
+
+    userService.addNewUser(userService.buildNewUser(email, firstName, lastName));
+
+    User user = Iterators.getOnlyElement(userRepo.findAll().iterator());
+    assertThat(user.getEmail(), equalTo(email));
+    assertThat(user.getFirstName(), equalTo(firstName));
+    assertThat(user.getLastName(), equalTo(lastName));
+    assertThatUsernameIsValid(user.getUsername());
+    assertThat(user.getUsername().startsWith("examplefirstname"), is(true));
+  }
+
   private void assertThatUsernameIsValid(String username) {
-    assertThat(String.format("Username: %s has only lower case characters", username),
+    assertThat(String.format("Username: %s must have only lower case characters", username),
         username.equals(username.toLowerCase()));
-    assertThat(String.format("Username: %s doesn't contain spaces", username),
+    assertThat(String.format("Username: %s must not contain spaces", username),
         username.indexOf(' ') == -1);
     assertThat(
-        String.format("Username: %s has only english alphabet, numbers, underscores and "
+        String.format("Username: %s must have only english alphabet, numbers, underscores and "
                 + "possibly a hyphen",
             username),
         username.matches("[a-zA-Z0-9_-]*"));

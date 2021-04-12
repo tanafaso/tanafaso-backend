@@ -13,7 +13,8 @@ public class UserFactory {
         .id("testId" + usersRequested)
         .email("testEmail" + usersRequested + "@example_domain.com")
         .username("testUsername" + usersRequested)
-        .name("testName" + usersRequested)
+        .firstName("testFirstName" + usersRequested)
+        .lastName("testLastName" + usersRequested)
         .build();
   }
 
@@ -24,7 +25,8 @@ public class UserFactory {
         .email(email)
         .encodedPassword(encodedPassword)
         .username("testUsername" + usersRequested)
-        .name("testName" + usersRequested)
+        .firstName("testFirstName" + usersRequested)
+        .lastName("testLastName" + usersRequested)
         .build();
   }
 
@@ -33,13 +35,15 @@ public class UserFactory {
     UserFacebookData userFacebookData = UserFacebookData.builder()
         .email("testFacebookEmail" + usersRequested + "@example_domain.com")
         .userId("testFacebookId" + usersRequested)
-        .name("testFacebookName" + usersRequested)
+        .firstName("testFacebookFirstName" + usersRequested)
+        .lastName("testFacebookLastName" + usersRequested)
         .build();
 
     return User.builder()
         .id("testId" + usersRequested)
         .userFacebookData(userFacebookData)
-        .name(userFacebookData.getName())
+        .firstName(userFacebookData.getLastName())
+        .lastName(userFacebookData.getLastName())
         .build();
   }
 
@@ -48,13 +52,14 @@ public class UserFactory {
     UserFacebookData userFacebookData = UserFacebookData.builder()
         .email("testFacebookEmail" + usersRequested + "@example_domain.com")
         .userId(facebookUserId)
-        .name("testFacebookName" + usersRequested)
-        .build();
+        .firstName("testFirstName" + usersRequested)
+        .lastName("testLastName" + usersRequested).build();
 
     return User.builder()
         .id("testId" + usersRequested)
         .userFacebookData(userFacebookData)
-        .name(userFacebookData.getName())
+        .firstName(userFacebookData.getLastName())
+        .lastName(userFacebookData.getLastName())
         .build();
   }
 }
