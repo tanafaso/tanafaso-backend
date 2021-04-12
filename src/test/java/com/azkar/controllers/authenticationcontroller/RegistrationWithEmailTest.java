@@ -56,7 +56,8 @@ public class RegistrationWithEmailTest extends TestBase {
 
     RegistrationEmailConfirmationState state =
         Iterators.getOnlyElement(registrationEmailConfirmationStateRepo.findAll().iterator());
-    assertThat(state.getName(), is(body.getName()));
+    assertThat(state.getFirstName(), is(body.getFirstName()));
+    assertThat(state.getLastName(), is(body.getLastName()));
     assertThat(state.getEmail(), is(body.getEmail()));
     assertThat("Password is hashed and saved",
         passwordEncoder.matches(body.getPassword(), state.getPassword()));
@@ -138,7 +139,8 @@ public class RegistrationWithEmailTest extends TestBase {
   public void registerWithEmail_nameEmpty_shouldNotSucceed() throws Exception {
     EmailRegistrationRequestBody body =
         EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
-    body.setName("");
+    body.setFirstName("");
+    body.setLastName("example last name");
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
@@ -155,7 +157,8 @@ public class RegistrationWithEmailTest extends TestBase {
   public void registerWithEmail_nameNotProvided_shouldNotSucceed() throws Exception {
     EmailRegistrationRequestBody bodyMissingNameField =
         EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
-    bodyMissingNameField.setName(null);
+    bodyMissingNameField.setFirstName(null);
+    bodyMissingNameField.setLastName(null);
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
@@ -338,7 +341,8 @@ public class RegistrationWithEmailTest extends TestBase {
   private void insertEmailVerificationPinInDatabase(String email, int pin) {
     registrationEmailConfirmationStateRepo.insert(
         RegistrationEmailConfirmationState.builder()
-            .name("example_name")
+            .firstName("example_first_name")
+            .lastName("example_last_name")
             .email(email)
             .password("example_password")
             .pin(pin)

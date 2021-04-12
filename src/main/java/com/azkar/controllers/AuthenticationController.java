@@ -104,7 +104,9 @@ public class AuthenticationController extends BaseController {
             .email(body.getEmail())
             .password(passwordEncoder.encode(body.getPassword()))
             .pin(pin)
-            .name(body.getName()).build());
+            .firstName(body.getFirstName())
+            .lastName(body.getLastName())
+            .build());
     return ResponseEntity.ok(response);
   }
 
@@ -128,7 +130,8 @@ public class AuthenticationController extends BaseController {
     }
 
     User user = userService.buildNewUser(registrationEmailConfirmationState.get().getEmail(),
-        registrationEmailConfirmationState.get().getName(),
+        registrationEmailConfirmationState.get().getFirstName(),
+        registrationEmailConfirmationState.get().getLastName(),
         registrationEmailConfirmationState.get().getPassword());
 
     userService.addNewUser(user);
@@ -309,6 +312,7 @@ public class AuthenticationController extends BaseController {
   }
 
   private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationRequest body) {
+    // TODO(Omar): Check that this still works after changing name to first_name and last_name
     String facebookGraphApiUril =
         "https://graph.facebook.com/v7.0/me?fields=id,first_name,last_name,email&access_token="
             + body.getToken();
