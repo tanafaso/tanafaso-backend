@@ -13,13 +13,15 @@ public class EmailRegistrationRequestBody extends RequestBodyBase {
 
   private String email;
   private String password;
-  private String name;
+  private String firstName;
+  private String lastName;
 
   @Override public void validate() throws BadRequestException {
-    checkNotNull(email, password, name);
+    checkNotNull(email, password, firstName, lastName);
     EmailAuthenticationRequestBodyUtil.validateEmail(email);
     EmailAuthenticationRequestBodyUtil.validatePassword(password);
-    EmailAuthenticationRequestBodyUtil.validateName(name);
+    EmailAuthenticationRequestBodyUtil.validateName(firstName);
+    EmailAuthenticationRequestBodyUtil.validateName(lastName);
   }
 
 }
