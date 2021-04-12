@@ -1,5 +1,6 @@
 package com.azkar.controllers;
 
+import com.azkar.entities.Zekr;
 import com.azkar.payload.ResponseBase.Error;
 import com.azkar.payload.azkarcontroller.responses.GetAzkarResponse;
 import com.azkar.payload.exceptions.DefaultExceptionResponse;
@@ -30,17 +31,19 @@ public class AzkarController extends BaseController {
   @GetMapping(path = "/azkar", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<GetAzkarResponse> getAzkar() {
     GetAzkarResponse response = new GetAzkarResponse();
-    List<String> azkar = new ArrayList<>();
+    List<Zekr> azkar = new ArrayList<>();
     try {
       CSVReader csvReader =
           new CSVReader(new FileReader(
               resourceLoader.getClassLoader().getResource(AZKAR_FILE).getFile()));
       String[] values;
       while ((values = csvReader.readNext()) != null) {
-        if (values.length != 1) {
-          throw new IOException("Didn't find exactly one column per row in CSV file.");
+        if (values.length != 2) {
+          throw new IOException("Didn't find exactly 2 columns per row in CSV file.");
         }
-        azkar.add(values[0]);
+
+        Zekr zekr = Zekr.builder().id(Integer.parseInt(values[0])).zekr(values[1]).build();
+        azkar.add(zekr);
       }
 
       if (azkar.size() == 0) {

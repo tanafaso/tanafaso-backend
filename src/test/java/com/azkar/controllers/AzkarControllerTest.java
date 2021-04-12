@@ -1,6 +1,7 @@
 package com.azkar.controllers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -9,12 +10,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.azkar.TestBase;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.User;
+import com.azkar.entities.Zekr;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.azkarcontroller.responses.GetAzkarResponse;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -30,7 +33,7 @@ public class AzkarControllerTest extends TestBase {
     User user = UserFactory.getNewUser();
     addNewUser(user);
 
-    List<String> expectedAzkar = new ArrayList<>();
+    List<Zekr> expectedAzkar = new ArrayList<>();
     // Read the CSV file lines using a different way than the controller to validate the response.
     // Note: CSV cells with strings are saved using quotations which is read by the
     // BufferedReader which is different from CSVReader which is used in the controller under test.
@@ -40,9 +43,10 @@ public class AzkarControllerTest extends TestBase {
     while (bufferedReader.ready()) {
       String line = bufferedReader.readLine();
       assertThat(line.length(), greaterThanOrEqualTo(2));
-      assertThat(line.charAt(0), is('"'));
-      assertThat(line.charAt(line.length() - 1), is('"'));
-      expectedAzkar.add(line.substring(1, line.length() - 1));
+      StringTokenizer stringTokenizer = new StringTokenizer(line, ",");
+      assertThat(stringTokenizer.countTokens(), equalTo(2));
+      expectedAzkar.add(new Zekr(Integer.parseInt(stringTokenizer.nextToken()),
+          stringTokenizer.nextToken()));
     }
 
     GetAzkarResponse expectedResponse = new GetAzkarResponse();
