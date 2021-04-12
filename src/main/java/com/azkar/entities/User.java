@@ -31,7 +31,9 @@ public class User extends EntityBase {
   private List<Challenge> personalChallenges = new ArrayList<>();
   private String username;
   @NotNull
-  private String name;
+  private String firstName;
+  @NotNull
+  private String lastName;
   private UserFacebookData userFacebookData;
   @Default
   private List<UserGroup> userGroups = new ArrayList();
@@ -75,6 +77,8 @@ public class User extends EntityBase {
     String accessToken;
     String email;
     @NotNull
-    String name;
+    String firstName;
+    @NotNull
+    String lastName;
   }
 }

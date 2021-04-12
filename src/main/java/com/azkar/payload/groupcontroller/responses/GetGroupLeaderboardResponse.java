@@ -14,7 +14,8 @@ public class GetGroupLeaderboardResponse extends ResponseBase<List<UserScore>> {
   @Getter
   public static class UserScore {
 
-    String name;
+    String firstName;
+    String lastName;
     String username;
     int totalScore;
   }

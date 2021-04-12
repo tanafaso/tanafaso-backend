@@ -162,7 +162,8 @@ public class GroupController extends BaseController {
     }
 
     return Optional.of(
-        UserScore.builder().name(user.get().getName()).username(user.get().getUsername())
+        UserScore.builder().firstName(user.get().getFirstName()).lastName(user.get().getLastName())
+            .username(user.get().getUsername())
             .totalScore(userGroup.get().getTotalScore()).build());
   }
 

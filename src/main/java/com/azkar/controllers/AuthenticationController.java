@@ -219,17 +219,20 @@ public class AuthenticationController extends BaseController {
           userRepo.findByUserFacebookData_UserId(facebookResponse.getId()).orElse(null);
       if (user == null) {
         // Case 1
-        user = userService.buildNewUser(facebookResponse.email, facebookResponse.name);
+        user = userService.buildNewUser(facebookResponse.email, facebookResponse.firstName,
+            facebookResponse.lastName);
         user = userService.addNewUser(user);
       }
 
       UserFacebookData userFacebookData = UserFacebookData.builder()
           .accessToken(requestBody.getToken())
           .userId(facebookResponse.id)
-          .name(facebookResponse.name)
+          .firstName(facebookResponse.firstName)
+          .lastName(facebookResponse.lastName)
           .email(facebookResponse.email).build();
       user.setUserFacebookData(userFacebookData);
-      user.setName(userFacebookData.getName());
+      user.setFirstName(userFacebookData.getFirstName());
+      user.setLastName(userFacebookData.getLastName());
       userRepo.save(user);
       jwtToken = jwtService.generateToken(user);
     } catch (Exception e) {
@@ -280,7 +283,8 @@ public class AuthenticationController extends BaseController {
     UserFacebookData userFacebookData = UserFacebookData.builder()
         .accessToken(requestBody.getToken())
         .userId(facebookResponse.id)
-        .name(facebookResponse.name)
+        .firstName(facebookResponse.firstName)
+        .lastName(facebookResponse.lastName)
         .email(facebookResponse.email).build();
     user.setUserFacebookData(userFacebookData);
     userRepo.save(user);
@@ -306,7 +310,8 @@ public class AuthenticationController extends BaseController {
 
   private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationRequest body) {
     String facebookGraphApiUril =
-        "https://graph.facebook.com/v7.0/me?fields=id,name,email&access_token=" + body.getToken();
+        "https://graph.facebook.com/v7.0/me?fields=id,first_name,last_name,email&access_token="
+            + body.getToken();
     FacebookBasicProfileResponse facebookResponse = restTemplate.getForObject(
         facebookGraphApiUril,
         FacebookBasicProfileResponse.class);
@@ -323,7 +328,8 @@ public class AuthenticationController extends BaseController {
   public static class FacebookBasicProfileResponse {
 
     String id;
-    String name;
+    String firstName;
+    String lastName;
     String email;
   }
 }
