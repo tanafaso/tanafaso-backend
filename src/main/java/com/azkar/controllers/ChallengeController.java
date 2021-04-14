@@ -181,6 +181,12 @@ public class ChallengeController extends BaseController {
       response.setError(new Error(UpdateChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
+    if (personalChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
+      UpdateChallengeResponse response = new UpdateChallengeResponse();
+      response.setError(new Error(UpdateChallengeResponse.CHALLENGE_EXPIRED_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
     List<SubChallenge> oldSubChallenges = personalChallenge.get().getSubChallenges();
     // Note: It is ok to change the old sub-challenges even if there was an error since we don't
     // save the updated user object unless there are no errors.
@@ -305,6 +311,12 @@ public class ChallengeController extends BaseController {
     if (!currentUserChallenge.isPresent()) {
       UpdateChallengeResponse response = new UpdateChallengeResponse();
       response.setError(new Error(UpdateChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+    // TODO(issue#170): Time should be supplied by a bean to allow easier testing
+    if (currentUserChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
+      UpdateChallengeResponse response = new UpdateChallengeResponse();
+      response.setError(new Error(UpdateChallengeResponse.CHALLENGE_EXPIRED_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 

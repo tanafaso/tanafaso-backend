@@ -11,4 +11,5 @@ public class UpdateChallengeResponse extends ResponseBase<String> {
   public static final String CHALLENGE_NOT_FOUND_ERROR = "Could not find the challenge to update.";
   public static final String MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR =
       "There is a missing or duplicated sub challenge.";
+  public static final String CHALLENGE_EXPIRED_ERROR = "Can't perform expired challenges.";
 }
