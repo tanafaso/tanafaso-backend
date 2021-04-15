@@ -116,7 +116,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse expectedResponse = new UpdateChallengeResponse();
     expectedResponse
-        .setError(new Error(UpdateChallengeResponse.INCREMENTING_LEFT_REPETITIONS_ERROR));
+        .setError(new Error(Error.INCREMENTING_LEFT_REPETITIONS_ERROR));
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isUnprocessableEntity())
@@ -139,7 +139,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse expectedResponse = new UpdateChallengeResponse();
     expectedResponse
-        .setError(new Error(UpdateChallengeResponse.NON_EXISTENT_SUB_CHALLENGE_ERROR));
+        .setError(new Error(Error.NON_EXISTENT_SUB_CHALLENGE_ERROR));
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isUnprocessableEntity())
@@ -159,7 +159,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     Challenge unsavedChallenge = ChallengeFactory.getNewChallenge("invalidId");
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(unsavedChallenge);
     UpdateChallengeResponse response = new UpdateChallengeResponse();
-    response.setError(new Error(UpdateChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
+    response.setError(new Error(Error.CHALLENGE_NOT_FOUND_ERROR));
 
     updateChallenge(user, "invalidId", requestBody)
         .andExpect(status().isBadRequest())
@@ -177,7 +177,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     challenge.setSubChallenges(updatedSubChallenges);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse response = new UpdateChallengeResponse();
-    response.setError(new Error(UpdateChallengeResponse.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+    response.setError(new Error(Error.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isUnprocessableEntity())
@@ -199,7 +199,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     challenge.setSubChallenges(updatedSubChallenges);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse response = new UpdateChallengeResponse();
-    response.setError(new Error(UpdateChallengeResponse.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+    response.setError(new Error(Error.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isUnprocessableEntity())
@@ -223,7 +223,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     challenge.setSubChallenges(updatedSubChallenges);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse response = new UpdateChallengeResponse();
-    response.setError(new Error(UpdateChallengeResponse.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+    response.setError(new Error(Error.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isUnprocessableEntity())

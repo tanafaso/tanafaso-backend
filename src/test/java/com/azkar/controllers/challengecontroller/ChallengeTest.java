@@ -66,7 +66,7 @@ public class ChallengeTest extends TestBase {
 
   private GetChallengeResponse getGetChallengeNotFoundResponse() {
     GetChallengeResponse expectedResponse = new GetChallengeResponse();
-    expectedResponse.setError(new Error(GetChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
+    expectedResponse.setError(new Error(Error.CHALLENGE_NOT_FOUND_ERROR));
     return expectedResponse;
   }
 

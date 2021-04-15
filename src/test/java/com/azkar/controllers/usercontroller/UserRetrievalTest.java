@@ -58,7 +58,7 @@ public class UserRetrievalTest extends TestBase {
         build();
     addNewUser(user);
     GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setError(new Error(GetUserResponse.USER_NOT_FOUND_ERROR));
+    expectedResponse.setError(new Error(Error.USER_NOT_FOUND_ERROR));
 
     ResultActions result = performGetRequest(user, String.format("/users/%s", fakeUserId));
 
@@ -95,7 +95,7 @@ public class UserRetrievalTest extends TestBase {
         build();
     addNewUser(user);
     GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setError(new Error(GetUserResponse.USER_NOT_FOUND_ERROR));
+    expectedResponse.setError(new Error(Error.USER_NOT_FOUND_ERROR));
 
     ResultActions result = azkarApi.searchForUserByUsername(user, fakeUsername);
 
@@ -128,7 +128,7 @@ public class UserRetrievalTest extends TestBase {
     User user = UserFactory.getUserRegisteredWithFacebookWithFacebookUserId(realFacebookUserId);
     addNewUser(user);
     GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setError(new Error(GetUserResponse.USER_NOT_FOUND_ERROR));
+    expectedResponse.setError(new Error(Error.USER_NOT_FOUND_ERROR));
 
     ResultActions result = azkarApi.searchForUserByFacebookUserId(user, fakeFacebookUserId);
 
@@ -166,7 +166,7 @@ public class UserRetrievalTest extends TestBase {
     addNewUser(user);
 
     GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setError(new Error(GetUserResponse.SEARCH_PARAMETERS_NOT_SPECIFIED));
+    expectedResponse.setError(new Error(Error.SEARCH_PARAMETERS_NOT_SPECIFIED));
 
     ResultActions result =
         performGetRequest(user, String.format("/users/search", username));

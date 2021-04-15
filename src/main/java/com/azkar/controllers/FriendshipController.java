@@ -56,14 +56,14 @@ public class FriendshipController extends BaseController {
 
     User currentUser = userRepo.findById(getCurrentUser().getUserId()).get();
     if (currentUser.getId().equals(otherUserId)) {
-      response.setError(new Error(AddFriendResponse.ADD_SELF_ERROR));
+      response.setError(new Error(Error.ADD_SELF_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the provided id is valid.
     Optional<User> otherUser = userRepo.findById(otherUserId);
     if (!otherUser.isPresent()) {
-      response.setError(new Error(AddFriendResponse.USER_NOT_FOUND_ERROR));
+      response.setError(new Error(Error.USER_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
@@ -71,7 +71,7 @@ public class FriendshipController extends BaseController {
     Friendship otherUserFriendship = friendshipRepo.findByUserId(otherUserId);
     if (otherUserFriendship.getFriends().stream()
         .anyMatch(friend -> friend.getUserId().equals(currentUser.getId()))) {
-      response.setError(new Error(AddFriendResponse.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
+      response.setError(new Error(Error.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -125,14 +125,14 @@ public class FriendshipController extends BaseController {
     Optional<Friend> friend = currentUserFriendship.getFriends().stream()
         .filter(f -> f.getUserId().equals(otherUserId)).findAny();
     if (!friend.isPresent()) {
-      response.setError(new Error(ResolveFriendRequestResponse.NO_FRIEND_REQUEST_EXIST_ERROR));
+      response.setError(new Error(Error.NO_FRIEND_REQUEST_EXIST_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     // Check if the users are already friends.
     if (!friend.get().isPending()) {
       response
-          .setError(new Error(ResolveFriendRequestResponse.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
+          .setError(new Error(Error.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -192,13 +192,13 @@ public class FriendshipController extends BaseController {
 
     int friendIndex = findFriendIndexInList(otherUserId, currentUserFriends);
     if (friendIndex == -1) {
-      response.setError(new Error(ResolveFriendRequestResponse.NO_FRIEND_REQUEST_EXIST_ERROR));
+      response.setError(new Error(Error.NO_FRIEND_REQUEST_EXIST_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
     // Check if the users are already friends.
     if (!currentUserFriends.get(friendIndex).isPending()) {
       response
-          .setError(new Error(ResolveFriendRequestResponse.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
+          .setError(new Error(Error.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -215,7 +215,7 @@ public class FriendshipController extends BaseController {
     // Check if the provided id is valid.
     Optional<User> otherUser = userRepo.findById(otherUserId);
     if (!otherUser.isPresent()) {
-      response.setError(new Error(DeleteFriendResponse.USER_NOT_FOUND_ERROR));
+      response.setError(new Error(Error.USER_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
@@ -228,7 +228,7 @@ public class FriendshipController extends BaseController {
         findFriendIndexInList(otherUserId, currentUserFriendship.getFriends());
 
     if (currentUserAsFriendIndex == -1 || otherUserAsFriendIndex == -1) {
-      response.setError(new Error(DeleteFriendResponse.NO_FRIENDSHIP_ERROR));
+      response.setError(new Error(Error.NO_FRIENDSHIP_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 

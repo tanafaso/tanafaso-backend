@@ -6,11 +6,4 @@ import com.azkar.payload.ResponseBase;
 // should be sent in the headers.
 public class FacebookAuthenticationResponse extends ResponseBase {
 
-  public static final String USER_ALREADY_LOGGED_IN_ERROR = "The user is already logged in.";
-
-  public static final String AUTHENTICATION_WITH_FACEBOOK_ERROR =
-      "Something wrong happened while authenticating with facebook, please try again.";
-
-  public static final String SOMEONE_ELSE_ALREADY_CONNECTED_ERROR =
-      "Someone else already connected to facebook using this account.";
 }

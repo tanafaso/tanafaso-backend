@@ -19,11 +19,11 @@ public class ExceptionHandlingConfig {
   public ResponseEntity<DefaultExceptionResponse> handleException(Exception e) {
     DefaultExceptionResponse response = new DefaultExceptionResponse();
     if (e instanceof BadRequestException) {
-      response.setError(new Error(e.getMessage()));
+      response.setError(((BadRequestException) e).error);
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     } else {
       logger.error(e.getMessage(), e);
-      response.setError(new Error(DefaultExceptionResponse.DEFAULT_ERROR));
+      response.setError(new Error(Error.DEFAULT_ERROR));
     }
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
   }
