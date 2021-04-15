@@ -13,7 +13,7 @@ import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
@@ -89,7 +89,7 @@ public class PersonalChallengeTest extends TestBase {
     long pastExpiryDate = Instant.now().getEpochSecond() - DATE_OFFSET_IN_SECONDS;
     AddPersonalChallengeRequest requestBody = createPersonalChallengeRequest(pastExpiryDate);
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
-    expectedResponse.setError(new Error(Error.PAST_EXPIRY_DATE_ERROR));
+    expectedResponse.setStatus(new Status(Status.PAST_EXPIRY_DATE_ERROR));
 
     azkarApi.createPersonalChallenge(USER, requestBody)
         .andExpect(status().isBadRequest())

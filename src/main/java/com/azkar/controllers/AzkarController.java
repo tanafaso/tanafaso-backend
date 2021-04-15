@@ -1,7 +1,7 @@
 package com.azkar.controllers;
 
 import com.azkar.entities.Zekr;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.azkarcontroller.responses.GetAzkarResponse;
 import com.opencsv.CSVReader;
 import java.io.FileReader;
@@ -50,7 +50,7 @@ public class AzkarController extends BaseController {
       }
     } catch (Exception e) {
       logger.error("Can't retrieve azkar: " + e.getMessage());
-      response.setError(new Error(Error.DEFAULT_ERROR));
+      response.setStatus(new Status(Status.DEFAULT_ERROR));
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 

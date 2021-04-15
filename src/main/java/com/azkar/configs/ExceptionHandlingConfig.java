@@ -1,6 +1,6 @@
 package com.azkar.configs;
 
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.payload.exceptions.DefaultExceptionResponse;
 import org.slf4j.Logger;
@@ -19,11 +19,11 @@ public class ExceptionHandlingConfig {
   public ResponseEntity<DefaultExceptionResponse> handleException(Exception e) {
     DefaultExceptionResponse response = new DefaultExceptionResponse();
     if (e instanceof BadRequestException) {
-      response.setError(((BadRequestException) e).error);
+      response.setStatus(((BadRequestException) e).error);
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     } else {
       logger.error(e.getMessage(), e);
-      response.setError(new Error(Error.DEFAULT_ERROR));
+      response.setStatus(new Status(Status.DEFAULT_ERROR));
     }
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
   }
