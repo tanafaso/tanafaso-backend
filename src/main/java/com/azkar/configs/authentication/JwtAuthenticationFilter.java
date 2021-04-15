@@ -88,7 +88,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     httpServletResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
     UnauthenticatedResponse unauthenticatedResponse = new UnauthenticatedResponse();
-    unauthenticatedResponse.setError(new Error(UnauthenticatedResponse.AUTHENTICATION_ERROR));
+    unauthenticatedResponse.setError(new Error(Error.AUTHENTICATION_ERROR));
     ObjectMapper objectMapper = new ObjectMapper();
     String responseBody = objectMapper.writeValueAsString(unauthenticatedResponse);
     httpServletResponse.getWriter().write(responseBody);

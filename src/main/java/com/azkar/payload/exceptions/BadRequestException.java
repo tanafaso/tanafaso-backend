@@ -1,11 +1,13 @@
 package com.azkar.payload.exceptions;
 
+import com.azkar.payload.ResponseBase.Error;
+
 public class BadRequestException extends RuntimeException {
 
-  public static final String REQUIRED_FIELDS_NOT_GIVEN_ERROR =
-      "Some required fields are not provided.";
+  public Error error;
 
-  public BadRequestException(String message) {
-    super(message);
+  public BadRequestException(Error error) {
+    super("Bad Request");
+    this.error = error;
   }
 }

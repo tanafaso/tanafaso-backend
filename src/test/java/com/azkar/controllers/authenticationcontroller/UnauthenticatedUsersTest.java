@@ -16,7 +16,7 @@ public class UnauthenticatedUsersTest extends TestBase {
   @Test
   public void getLoggedInUserProfile_invalidTokenProvided_shouldNotSucceed() throws Exception {
     UnauthenticatedResponse expectedResponse = new UnauthenticatedResponse();
-    expectedResponse.setError(new Error(UnauthenticatedResponse.AUTHENTICATION_ERROR));
+    expectedResponse.setError(new Error(Error.AUTHENTICATION_ERROR));
 
     ResultActions result =
         performGetRequest(/*token=*/"invalid-token-example", "/users/me");
@@ -30,7 +30,7 @@ public class UnauthenticatedUsersTest extends TestBase {
   @Test
   public void getLoggedInUserProfile_noTokenProvided_shouldNotSucceed() throws Exception {
     UnauthenticatedResponse expectedResponse = new UnauthenticatedResponse();
-    expectedResponse.setError(new Error(UnauthenticatedResponse.AUTHENTICATION_ERROR));
+    expectedResponse.setError(new Error(Error.AUTHENTICATION_ERROR));
 
     ResultActions result = azkarApi.getProfileWithoutAuthentication();
 

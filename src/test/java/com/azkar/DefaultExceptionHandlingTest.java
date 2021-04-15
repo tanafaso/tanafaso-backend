@@ -19,7 +19,7 @@ public class DefaultExceptionHandlingTest extends TestBase {
     addNewUser(user);
 
     DefaultExceptionResponse expectedResponse = new DefaultExceptionResponse();
-    expectedResponse.setError(new Error(DefaultExceptionResponse.DEFAULT_ERROR));
+    expectedResponse.setError(new Error(Error.DEFAULT_ERROR));
     performPutRequest(user, "/users", /*body=*/null)
         .andExpect(status().isInternalServerError())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))

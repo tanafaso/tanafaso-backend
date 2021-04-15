@@ -89,7 +89,7 @@ public class PersonalChallengeTest extends TestBase {
     long pastExpiryDate = Instant.now().getEpochSecond() - DATE_OFFSET_IN_SECONDS;
     AddPersonalChallengeRequest requestBody = createPersonalChallengeRequest(pastExpiryDate);
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
-    expectedResponse.setError(new Error(AddPersonalChallengeRequest.PAST_EXPIRY_DATE_ERROR));
+    expectedResponse.setError(new Error(Error.PAST_EXPIRY_DATE_ERROR));
 
     azkarApi.createPersonalChallenge(USER, requestBody)
         .andExpect(status().isBadRequest())
