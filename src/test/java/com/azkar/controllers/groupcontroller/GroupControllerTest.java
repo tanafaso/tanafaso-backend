@@ -12,7 +12,7 @@ import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AcceptGroupInvitationResponse;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
@@ -97,7 +97,7 @@ public class GroupControllerTest extends TestBase {
   @Test
   public void invite_invalidOtherUser_shouldNotSucceed() throws Exception {
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
-    expectedResponse.setError(new Error(Error.INVITED_USER_INVALID_ERROR));
+    expectedResponse.setStatus(new Status(Status.INVITED_USER_INVALID_ERROR));
     inviteUserToGroup(user1, invalidUser, user1Group.getId())
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -109,7 +109,7 @@ public class GroupControllerTest extends TestBase {
     Group unSavedGroup = GroupFactory.getNewGroup(user1.getId());
 
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
-    expectedResponse.setError(new Error(Error.GROUP_INVALID_ERROR));
+    expectedResponse.setStatus(new Status(Status.GROUP_INVALID_ERROR));
     inviteUserToGroup(user1, user2, unSavedGroup.getId())
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -127,7 +127,7 @@ public class GroupControllerTest extends TestBase {
     addUserToGroup(user2, /*invitingUser=*/user1, user1Group.getId());
 
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
-    expectedResponse.setError(new Error(Error.INVITED_USER_ALREADY_MEMBER_ERROR));
+    expectedResponse.setStatus(new Status(Status.INVITED_USER_ALREADY_MEMBER_ERROR));
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -138,7 +138,7 @@ public class GroupControllerTest extends TestBase {
   @Test
   public void invite_invitingUserIsNotMember_shouldNotSucceed() throws Exception {
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
-    expectedResponse.setError(new Error(Error.INVITING_USER_IS_NOT_MEMBER_ERROR));
+    expectedResponse.setStatus(new Status(Status.INVITING_USER_IS_NOT_MEMBER_ERROR));
     inviteUserToGroup(user2, user3, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -158,7 +158,7 @@ public class GroupControllerTest extends TestBase {
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     expectedResponse = new InviteToGroupResponse();
-    expectedResponse.setError(new Error(Error.USER_ALREADY_INVITED_ERROR));
+    expectedResponse.setStatus(new Status(Status.USER_ALREADY_INVITED_ERROR));
     inviteUserToGroup(user1, user2, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -242,7 +242,7 @@ public class GroupControllerTest extends TestBase {
     Group unSavedGroup = GroupFactory.getNewGroup(user1.getId());
 
     AcceptGroupInvitationResponse expectedResponse = new AcceptGroupInvitationResponse();
-    expectedResponse.setError(new Error(Error.GROUP_INVALID_ERROR));
+    expectedResponse.setStatus(new Status(Status.GROUP_INVALID_ERROR));
     inviteUserToGroup(user1, user2, unSavedGroup.getId())
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -260,7 +260,7 @@ public class GroupControllerTest extends TestBase {
   public void accept_notInvited_shouldNotSucceed() throws Exception {
     AcceptGroupInvitationResponse expectedResponse =
         new AcceptGroupInvitationResponse();
-    expectedResponse.setError(new Error(Error.USER_NOT_INVITED_ERROR));
+    expectedResponse.setStatus(new Status(Status.USER_NOT_INVITED_ERROR));
     acceptInvitationToGroup(user2, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -295,7 +295,7 @@ public class GroupControllerTest extends TestBase {
         new AcceptGroupInvitationResponse();
     // user2 accepts group invitation again.
     expectedAcceptGroupInvitationResponse
-        .setError(new Error(Error.USER_ALREADY_MEMBER_ERROR));
+        .setStatus(new Status(Status.USER_ALREADY_MEMBER_ERROR));
     acceptInvitationToGroup(user2, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -342,7 +342,7 @@ public class GroupControllerTest extends TestBase {
   public void reject_notInvited_shouldNotSucceed() throws Exception {
     RejectGroupInvitationResponse expectedResponse =
         new RejectGroupInvitationResponse();
-    expectedResponse.setError(new Error(Error.USER_NOT_INVITED_ERROR));
+    expectedResponse.setStatus(new Status(Status.USER_NOT_INVITED_ERROR));
     rejectInvitationToGroup(user2, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -363,7 +363,7 @@ public class GroupControllerTest extends TestBase {
     RejectGroupInvitationResponse expectedRejectGroupInvitationResponse =
         new RejectGroupInvitationResponse();
     expectedRejectGroupInvitationResponse
-        .setError(new Error(Error.USER_ALREADY_MEMBER_ERROR));
+        .setStatus(new Status(Status.USER_ALREADY_MEMBER_ERROR));
     rejectInvitationToGroup(user2, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -404,7 +404,7 @@ public class GroupControllerTest extends TestBase {
     Group unSavedGroup = GroupFactory.getNewGroup(user1.getId());
 
     LeaveGroupResponse expectedResponse = new LeaveGroupResponse();
-    expectedResponse.setError(new Error(Error.GROUP_INVALID_ERROR));
+    expectedResponse.setStatus(new Status(Status.GROUP_INVALID_ERROR));
     leaveGroup(user2, unSavedGroup.getId())
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -414,7 +414,7 @@ public class GroupControllerTest extends TestBase {
   @Test
   public void leave_notMember_shouldNoSucceed() throws Exception {
     LeaveGroupResponse expectedResponse = new LeaveGroupResponse();
-    expectedResponse.setError(new Error(Error.NOT_MEMBER_ERROR));
+    expectedResponse.setStatus(new Status(Status.NOT_MEMBER_ERROR));
     leaveGroup(user2, user1Group.getId())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -488,7 +488,7 @@ public class GroupControllerTest extends TestBase {
     Group group3 = azkarApi.addGroupAndReturn(user2, "group3");
 
     GetGroupResponse expectedResponse = new GetGroupResponse();
-    expectedResponse.setError(new Error(Error.NOT_MEMBER_IN_GROUP_ERROR));
+    expectedResponse.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
     azkarApi.getGroup(user1, group3.getId())
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -503,7 +503,7 @@ public class GroupControllerTest extends TestBase {
     azkarApi.addGroup(user2, "group3");
 
     GetGroupResponse expectedResponse = new GetGroupResponse();
-    expectedResponse.setError(new Error(Error.NOT_MEMBER_IN_GROUP_ERROR));
+    expectedResponse.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
     azkarApi.getGroup(user1, "nonExistingGroupId")
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -601,7 +601,7 @@ public class GroupControllerTest extends TestBase {
     userRepo.save(user1InDb);
 
     GetGroupLeaderboardResponse expectedResponse = new GetGroupLeaderboardResponse();
-    expectedResponse.setError(new Error(Error.NOT_MEMBER_IN_GROUP_ERROR));
+    expectedResponse.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
 
     azkarApi.getGroupLeaderboard(nonGroupUser, group.getId())
         .andExpect(status().isBadRequest())

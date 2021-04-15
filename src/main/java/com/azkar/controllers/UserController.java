@@ -1,7 +1,7 @@
 package com.azkar.controllers;
 
 import com.azkar.entities.User;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.usercontroller.GetUserResponse;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
@@ -27,7 +27,7 @@ public class UserController extends BaseController {
 
     Optional<User> user = userRepo.findById(id);
     if (!user.isPresent()) {
-      response.setError(new Error(Error.USER_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -53,7 +53,7 @@ public class UserController extends BaseController {
     }
 
     GetUserResponse response = new GetUserResponse();
-    response.setError(new Error(Error.SEARCH_PARAMETERS_NOT_SPECIFIED));
+    response.setStatus(new Status(Status.SEARCH_PARAMETERS_NOT_SPECIFIED));
     return ResponseEntity.badRequest().body(response);
   }
 
@@ -61,7 +61,7 @@ public class UserController extends BaseController {
     Optional<User> user = userRepo.findByUsername(username);
     GetUserResponse response = new GetUserResponse();
     if (!user.isPresent()) {
-      response.setError(new Error(Error.USER_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
     response.setData(user.get());
@@ -72,7 +72,7 @@ public class UserController extends BaseController {
     GetUserResponse response = new GetUserResponse();
     Optional<User> user = userRepo.findByUserFacebookData_UserId(facebookUserId);
     if (!user.isPresent()) {
-      response.setError(new Error(Error.USER_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 

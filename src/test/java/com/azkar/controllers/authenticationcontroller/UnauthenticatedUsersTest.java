@@ -5,7 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.azkar.TestBase;
 import com.azkar.controllers.utils.JsonHandler;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.authenticationcontroller.responses.UnauthenticatedResponse;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -16,7 +16,7 @@ public class UnauthenticatedUsersTest extends TestBase {
   @Test
   public void getLoggedInUserProfile_invalidTokenProvided_shouldNotSucceed() throws Exception {
     UnauthenticatedResponse expectedResponse = new UnauthenticatedResponse();
-    expectedResponse.setError(new Error(Error.AUTHENTICATION_ERROR));
+    expectedResponse.setStatus(new Status(Status.AUTHENTICATION_ERROR));
 
     ResultActions result =
         performGetRequest(/*token=*/"invalid-token-example", "/users/me");
@@ -30,7 +30,7 @@ public class UnauthenticatedUsersTest extends TestBase {
   @Test
   public void getLoggedInUserProfile_noTokenProvided_shouldNotSucceed() throws Exception {
     UnauthenticatedResponse expectedResponse = new UnauthenticatedResponse();
-    expectedResponse.setError(new Error(Error.AUTHENTICATION_ERROR));
+    expectedResponse.setStatus(new Status(Status.AUTHENTICATION_ERROR));
 
     ResultActions result = azkarApi.getProfileWithoutAuthentication();
 

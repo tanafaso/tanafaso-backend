@@ -1,6 +1,8 @@
 package com.azkar.payload;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Setter
@@ -8,11 +10,14 @@ import lombok.Setter;
 public abstract class ResponseBase<T> {
 
   T data;
-  Error error;
+  Status status = new Status(Status.SUCCESS);
 
   @Getter
-  public static class Error {
+  @NoArgsConstructor
+  @Setter
+  public static class Status {
 
+    public static final int SUCCESS = 1000000;
     public static final int USER_ALREADY_LOGGED_IN_ERROR = 1;
     public static final int EMAIL_PASSWORD_COMBINATION_ERROR = 2;
     public static final int LOGIN_WITH_EMAIL_ERROR = 3;
@@ -59,10 +64,10 @@ public abstract class ResponseBase<T> {
     public static final int NAME_EMPTY_ERROR = 44;
     public static final int PASSWORD_CHARACTERS_LESS_THAN_8_ERROR = 45;
 
-    public final int errorCode;
+    public int code;
 
-    public Error(int errorCode) {
-      this.errorCode = errorCode;
+    public Status(int code) {
+      this.code = code;
     }
   }
 }

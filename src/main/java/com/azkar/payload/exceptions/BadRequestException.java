@@ -1,13 +1,13 @@
 package com.azkar.payload.exceptions;
 
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 
 public class BadRequestException extends RuntimeException {
 
-  public Error error;
+  public Status error;
 
-  public BadRequestException(Error error) {
+  public BadRequestException(Status status) {
     super("Bad Request");
-    this.error = error;
+    this.error = status;
   }
 }

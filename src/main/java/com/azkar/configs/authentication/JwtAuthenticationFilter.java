@@ -3,7 +3,7 @@ package com.azkar.configs.authentication;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.azkar.configs.SecurityConfig;
 import com.azkar.entities.User;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.authenticationcontroller.responses.UnauthenticatedResponse;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
@@ -88,7 +88,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     httpServletResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
     UnauthenticatedResponse unauthenticatedResponse = new UnauthenticatedResponse();
-    unauthenticatedResponse.setError(new Error(Error.AUTHENTICATION_ERROR));
+    unauthenticatedResponse.setStatus(new Status(Status.AUTHENTICATION_ERROR));
     ObjectMapper objectMapper = new ObjectMapper();
     String responseBody = objectMapper.writeValueAsString(unauthenticatedResponse);
     httpServletResponse.getWriter().write(responseBody);

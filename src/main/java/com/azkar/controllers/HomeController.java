@@ -1,7 +1,7 @@
 package com.azkar.controllers;
 
 import com.azkar.entities.User;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.homecontroller.GetHomeResponse;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
@@ -26,7 +26,7 @@ public class HomeController extends BaseController {
 
     Optional<User> user = userRepo.findById(getCurrentUser().getUserId());
     if (!user.isPresent()) {
-      response.setError(new Error(Error.ERROR_USER_NOT_FOUND));
+      response.setStatus(new Status(Status.ERROR_USER_NOT_FOUND));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 

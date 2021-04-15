@@ -3,7 +3,7 @@ package com.azkar.controllers;
 import com.azkar.entities.RegistrationEmailConfirmationState;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserFacebookData;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.authenticationcontroller.requests.EmailLoginRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
@@ -78,17 +78,17 @@ public class AuthenticationController extends BaseController {
     body.validate();
 
     if (userRepo.existsByEmail(body.getEmail())) {
-      response.setError(new Error(Error.USER_ALREADY_REGISTERED_ERROR));
+      response.setStatus(new Status(Status.USER_ALREADY_REGISTERED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     if (userRepo.existsByUserFacebookData_Email(body.getEmail())) {
-      response.setError(new Error(Error.USER_ALREADY_REGISTERED_WITH_FACEBOOK));
+      response.setStatus(new Status(Status.USER_ALREADY_REGISTERED_WITH_FACEBOOK));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     if (registrationPinRepo.existsByEmail(body.getEmail())) {
-      response.setError(new Error(Error.PIN_ALREADY_SENT_TO_USER_ERROR));
+      response.setStatus(new Status(Status.PIN_ALREADY_SENT_TO_USER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -114,7 +114,7 @@ public class AuthenticationController extends BaseController {
     body.validate();
 
     if (userRepo.existsByEmail(body.getEmail())) {
-      response.setError(new Error(Error.EMAIL_ALREADY_VERIFIED_ERROR));
+      response.setStatus(new Status(Status.EMAIL_ALREADY_VERIFIED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -122,7 +122,7 @@ public class AuthenticationController extends BaseController {
         registrationPinRepo.findByEmail(body.getEmail());
     if (!registrationEmailConfirmationState.isPresent()
         || registrationEmailConfirmationState.get().getPin() != body.getPin().intValue()) {
-      response.setError(new Error(Error.VERIFICATION_ERROR));
+      response.setStatus(new Status(Status.VERIFICATION_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -146,12 +146,12 @@ public class AuthenticationController extends BaseController {
     if (!(SecurityContextHolder.getContext()
         .getAuthentication() instanceof AnonymousAuthenticationToken)) {
       response
-          .setError(new Error(Error.USER_ALREADY_LOGGED_IN_ERROR));
+          .setStatus(new Status(Status.USER_ALREADY_LOGGED_IN_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     if (registrationPinRepo.existsByEmail(body.getEmail())) {
-      response.setError(new Error(Error.EMAIL_NOT_VERIFIED_ERROR));
+      response.setStatus(new Status(Status.EMAIL_NOT_VERIFIED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -159,7 +159,7 @@ public class AuthenticationController extends BaseController {
     if (!user.isPresent() || !passwordEncoder.matches(
         body.getPassword(),
         user.get().getEncodedPassword())) {
-      response.setError(new Error(Error.EMAIL_PASSWORD_COMBINATION_ERROR));
+      response.setStatus(new Status(Status.EMAIL_PASSWORD_COMBINATION_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -169,7 +169,7 @@ public class AuthenticationController extends BaseController {
     } catch (UnsupportedEncodingException e) {
       logger.error("Error when generating a verified user token: " + e.getStackTrace());
       response
-          .setError(new Error(Error.LOGIN_WITH_EMAIL_ERROR));
+          .setStatus(new Status(Status.LOGIN_WITH_EMAIL_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -200,7 +200,7 @@ public class AuthenticationController extends BaseController {
     if (!(SecurityContextHolder.getContext()
         .getAuthentication() instanceof AnonymousAuthenticationToken)) {
       response
-          .setError(new Error(Error.USER_ALREADY_LOGGED_IN_ERROR));
+          .setStatus(new Status(Status.USER_ALREADY_LOGGED_IN_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -208,7 +208,7 @@ public class AuthenticationController extends BaseController {
 
     if (facebookResponse == null) {
       response
-          .setError(new Error(Error.AUTHENTICATION_WITH_FACEBOOK_ERROR));
+          .setStatus(new Status(Status.AUTHENTICATION_WITH_FACEBOOK_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -237,7 +237,7 @@ public class AuthenticationController extends BaseController {
       jwtToken = jwtService.generateToken(user);
     } catch (Exception e) {
       response
-          .setError(new Error(Error.AUTHENTICATION_WITH_FACEBOOK_ERROR));
+          .setStatus(new Status(Status.AUTHENTICATION_WITH_FACEBOOK_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -265,7 +265,7 @@ public class AuthenticationController extends BaseController {
 
     if (facebookResponse == null) {
       response
-          .setError(new Error(Error.AUTHENTICATION_WITH_FACEBOOK_ERROR));
+          .setStatus(new Status(Status.AUTHENTICATION_WITH_FACEBOOK_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -276,7 +276,7 @@ public class AuthenticationController extends BaseController {
       logger.warn("The user is attempting to connect a facebook account already connected to "
           + "another account.");
       response
-          .setError(new Error(Error.SOMEONE_ELSE_ALREADY_CONNECTED_ERROR));
+          .setStatus(new Status(Status.SOMEONE_ELSE_ALREADY_CONNECTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 

@@ -3,7 +3,7 @@ package com.azkar.controllers;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AcceptGroupInvitationResponse;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
@@ -56,7 +56,7 @@ public class GroupController extends BaseController {
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
     AddGroupResponse response = new AddGroupResponse();
     if (Strings.isNullOrEmpty(req.getName())) {
-      response.setError(new Error(Error.EMPTY_GROUP_NAME_ERROR));
+      response.setStatus(new Status(Status.EMPTY_GROUP_NAME_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
     User currentUser = getCurrentUser(userRepo);
@@ -87,14 +87,14 @@ public class GroupController extends BaseController {
         userGroup ->
             userGroup.getGroupId().equals(groupId)
     )) {
-      response.setError(new Error(Error.NOT_MEMBER_IN_GROUP_ERROR));
+      response.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
     Optional<Group> group = groupRepo.findById(groupId);
     // Check whether the group is deleted.
     if (!group.isPresent()) {
-      response.setError(new Error(Error.NOT_MEMBER_IN_GROUP_ERROR));
+      response.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
@@ -121,7 +121,7 @@ public class GroupController extends BaseController {
         userGroup ->
             userGroup.getGroupId().equals(groupId)
     )) {
-      response.setError(new Error(Error.NOT_MEMBER_IN_GROUP_ERROR));
+      response.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
@@ -176,26 +176,26 @@ public class GroupController extends BaseController {
     // Check if the invited user id is valid.
     Optional<User> invitedUser = userRepo.findById(invitedUserId);
     if (!invitedUser.isPresent()) {
-      response.setError(new Error(Error.INVITED_USER_INVALID_ERROR));
+      response.setStatus(new Status(Status.INVITED_USER_INVALID_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the group id is valid.
     Optional<Group> group = groupRepo.findById(groupId);
     if (!group.isPresent()) {
-      response.setError(new Error(Error.GROUP_INVALID_ERROR));
+      response.setStatus(new Status(Status.GROUP_INVALID_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the inviting user is a member of the group.
     if (!isMember(userRepo.findById(getCurrentUser().getUserId()).get(), group.get())) {
-      response.setError(new Error(Error.INVITING_USER_IS_NOT_MEMBER_ERROR));
+      response.setStatus(new Status(Status.INVITING_USER_IS_NOT_MEMBER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     // Check if the invited user is already a member of the group.
     if (isMember(invitedUser.get(), group.get())) {
-      response.setError(new Error(Error.INVITED_USER_ALREADY_MEMBER_ERROR));
+      response.setStatus(new Status(Status.INVITED_USER_ALREADY_MEMBER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -205,7 +205,7 @@ public class GroupController extends BaseController {
         userGroup ->
             (userGroup.getGroupId().equals(groupId)
                 && userGroup.getInvitingUserId().equals(invitingUser.getId())))) {
-      response.setError(new Error(Error.USER_ALREADY_INVITED_ERROR));
+      response.setStatus(new Status(Status.USER_ALREADY_INVITED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -229,19 +229,19 @@ public class GroupController extends BaseController {
 
     // Check if the group id is valid.
     if (!group.isPresent()) {
-      response.setError(new Error(Error.GROUP_INVALID_ERROR));
+      response.setStatus(new Status(Status.GROUP_INVALID_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the user is already a member of the group.
     if (isMember(user, group.get())) {
-      response.setError(new Error(Error.USER_ALREADY_MEMBER_ERROR));
+      response.setStatus(new Status(Status.USER_ALREADY_MEMBER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     // Check if the user is not invited to the group.
     if (!isInvited(user, group.get())) {
-      response.setError(new Error(Error.USER_NOT_INVITED_ERROR));
+      response.setStatus(new Status(Status.USER_NOT_INVITED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -278,13 +278,13 @@ public class GroupController extends BaseController {
 
     // Check if the group id is valid.
     if (!group.isPresent()) {
-      response.setError(new Error(Error.GROUP_INVALID_ERROR));
+      response.setStatus(new Status(Status.GROUP_INVALID_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the user is not already a member of the group.
     if (!isMember(user, group.get())) {
-      response.setError(new Error(Error.NOT_MEMBER_ERROR));
+      response.setStatus(new Status(Status.NOT_MEMBER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -307,19 +307,19 @@ public class GroupController extends BaseController {
 
     // Check if the group id is valid.
     if (!group.isPresent()) {
-      response.setError(new Error(Error.GROUP_INVALID_ERROR));
+      response.setStatus(new Status(Status.GROUP_INVALID_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the user is already a member of the group.
     if (isMember(user, group.get())) {
-      response.setError(new Error(Error.USER_ALREADY_MEMBER_ERROR));
+      response.setStatus(new Status(Status.USER_ALREADY_MEMBER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     // Check if the user is not invited to the group.
     if (!isInvited(user, group.get())) {
-      response.setError(new Error(Error.USER_NOT_INVITED_ERROR));
+      response.setStatus(new Status(Status.USER_NOT_INVITED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 

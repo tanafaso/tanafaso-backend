@@ -2,7 +2,7 @@ package com.azkar.payload.challengecontroller.requests;
 
 import com.azkar.entities.Challenge;
 import com.azkar.payload.RequestBodyBase;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.exceptions.BadRequestException;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
@@ -31,14 +31,14 @@ public class AddChallengeRequest extends RequestBodyBase {
 
   protected void validateExpiryDate() {
     if (challenge.getExpiryDate() < Instant.now().getEpochSecond()) {
-      throw new BadRequestException(new Error(Error.PAST_EXPIRY_DATE_ERROR));
+      throw new BadRequestException(new Status(Status.PAST_EXPIRY_DATE_ERROR));
     }
   }
 
   protected void validateSubChallenges() {
     challenge.getSubChallenges().forEach(subChallenges -> {
       if (subChallenges.getRepetitions() <= 0) {
-        throw new BadRequestException(new Error(Error.MALFORMED_SUB_CHALLENGES_ERROR));
+        throw new BadRequestException(new Status(Status.MALFORMED_SUB_CHALLENGES_ERROR));
       }
     });
   }

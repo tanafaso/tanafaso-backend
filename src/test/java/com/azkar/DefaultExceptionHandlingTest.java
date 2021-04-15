@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.exceptions.DefaultExceptionResponse;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -19,7 +19,7 @@ public class DefaultExceptionHandlingTest extends TestBase {
     addNewUser(user);
 
     DefaultExceptionResponse expectedResponse = new DefaultExceptionResponse();
-    expectedResponse.setError(new Error(Error.DEFAULT_ERROR));
+    expectedResponse.setStatus(new Status(Status.DEFAULT_ERROR));
     performPutRequest(user, "/users", /*body=*/null)
         .andExpect(status().isInternalServerError())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
