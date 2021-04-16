@@ -1,10 +1,12 @@
 package com.azkar.payload.challengecontroller.requests;
 
 import com.azkar.entities.Challenge;
+import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.payload.RequestBodyBase;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.exceptions.BadRequestException;
 import java.time.Instant;
+import java.util.HashSet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,5 +43,13 @@ public class AddChallengeRequest extends RequestBodyBase {
         throw new BadRequestException(new Status(Status.MALFORMED_SUB_CHALLENGES_ERROR));
       }
     });
+
+    HashSet<Integer> foundAzkar = new HashSet<>();
+    for (SubChallenge subChallenge : challenge.getSubChallenges()) {
+      if (foundAzkar.contains(subChallenge.getZekr().getId())) {
+        throw new BadRequestException(new Status(Status.CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR));
+      }
+      foundAzkar.add(subChallenge.getZekr().getId());
+    }
   }
 }
