@@ -14,13 +14,11 @@ import com.azkar.entities.RegistrationEmailConfirmationState;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.factories.payload.requests.EmailRegistrationRequestBodyFactory;
-import com.azkar.payload.ResponseBase.Error;
-import com.azkar.payload.authenticationcontroller.requests.EmailAuthenticationRequestBodyUtil;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailVerificationResponse;
-import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.Iterators;
@@ -56,7 +54,8 @@ public class RegistrationWithEmailTest extends TestBase {
 
     RegistrationEmailConfirmationState state =
         Iterators.getOnlyElement(registrationEmailConfirmationStateRepo.findAll().iterator());
-    assertThat(state.getName(), is(body.getName()));
+    assertThat(state.getFirstName(), is(body.getFirstName()));
+    assertThat(state.getLastName(), is(body.getLastName()));
     assertThat(state.getEmail(), is(body.getEmail()));
     assertThat("Password is hashed and saved",
         passwordEncoder.matches(body.getPassword(), state.getPassword()));
@@ -89,7 +88,7 @@ public class RegistrationWithEmailTest extends TestBase {
     body.setEmail(emailWithoutAtSign);
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
-    expectedResponse.setError(new Error(EmailAuthenticationRequestBodyUtil.EMAIL_NOT_VALID_ERROR));
+    expectedResponse.setStatus(new Status(Status.EMAIL_NOT_VALID_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
@@ -106,7 +105,7 @@ public class RegistrationWithEmailTest extends TestBase {
     body.setEmail(emailWithoutDot);
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
-    expectedResponse.setError(new Error(EmailAuthenticationRequestBodyUtil.EMAIL_NOT_VALID_ERROR));
+    expectedResponse.setStatus(new Status(Status.EMAIL_NOT_VALID_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
@@ -124,8 +123,8 @@ public class RegistrationWithEmailTest extends TestBase {
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
-        .setError(
-            new Error(EmailAuthenticationRequestBodyUtil.PASSWORD_CHARACTERS_LESS_THAN_MIN_ERROR));
+        .setStatus(
+            new Status(Status.PASSWORD_CHARACTERS_LESS_THAN_8_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
@@ -138,11 +137,12 @@ public class RegistrationWithEmailTest extends TestBase {
   public void registerWithEmail_nameEmpty_shouldNotSucceed() throws Exception {
     EmailRegistrationRequestBody body =
         EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
-    body.setName("");
+    body.setFirstName("");
+    body.setLastName("example last name");
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
-        .setError(new Error(EmailAuthenticationRequestBodyUtil.NAME_EMPTY_ERROR));
+        .setStatus(new Status(Status.NAME_EMPTY_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
@@ -155,11 +155,12 @@ public class RegistrationWithEmailTest extends TestBase {
   public void registerWithEmail_nameNotProvided_shouldNotSucceed() throws Exception {
     EmailRegistrationRequestBody bodyMissingNameField =
         EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
-    bodyMissingNameField.setName(null);
+    bodyMissingNameField.setFirstName(null);
+    bodyMissingNameField.setLastName(null);
 
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
-        .setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
+        .setStatus(new Status(Status.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     registerWithEmail(JsonHandler.toJson(bodyMissingNameField))
         .andExpect(status().isBadRequest())
@@ -184,7 +185,7 @@ public class RegistrationWithEmailTest extends TestBase {
 
     EmailRegistrationResponse expectedResponse2 = new EmailRegistrationResponse();
     expectedResponse2
-        .setError(new Error(EmailRegistrationResponse.PIN_ALREADY_SENT_TO_USER_ERROR));
+        .setStatus(new Status(Status.PIN_ALREADY_SENT_TO_USER_ERROR));
     registerWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -203,7 +204,7 @@ public class RegistrationWithEmailTest extends TestBase {
         EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
     body.setEmail(user.getEmail());
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
-    expectedResponse.setError(new Error(EmailRegistrationResponse.USER_ALREADY_REGISTERED_ERROR));
+    expectedResponse.setStatus(new Status(Status.USER_ALREADY_REGISTERED_ERROR));
 
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     assertThat(userRepo.count(), is(1L));
@@ -226,7 +227,7 @@ public class RegistrationWithEmailTest extends TestBase {
     body.setEmail(registeredWithFacebookUser.getUserFacebookData().getEmail());
     EmailRegistrationResponse expectedResponse = new EmailRegistrationResponse();
     expectedResponse
-        .setError(new Error(EmailRegistrationResponse.USER_ALREADY_REGISTERED_WITH_FACEBOOK));
+        .setStatus(new Status(Status.USER_ALREADY_REGISTERED_WITH_FACEBOOK));
 
     assertThat(registrationEmailConfirmationStateRepo.count(), is(0L));
     assertThat(userRepo.count(), is(1L));
@@ -276,7 +277,7 @@ public class RegistrationWithEmailTest extends TestBase {
     // Verify for the first time.
     verifyEmail(JsonHandler.toJson(body)).andExpect(status().isOk());
     EmailVerificationResponse expectedResponse = new EmailVerificationResponse();
-    expectedResponse.setError(new Error(EmailVerificationResponse.EMAIL_ALREADY_VERIFIED_ERROR));
+    expectedResponse.setStatus(new Status(Status.EMAIL_ALREADY_VERIFIED_ERROR));
 
     // Verify again
     verifyEmail(JsonHandler.toJson(body))
@@ -301,7 +302,7 @@ public class RegistrationWithEmailTest extends TestBase {
         .pin(pin)
         .build();
     EmailVerificationResponse expectedResponse = new EmailVerificationResponse();
-    expectedResponse.setError(new Error(EmailVerificationResponse.VERIFICATION_ERROR));
+    expectedResponse.setStatus(new Status(Status.VERIFICATION_ERROR));
 
     verifyEmail(JsonHandler.toJson(body))
         .andExpect(status().isUnprocessableEntity())
@@ -325,7 +326,7 @@ public class RegistrationWithEmailTest extends TestBase {
         .pin(wrongPin)
         .build();
     EmailVerificationResponse expectedResponse = new EmailVerificationResponse();
-    expectedResponse.setError(new Error(EmailVerificationResponse.VERIFICATION_ERROR));
+    expectedResponse.setStatus(new Status(Status.VERIFICATION_ERROR));
 
     verifyEmail(JsonHandler.toJson(body))
         .andExpect(status().isUnprocessableEntity())
@@ -338,7 +339,8 @@ public class RegistrationWithEmailTest extends TestBase {
   private void insertEmailVerificationPinInDatabase(String email, int pin) {
     registrationEmailConfirmationStateRepo.insert(
         RegistrationEmailConfirmationState.builder()
-            .name("example_name")
+            .firstName("example_first_name")
+            .lastName("example_last_name")
             .email(email)
             .password("example_password")
             .pin(pin)

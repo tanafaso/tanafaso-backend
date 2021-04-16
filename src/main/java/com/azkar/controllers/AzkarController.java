@@ -1,8 +1,8 @@
 package com.azkar.controllers;
 
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.entities.Zekr;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.azkarcontroller.responses.GetAzkarResponse;
-import com.azkar.payload.exceptions.DefaultExceptionResponse;
 import com.opencsv.CSVReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -30,17 +30,19 @@ public class AzkarController extends BaseController {
   @GetMapping(path = "/azkar", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<GetAzkarResponse> getAzkar() {
     GetAzkarResponse response = new GetAzkarResponse();
-    List<String> azkar = new ArrayList<>();
+    List<Zekr> azkar = new ArrayList<>();
     try {
       CSVReader csvReader =
           new CSVReader(new FileReader(
               resourceLoader.getClassLoader().getResource(AZKAR_FILE).getFile()));
       String[] values;
       while ((values = csvReader.readNext()) != null) {
-        if (values.length != 1) {
-          throw new IOException("Didn't find exactly one column per row in CSV file.");
+        if (values.length != 2) {
+          throw new IOException("Didn't find exactly 2 columns per row in CSV file.");
         }
-        azkar.add(values[0]);
+
+        Zekr zekr = Zekr.builder().id(Integer.parseInt(values[0])).zekr(values[1]).build();
+        azkar.add(zekr);
       }
 
       if (azkar.size() == 0) {
@@ -48,7 +50,7 @@ public class AzkarController extends BaseController {
       }
     } catch (Exception e) {
       logger.error("Can't retrieve azkar: " + e.getMessage());
-      response.setError(new Error(DefaultExceptionResponse.DEFAULT_ERROR));
+      response.setStatus(new Status(Status.DEFAULT_ERROR));
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 

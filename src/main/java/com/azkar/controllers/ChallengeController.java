@@ -5,7 +5,7 @@ import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
@@ -64,28 +64,28 @@ public class ChallengeController extends BaseController {
     UpdateChallengeResponse response = new UpdateChallengeResponse();
     if (newSubChallenges.size() != oldSubChallenges.size()) {
       response
-          .setError(new Error(UpdateChallengeResponse.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+          .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
       return Optional.of(ResponseEntity.unprocessableEntity().body(response));
     }
 
     // Set to make sure that the zekr IDs of both old and modified sub-challenges are identical.
-    Set<String> newZekrIds = new HashSet<>();
+    Set<Integer> newZekrIds = new HashSet<>();
     for (SubChallenge newSubChallenge : newSubChallenges) {
-      newZekrIds.add(newSubChallenge.getZekrId());
+      newZekrIds.add(newSubChallenge.getZekr().getId());
       Optional<SubChallenge> subChallenge = findSubChallenge(oldSubChallenges, newSubChallenge);
       if (!subChallenge.isPresent()) {
-        response.setError(new Error(UpdateChallengeResponse.NON_EXISTENT_SUB_CHALLENGE_ERROR));
+        response.setStatus(new Status(Status.NON_EXISTENT_SUB_CHALLENGE_ERROR));
         return Optional.of(ResponseEntity.unprocessableEntity().body(response));
       }
-      Optional<String> errorMessage = updateSubChallenge(subChallenge.get(), newSubChallenge);
-      if (errorMessage.isPresent()) {
-        response.setError(new Error(errorMessage.get()));
+      Optional<Status> error = updateSubChallenge(subChallenge.get(), newSubChallenge);
+      if (error.isPresent()) {
+        response.setStatus(error.get());
         return Optional.of(ResponseEntity.unprocessableEntity().body(response));
       }
     }
     if (newZekrIds.size() != oldSubChallenges.size()) {
       response
-          .setError(new Error(UpdateChallengeResponse.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+          .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
       return Optional.of(ResponseEntity.unprocessableEntity().body(response));
     }
     return Optional.empty();
@@ -106,7 +106,7 @@ public class ChallengeController extends BaseController {
       List<SubChallenge> oldSubChallenges,
       SubChallenge newSubChallenge) {
     for (SubChallenge subChallenge : oldSubChallenges) {
-      if (subChallenge.getZekrId().equals(newSubChallenge.getZekrId())) {
+      if (subChallenge.getZekr().getId().equals(newSubChallenge.getZekr().getId())) {
         return Optional.of(subChallenge);
       }
     }
@@ -115,14 +115,14 @@ public class ChallengeController extends BaseController {
 
   /**
    * Updates the subChallenge as requested in newSubChallenge. If an error occurred the function
-   * returns a String with the error message, and returns empty object otherwise.
+   * returns an error, and returns empty object otherwise.
    */
-  private static Optional<String> updateSubChallenge(
+  private static Optional<Status> updateSubChallenge(
       SubChallenge subChallenge,
       SubChallenge newSubChallenge) {
     int newLeftRepetitions = newSubChallenge.getRepetitions();
     if (newLeftRepetitions > subChallenge.getRepetitions()) {
-      return Optional.of(UpdateChallengeResponse.INCREMENTING_LEFT_REPETITIONS_ERROR);
+      return Optional.of(new Status(Status.INCREMENTING_LEFT_REPETITIONS_ERROR));
     }
     if (newLeftRepetitions < 0) {
       logger.warn("Received UpdateChallenge request with negative leftRepetition value of: "
@@ -141,7 +141,7 @@ public class ChallengeController extends BaseController {
     try {
       request.validate();
     } catch (BadRequestException e) {
-      response.setError(new Error(e.getMessage()));
+      response.setStatus(e.error);
       return ResponseEntity.badRequest().body(response);
     }
 
@@ -178,9 +178,15 @@ public class ChallengeController extends BaseController {
         .findAny();
     if (!personalChallenge.isPresent()) {
       UpdateChallengeResponse response = new UpdateChallengeResponse();
-      response.setError(new Error(UpdateChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
+    if (personalChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
+      UpdateChallengeResponse response = new UpdateChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_EXPIRED_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
     List<SubChallenge> oldSubChallenges = personalChallenge.get().getSubChallenges();
     // Note: It is ok to change the old sub-challenges even if there was an error since we don't
     // save the updated user object unless there are no errors.
@@ -203,7 +209,7 @@ public class ChallengeController extends BaseController {
         .filter(challenge -> challenge.getId().equals(challengeId))
         .findFirst();
     if (!userChallenge.isPresent()) {
-      response.setError(new Error(GetChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     response.setData(userChallenge.get());
@@ -217,16 +223,16 @@ public class ChallengeController extends BaseController {
     try {
       req.validate();
     } catch (BadRequestException e) {
-      response.setError(new Error(e.getMessage()));
+      response.setStatus(e.error);
       return ResponseEntity.badRequest().body(response);
     }
     Optional<Group> group = groupRepo.findById(req.getChallenge().getGroupId());
     if (!group.isPresent()) {
-      response.setError(new Error(AddChallengeResponse.GROUP_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.GROUP_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
     if (!groupContainsCurrentUser(group.get())) {
-      response.setError(new Error(AddChallengeResponse.NOT_GROUP_MEMBER_ERROR));
+      response.setStatus(new Status(Status.NOT_GROUP_MEMBER_ERROR));
       return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
     Challenge challenge = req.getChallenge().toBuilder()
@@ -283,11 +289,11 @@ public class ChallengeController extends BaseController {
       Optional<Group> optionalGroup) {
     GetChallengesResponse response = new GetChallengesResponse();
     if (!optionalGroup.isPresent()) {
-      response.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.GROUP_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
     if (!groupContainsCurrentUser(optionalGroup.get())) {
-      response.setError(new Error(GetChallengesResponse.NON_GROUP_MEMBER_ERROR));
+      response.setStatus(new Status(Status.NON_GROUP_MEMBER_ERROR));
       return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
     return null;
@@ -304,7 +310,13 @@ public class ChallengeController extends BaseController {
         .findFirst();
     if (!currentUserChallenge.isPresent()) {
       UpdateChallengeResponse response = new UpdateChallengeResponse();
-      response.setError(new Error(UpdateChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+    // TODO(issue#170): Time should be supplied by a bean to allow easier testing
+    if (currentUserChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
+      UpdateChallengeResponse response = new UpdateChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_EXPIRED_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 

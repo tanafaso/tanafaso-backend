@@ -11,7 +11,7 @@ import com.azkar.entities.User;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.repos.GroupRepo;
 import org.junit.Before;
@@ -66,7 +66,7 @@ public class ChallengeTest extends TestBase {
 
   private GetChallengeResponse getGetChallengeNotFoundResponse() {
     GetChallengeResponse expectedResponse = new GetChallengeResponse();
-    expectedResponse.setError(new Error(GetChallengeResponse.CHALLENGE_NOT_FOUND_ERROR));
+    expectedResponse.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
     return expectedResponse;
   }
 

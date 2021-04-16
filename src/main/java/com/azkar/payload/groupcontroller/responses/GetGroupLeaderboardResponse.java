@@ -8,13 +8,12 @@ import lombok.Getter;
 
 public class GetGroupLeaderboardResponse extends ResponseBase<List<UserScore>> {
 
-  public static final String NOT_MEMBER_IN_GROUP_ERROR = "Not a member in this group";
-
   @Builder
   @Getter
   public static class UserScore {
 
-    String name;
+    String firstName;
+    String lastName;
     String username;
     int totalScore;
   }

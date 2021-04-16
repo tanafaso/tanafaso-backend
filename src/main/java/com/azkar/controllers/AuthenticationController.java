@@ -1,13 +1,9 @@
 package com.azkar.controllers;
 
-import static com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse.PIN_ALREADY_SENT_TO_USER_ERROR;
-import static com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse.USER_ALREADY_REGISTERED_ERROR;
-import static com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse.USER_ALREADY_REGISTERED_WITH_FACEBOOK;
-
 import com.azkar.entities.RegistrationEmailConfirmationState;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserFacebookData;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.authenticationcontroller.requests.EmailLoginRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
@@ -20,6 +16,7 @@ import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 import java.util.Random;
@@ -81,17 +78,17 @@ public class AuthenticationController extends BaseController {
     body.validate();
 
     if (userRepo.existsByEmail(body.getEmail())) {
-      response.setError(new Error(USER_ALREADY_REGISTERED_ERROR));
+      response.setStatus(new Status(Status.USER_ALREADY_REGISTERED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     if (userRepo.existsByUserFacebookData_Email(body.getEmail())) {
-      response.setError(new Error(USER_ALREADY_REGISTERED_WITH_FACEBOOK));
+      response.setStatus(new Status(Status.USER_ALREADY_REGISTERED_WITH_FACEBOOK));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     if (registrationPinRepo.existsByEmail(body.getEmail())) {
-      response.setError(new Error(PIN_ALREADY_SENT_TO_USER_ERROR));
+      response.setStatus(new Status(Status.PIN_ALREADY_SENT_TO_USER_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -104,7 +101,9 @@ public class AuthenticationController extends BaseController {
             .email(body.getEmail())
             .password(passwordEncoder.encode(body.getPassword()))
             .pin(pin)
-            .name(body.getName()).build());
+            .firstName(body.getFirstName())
+            .lastName(body.getLastName())
+            .build());
     return ResponseEntity.ok(response);
   }
 
@@ -115,7 +114,7 @@ public class AuthenticationController extends BaseController {
     body.validate();
 
     if (userRepo.existsByEmail(body.getEmail())) {
-      response.setError(new Error(EmailVerificationResponse.EMAIL_ALREADY_VERIFIED_ERROR));
+      response.setStatus(new Status(Status.EMAIL_ALREADY_VERIFIED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -123,12 +122,13 @@ public class AuthenticationController extends BaseController {
         registrationPinRepo.findByEmail(body.getEmail());
     if (!registrationEmailConfirmationState.isPresent()
         || registrationEmailConfirmationState.get().getPin() != body.getPin().intValue()) {
-      response.setError(new Error(EmailVerificationResponse.VERIFICATION_ERROR));
+      response.setStatus(new Status(Status.VERIFICATION_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     User user = userService.buildNewUser(registrationEmailConfirmationState.get().getEmail(),
-        registrationEmailConfirmationState.get().getName(),
+        registrationEmailConfirmationState.get().getFirstName(),
+        registrationEmailConfirmationState.get().getLastName(),
         registrationEmailConfirmationState.get().getPassword());
 
     userService.addNewUser(user);
@@ -146,12 +146,12 @@ public class AuthenticationController extends BaseController {
     if (!(SecurityContextHolder.getContext()
         .getAuthentication() instanceof AnonymousAuthenticationToken)) {
       response
-          .setError(new Error(EmailLoginResponse.USER_ALREADY_LOGGED_IN_ERROR));
+          .setStatus(new Status(Status.USER_ALREADY_LOGGED_IN_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     if (registrationPinRepo.existsByEmail(body.getEmail())) {
-      response.setError(new Error(EmailLoginResponse.EMAIL_NOT_VERIFIED_ERROR));
+      response.setStatus(new Status(Status.EMAIL_NOT_VERIFIED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -159,7 +159,7 @@ public class AuthenticationController extends BaseController {
     if (!user.isPresent() || !passwordEncoder.matches(
         body.getPassword(),
         user.get().getEncodedPassword())) {
-      response.setError(new Error(EmailLoginResponse.EMAIL_PASSWORD_COMBINATION_ERROR));
+      response.setStatus(new Status(Status.EMAIL_PASSWORD_COMBINATION_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -169,7 +169,7 @@ public class AuthenticationController extends BaseController {
     } catch (UnsupportedEncodingException e) {
       logger.error("Error when generating a verified user token: " + e.getStackTrace());
       response
-          .setError(new Error(EmailLoginResponse.LOGIN_WITH_EMAIL_ERROR));
+          .setStatus(new Status(Status.LOGIN_WITH_EMAIL_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -200,7 +200,7 @@ public class AuthenticationController extends BaseController {
     if (!(SecurityContextHolder.getContext()
         .getAuthentication() instanceof AnonymousAuthenticationToken)) {
       response
-          .setError(new Error(FacebookAuthenticationResponse.USER_ALREADY_LOGGED_IN_ERROR));
+          .setStatus(new Status(Status.USER_ALREADY_LOGGED_IN_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -208,7 +208,7 @@ public class AuthenticationController extends BaseController {
 
     if (facebookResponse == null) {
       response
-          .setError(new Error(FacebookAuthenticationResponse.AUTHENTICATION_WITH_FACEBOOK_ERROR));
+          .setStatus(new Status(Status.AUTHENTICATION_WITH_FACEBOOK_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -219,22 +219,25 @@ public class AuthenticationController extends BaseController {
           userRepo.findByUserFacebookData_UserId(facebookResponse.getId()).orElse(null);
       if (user == null) {
         // Case 1
-        user = userService.buildNewUser(facebookResponse.email, facebookResponse.name);
+        user = userService.buildNewUser(facebookResponse.email, facebookResponse.firstName,
+            facebookResponse.lastName);
         user = userService.addNewUser(user);
       }
 
       UserFacebookData userFacebookData = UserFacebookData.builder()
           .accessToken(requestBody.getToken())
           .userId(facebookResponse.id)
-          .name(facebookResponse.name)
+          .firstName(facebookResponse.firstName)
+          .lastName(facebookResponse.lastName)
           .email(facebookResponse.email).build();
       user.setUserFacebookData(userFacebookData);
-      user.setName(userFacebookData.getName());
+      user.setFirstName(userFacebookData.getFirstName());
+      user.setLastName(userFacebookData.getLastName());
       userRepo.save(user);
       jwtToken = jwtService.generateToken(user);
     } catch (Exception e) {
       response
-          .setError(new Error(FacebookAuthenticationResponse.AUTHENTICATION_WITH_FACEBOOK_ERROR));
+          .setStatus(new Status(Status.AUTHENTICATION_WITH_FACEBOOK_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -262,7 +265,7 @@ public class AuthenticationController extends BaseController {
 
     if (facebookResponse == null) {
       response
-          .setError(new Error(FacebookAuthenticationResponse.AUTHENTICATION_WITH_FACEBOOK_ERROR));
+          .setStatus(new Status(Status.AUTHENTICATION_WITH_FACEBOOK_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -273,14 +276,15 @@ public class AuthenticationController extends BaseController {
       logger.warn("The user is attempting to connect a facebook account already connected to "
           + "another account.");
       response
-          .setError(new Error(FacebookAuthenticationResponse.SOMEONE_ELSE_ALREADY_CONNECTED_ERROR));
+          .setStatus(new Status(Status.SOMEONE_ELSE_ALREADY_CONNECTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     UserFacebookData userFacebookData = UserFacebookData.builder()
         .accessToken(requestBody.getToken())
         .userId(facebookResponse.id)
-        .name(facebookResponse.name)
+        .firstName(facebookResponse.firstName)
+        .lastName(facebookResponse.lastName)
         .email(facebookResponse.email).build();
     user.setUserFacebookData(userFacebookData);
     userRepo.save(user);
@@ -306,7 +310,8 @@ public class AuthenticationController extends BaseController {
 
   private FacebookBasicProfileResponse assertUserFacebookData(FacebookAuthenticationRequest body) {
     String facebookGraphApiUril =
-        "https://graph.facebook.com/v7.0/me?fields=id,name,email&access_token=" + body.getToken();
+        "https://graph.facebook.com/v7.0/me?fields=id,first_name,last_name,email&access_token="
+            + body.getToken();
     FacebookBasicProfileResponse facebookResponse = restTemplate.getForObject(
         facebookGraphApiUril,
         FacebookBasicProfileResponse.class);
@@ -323,7 +328,10 @@ public class AuthenticationController extends BaseController {
   public static class FacebookBasicProfileResponse {
 
     String id;
-    String name;
+    @JsonProperty("first_name")
+    String firstName;
+    @JsonProperty("last_name")
+    String lastName;
     String email;
   }
 }

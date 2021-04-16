@@ -10,13 +10,11 @@ import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.factories.payload.requests.EmailLoginRequestBodyFactory;
 import com.azkar.factories.payload.requests.EmailRegistrationRequestBodyFactory;
-import com.azkar.payload.ResponseBase.Error;
-import com.azkar.payload.authenticationcontroller.requests.EmailAuthenticationRequestBodyUtil;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.authenticationcontroller.requests.EmailLoginRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.responses.EmailLoginResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
-import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.payload.homecontroller.GetHomeResponse;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +62,7 @@ public class LoginWithEmailTest extends TestBase {
     body.setEmail(emailWithoutAtSign);
 
     EmailLoginResponse expectedResponse = new EmailLoginResponse();
-    expectedResponse.setError(new Error(EmailAuthenticationRequestBodyUtil.EMAIL_NOT_VALID_ERROR));
+    expectedResponse.setStatus(new Status(Status.EMAIL_NOT_VALID_ERROR));
     loginWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -79,7 +77,7 @@ public class LoginWithEmailTest extends TestBase {
     body.setEmail(emailWithoutDot);
 
     EmailLoginResponse expectedResponse = new EmailLoginResponse();
-    expectedResponse.setError(new Error(EmailAuthenticationRequestBodyUtil.EMAIL_NOT_VALID_ERROR));
+    expectedResponse.setStatus(new Status(Status.EMAIL_NOT_VALID_ERROR));
     loginWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -95,8 +93,8 @@ public class LoginWithEmailTest extends TestBase {
 
     EmailLoginResponse expectedResponse = new EmailLoginResponse();
     expectedResponse
-        .setError(
-            new Error(EmailAuthenticationRequestBodyUtil.PASSWORD_CHARACTERS_LESS_THAN_MIN_ERROR));
+        .setStatus(
+            new Status(Status.PASSWORD_CHARACTERS_LESS_THAN_8_ERROR));
     loginWithEmail(JsonHandler.toJson(body))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -111,7 +109,7 @@ public class LoginWithEmailTest extends TestBase {
 
     EmailLoginResponse expectedResponse = new EmailLoginResponse();
     expectedResponse
-        .setError(new Error(BadRequestException.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
+        .setStatus(new Status(Status.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
     loginWithEmail(JsonHandler.toJson(bodyMissingEmailField))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -135,7 +133,7 @@ public class LoginWithEmailTest extends TestBase {
         EmailLoginRequestBody.builder().email(emailRegistrationRequestBody.getEmail())
             .password(emailRegistrationRequestBody.getPassword()).build();
     EmailLoginResponse expectedResponse = new EmailLoginResponse();
-    expectedResponse.setError(new Error(EmailLoginResponse.EMAIL_NOT_VERIFIED_ERROR));
+    expectedResponse.setStatus(new Status(Status.EMAIL_NOT_VERIFIED_ERROR));
 
     loginWithEmail(JsonHandler.toJson(emailLoginRequestBody))
         .andExpect(status().isUnprocessableEntity())

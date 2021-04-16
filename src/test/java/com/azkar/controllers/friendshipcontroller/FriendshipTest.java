@@ -14,13 +14,14 @@ import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.usercontroller.AddFriendResponse;
 import com.azkar.payload.usercontroller.DeleteFriendResponse;
 import com.azkar.payload.usercontroller.GetFriendsResponse;
 import com.azkar.payload.usercontroller.ResolveFriendRequestResponse;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
+import com.azkar.repos.UserRepo;
 import com.google.common.collect.Iterators;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,6 +48,9 @@ public class FriendshipTest extends TestBase {
 
   @Autowired
   GroupRepo groupRepo;
+
+  @Autowired
+  UserRepo userRepo;
 
   @Before
   public void before() {
@@ -86,7 +90,7 @@ public class FriendshipTest extends TestBase {
     sendFriendRequest(user1, user2);
 
     AddFriendResponse expectedResponse = new AddFriendResponse();
-    expectedResponse.setError(new Error(AddFriendResponse.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
+    expectedResponse.setStatus(new Status(Status.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
 
     sendFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
@@ -124,7 +128,7 @@ public class FriendshipTest extends TestBase {
   @Test
   public void addFriend_invalidResponder_shouldNotSucceed() throws Exception {
     AddFriendResponse expectedResponse = new AddFriendResponse();
-    expectedResponse.setError(new Error(AddFriendResponse.USER_NOT_FOUND_ERROR));
+    expectedResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
 
     sendFriendRequest(user1, unAuthenticatedUser)
         .andExpect(status().isBadRequest())
@@ -135,7 +139,7 @@ public class FriendshipTest extends TestBase {
   @Test
   public void addFriend_addSelf_shouldNotSucceed() throws Exception {
     AddFriendResponse expectedResponse = new AddFriendResponse();
-    expectedResponse.setError(new Error(AddFriendResponse.ADD_SELF_ERROR));
+    expectedResponse.setStatus(new Status(Status.ADD_SELF_ERROR));
 
     sendFriendRequest(user1, user1)
         .andExpect(status().isBadRequest())
@@ -146,6 +150,8 @@ public class FriendshipTest extends TestBase {
   @Test
   public void acceptFriendRequest_normalScenario_shouldSucceed() throws Exception {
     assertThat(groupRepo.count(), equalTo(0L));
+    assertThat(user1.getUserGroups().size(), equalTo(0));
+    assertThat(user2.getUserGroups().size(), equalTo(0));
 
     sendFriendRequest(user1, user2);
 
@@ -175,6 +181,13 @@ public class FriendshipTest extends TestBase {
 
     assertThat(user1Friend.getGroupId(), notNullValue());
     assertThat(user1Friend.getGroupId(), equalTo(user2Friend.getGroupId()));
+
+    User updatedUser1 = userRepo.findById(user1.getId()).get();
+    User updatedUser2 = userRepo.findById(user2.getId()).get();
+    assertThat(Iterators.getOnlyElement(updatedUser1.getUserGroups().iterator()).getGroupId(),
+        equalTo(group.getId()));
+    assertThat(Iterators.getOnlyElement(updatedUser2.getUserGroups().iterator()).getGroupId(),
+        equalTo(group.getId()));
   }
 
   @Test
@@ -201,7 +214,7 @@ public class FriendshipTest extends TestBase {
   public void acceptFriendRequest_friendshipNotPending_shouldNotSucceed() throws Exception {
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
     expectedResponse
-        .setError(new Error(ResolveFriendRequestResponse.NO_FRIEND_REQUEST_EXIST_ERROR));
+        .setStatus(new Status(Status.NO_FRIEND_REQUEST_EXIST_ERROR));
     acceptFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -218,7 +231,7 @@ public class FriendshipTest extends TestBase {
   public void resolveFriendship_noFriendshipExist_shouldNotSucceed() throws Exception {
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
     expectedResponse
-        .setError(new Error(ResolveFriendRequestResponse.NO_FRIEND_REQUEST_EXIST_ERROR));
+        .setStatus(new Status(Status.NO_FRIEND_REQUEST_EXIST_ERROR));
 
     acceptFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
@@ -238,7 +251,7 @@ public class FriendshipTest extends TestBase {
 
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
     expectedResponse
-        .setError(new Error(ResolveFriendRequestResponse.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
+        .setStatus(new Status(Status.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
     acceptFriendRequest(user1, user2)
         .andExpect(status().isUnprocessableEntity())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -274,14 +287,16 @@ public class FriendshipTest extends TestBase {
     expectedUser1Friends.add(Friend.builder()
         .userId(user2.getId())
         .username(user2.getUsername())
-        .name(user2.getName())
+        .firstName(user2.getFirstName())
+        .lastName(user2.getLastName())
         .isPending(false)
         .build()
     );
     expectedUser1Friends.add(Friend.builder()
         .userId(user3.getId())
         .username(user3.getUsername())
-        .name(user3.getName())
+        .firstName(user3.getFirstName())
+        .lastName(user3.getLastName())
         .isPending(false)
         .build()
     );
@@ -302,8 +317,8 @@ public class FriendshipTest extends TestBase {
     expectedUser5Friends.add(Friend.builder()
         .userId(user1.getId())
         .username(user1.getUsername())
-        .name(user1.getName())
-        .isPending(true)
+        .firstName(user1.getFirstName())
+        .lastName(user1.getLastName()).isPending(true)
         .build()
     );
     mvcResult = performGetRequest(user5, "/friends")
@@ -321,6 +336,11 @@ public class FriendshipTest extends TestBase {
   @Test
   public void deleteFriend_normalScenario_shouldSucceed() throws Exception {
     makeFriends(user1, user2);
+    assertThat(groupRepo.count(), equalTo(1L));
+    User updatedUser1 = userRepo.findById(user1.getId()).get();
+    User updatedUser2 = userRepo.findById(user2.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), equalTo(1));
+    assertThat(updatedUser2.getUserGroups().size(), equalTo(1));
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     deleteFriend(user1, user2)
@@ -333,12 +353,18 @@ public class FriendshipTest extends TestBase {
 
     assertThat(user1Friendship.getFriends().size(), is(0));
     assertThat(user2Friendship.getFriends().size(), is(0));
+
+    assertThat(groupRepo.count(), equalTo(0L));
+    updatedUser1 = userRepo.findById(user1.getId()).get();
+    updatedUser2 = userRepo.findById(user2.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), equalTo(0));
+    assertThat(updatedUser2.getUserGroups().size(), equalTo(0));
   }
 
   @Test
   public void deleteFriend_invalidUser_shouldSucceed() throws Exception {
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
-    expectedResponse.setError(new Error(DeleteFriendResponse.USER_NOT_FOUND_ERROR));
+    expectedResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
 
     deleteFriend(user1, unAuthenticatedUser)
         .andExpect(status().isBadRequest())
@@ -351,7 +377,7 @@ public class FriendshipTest extends TestBase {
     sendFriendRequest(user1, user2);
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
-    expectedResponse.setError(new Error(DeleteFriendResponse.NO_FRIENDSHIP_ERROR));
+    expectedResponse.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
     deleteFriend(user1, user2)
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -361,7 +387,7 @@ public class FriendshipTest extends TestBase {
   @Test
   public void deleteFriend_noFriendRequestExist_shouldNotSucceed() throws Exception {
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
-    expectedResponse.setError(new Error(DeleteFriendResponse.NO_FRIENDSHIP_ERROR));
+    expectedResponse.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
 
     deleteFriend(user1, user2)
         .andExpect(status().isNotFound())

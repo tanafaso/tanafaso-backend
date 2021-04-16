@@ -15,11 +15,11 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.entities.Zekr;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
-import com.azkar.payload.ResponseBase.Error;
-import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.repos.GroupRepo;
@@ -107,8 +107,9 @@ public class GroupChallengeTest extends TestBase {
   @Test
   public void addChallenge_zeroSubChallengeRepetitions_shouldNotSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
-    SubChallenge zeroRepetitionSubChallenge = SubChallenge.builder().zekrId("1").zekr("zekr")
-        .build();
+    SubChallenge zeroRepetitionSubChallenge =
+        SubChallenge.builder().zekr(Zekr.builder().id(1).zekr("zekr").build())
+            .build();
     Challenge challenge = Challenge.builder()
         .name(ChallengeFactory.CHALLENGE_NAME_BASE)
         .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
@@ -117,7 +118,35 @@ public class GroupChallengeTest extends TestBase {
         .groupId(validGroup.getId())
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
-    expectedResponse.setError(new Error(AddChallengeRequest.MALFORMED_SUB_CHALLENGES_ERROR));
+    expectedResponse.setStatus(new Status(Status.MALFORMED_SUB_CHALLENGES_ERROR));
+
+    azkarApi.createChallenge(user1, challenge)
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+
+    List<Challenge> challengesProgress = userRepo.findById(user1.getId()).get()
+        .getUserChallenges();
+    assertTrue("Challenges progress list is not empty.", challengesProgress.isEmpty());
+  }
+
+  @Test
+  public void addChallenge_duplicateZekr_shouldNotSucceed() throws Exception {
+    long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
+    SubChallenge subChallenge1 =
+        SubChallenge.builder().repetitions(2).zekr(Zekr.builder().id(1).zekr("zekr").build())
+            .build();
+    SubChallenge subChallenge2 =
+        SubChallenge.builder().repetitions(3).zekr(Zekr.builder().id(1).zekr("zekr").build())
+            .build();
+    Challenge challenge = Challenge.builder()
+        .name(ChallengeFactory.CHALLENGE_NAME_BASE)
+        .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
+        .expiryDate(expiryDate)
+        .subChallenges(ImmutableList.of(subChallenge1, subChallenge2))
+        .groupId(validGroup.getId())
+        .build();
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setStatus(new Status(Status.CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR));
 
     azkarApi.createChallenge(user1, challenge)
         .andExpect(status().isBadRequest())
@@ -132,7 +161,7 @@ public class GroupChallengeTest extends TestBase {
   public void addChallenge_invalidGroup_shouldNotSucceed() throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(invalidGroup.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
-    expectedResponse.setError(new Error(AddChallengeResponse.GROUP_NOT_FOUND_ERROR));
+    expectedResponse.setStatus(new Status(Status.GROUP_NOT_FOUND_ERROR));
 
     azkarApi.createChallenge(user1, challenge)
         .andExpect(status().isBadRequest())
@@ -149,7 +178,7 @@ public class GroupChallengeTest extends TestBase {
     User nonGroupMember = UserFactory.getNewUser();
     addNewUser(nonGroupMember);
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
-    expectedResponse.setError(new Error(AddChallengeResponse.NOT_GROUP_MEMBER_ERROR));
+    expectedResponse.setStatus(new Status(Status.NOT_GROUP_MEMBER_ERROR));
 
     azkarApi.createChallenge(nonGroupMember, challenge)
         .andExpect(status().isForbidden())
@@ -197,7 +226,7 @@ public class GroupChallengeTest extends TestBase {
         .groupId(validGroup.getId())
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
-    expectedResponse.setError(new Error(AddChallengeRequest.PAST_EXPIRY_DATE_ERROR));
+    expectedResponse.setStatus(new Status(Status.PAST_EXPIRY_DATE_ERROR));
 
     azkarApi.createChallenge(user1, challenge)
         .andExpect(status().isBadRequest())
@@ -238,7 +267,7 @@ public class GroupChallengeTest extends TestBase {
   @Test
   public void getGroupChallenges_invalidGroup_shouldFail() throws Exception {
     GetChallengesResponse expectedResponse = new GetChallengesResponse();
-    expectedResponse.setError(new Error(GetChallengesResponse.GROUP_NOT_FOUND_ERROR));
+    expectedResponse.setStatus(new Status(Status.GROUP_NOT_FOUND_ERROR));
 
     azkarApi.getAllChallengesInGroup(user1, invalidGroup.getId())
         .andExpect(status().isBadRequest())
@@ -249,7 +278,7 @@ public class GroupChallengeTest extends TestBase {
   public void getGroupChallenges_nonGroupMember_shouldFail() throws Exception {
     User nonGroupMember = getNewRegisteredUser();
     GetChallengesResponse expectedResponse = new GetChallengesResponse();
-    expectedResponse.setError(new Error(GetChallengesResponse.NON_GROUP_MEMBER_ERROR));
+    expectedResponse.setStatus(new Status(Status.NON_GROUP_MEMBER_ERROR));
 
     azkarApi.getAllChallengesInGroup(nonGroupMember, validGroup.getId())
         .andExpect(status().isForbidden())

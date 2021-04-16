@@ -2,6 +2,7 @@ package com.azkar.factories.entities;
 
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenge;
+import com.azkar.entities.Zekr;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 
@@ -14,16 +15,14 @@ public class ChallengeFactory {
 
   public static SubChallenge subChallenge1() {
     return SubChallenge.builder()
-        .zekrId("1")
-        .zekr("zekr")
+        .zekr(Zekr.builder().id(1).zekr("zekr").build())
         .repetitions(3)
         .build();
   }
 
   public static SubChallenge subChallenge2() {
     return SubChallenge.builder()
-        .zekrId("2")
-        .zekr("zekr2")
+        .zekr(Zekr.builder().id(2).zekr("zekr2").build())
         .repetitions(5)
         .build();
   }

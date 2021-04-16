@@ -1,10 +1,12 @@
 package com.azkar.payload.challengecontroller.requests;
 
 import com.azkar.entities.Challenge;
+import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.payload.RequestBodyBase;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.exceptions.BadRequestException;
-import com.google.common.annotations.VisibleForTesting;
 import java.time.Instant;
+import java.util.HashSet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,12 +17,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class AddChallengeRequest extends RequestBodyBase {
-
-  @VisibleForTesting
-  public static final String PAST_EXPIRY_DATE_ERROR = "Expiry date is in the past.";
-  @VisibleForTesting
-  public static final String MALFORMED_SUB_CHALLENGES_ERROR =
-      "Sub challenges repetitions must be greater than 0.";
 
   protected Challenge challenge;
 
@@ -37,15 +33,23 @@ public class AddChallengeRequest extends RequestBodyBase {
 
   protected void validateExpiryDate() {
     if (challenge.getExpiryDate() < Instant.now().getEpochSecond()) {
-      throw new BadRequestException(PAST_EXPIRY_DATE_ERROR);
+      throw new BadRequestException(new Status(Status.PAST_EXPIRY_DATE_ERROR));
     }
   }
 
   protected void validateSubChallenges() {
     challenge.getSubChallenges().forEach(subChallenges -> {
       if (subChallenges.getRepetitions() <= 0) {
-        throw new BadRequestException(MALFORMED_SUB_CHALLENGES_ERROR);
+        throw new BadRequestException(new Status(Status.MALFORMED_SUB_CHALLENGES_ERROR));
       }
     });
+
+    HashSet<Integer> foundAzkar = new HashSet<>();
+    for (SubChallenge subChallenge : challenge.getSubChallenges()) {
+      if (foundAzkar.contains(subChallenge.getZekr().getId())) {
+        throw new BadRequestException(new Status(Status.CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR));
+      }
+      foundAzkar.add(subChallenge.getZekr().getId());
+    }
   }
 }

@@ -4,7 +4,8 @@ import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
-import com.azkar.payload.ResponseBase.Error;
+import com.azkar.entities.User.UserGroup;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.usercontroller.AddFriendResponse;
 import com.azkar.payload.usercontroller.DeleteFriendResponse;
 import com.azkar.payload.usercontroller.GetFriendsResponse;
@@ -55,14 +56,14 @@ public class FriendshipController extends BaseController {
 
     User currentUser = userRepo.findById(getCurrentUser().getUserId()).get();
     if (currentUser.getId().equals(otherUserId)) {
-      response.setError(new Error(AddFriendResponse.ADD_SELF_ERROR));
+      response.setStatus(new Status(Status.ADD_SELF_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the provided id is valid.
     Optional<User> otherUser = userRepo.findById(otherUserId);
     if (!otherUser.isPresent()) {
-      response.setError(new Error(AddFriendResponse.USER_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
@@ -70,7 +71,7 @@ public class FriendshipController extends BaseController {
     Friendship otherUserFriendship = friendshipRepo.findByUserId(otherUserId);
     if (otherUserFriendship.getFriends().stream()
         .anyMatch(friend -> friend.getUserId().equals(currentUser.getId()))) {
-      response.setError(new Error(AddFriendResponse.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
+      response.setStatus(new Status(Status.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -88,7 +89,8 @@ public class FriendshipController extends BaseController {
           Friend.builder()
               .userId(currentUser.getId())
               .username(currentUser.getUsername())
-              .name(currentUser.getName())
+              .firstName(currentUser.getFirstName())
+              .lastName(currentUser.getLastName())
               .isPending(false)
               .build()
       );
@@ -102,7 +104,8 @@ public class FriendshipController extends BaseController {
         Friend.builder()
             .userId(currentUser.getId())
             .username(currentUser.getUsername())
-            .name(currentUser.getName())
+            .firstName(currentUser.getFirstName())
+            .lastName(currentUser.getLastName())
             .isPending(true)
             .build()
     );
@@ -122,14 +125,14 @@ public class FriendshipController extends BaseController {
     Optional<Friend> friend = currentUserFriendship.getFriends().stream()
         .filter(f -> f.getUserId().equals(otherUserId)).findAny();
     if (!friend.isPresent()) {
-      response.setError(new Error(ResolveFriendRequestResponse.NO_FRIEND_REQUEST_EXIST_ERROR));
+      response.setStatus(new Status(Status.NO_FRIEND_REQUEST_EXIST_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
     // Check if the users are already friends.
     if (!friend.get().isPending()) {
       response
-          .setError(new Error(ResolveFriendRequestResponse.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
+          .setStatus(new Status(Status.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -144,14 +147,25 @@ public class FriendshipController extends BaseController {
         Friend.builder()
             .userId(currentUser.getId())
             .username(currentUser.getUsername())
-            .name(currentUser.getName())
+            .firstName(currentUser.getFirstName())
+            .lastName(currentUser.getLastName())
             .isPending(false)
             .groupId(binaryGroup.getId())
             .build()
     );
 
+    UserGroup userGroup =
+        UserGroup.builder().groupId(binaryGroup.getId()).groupName(binaryGroup.getName())
+            .invitingUserId(binaryGroup.getAdminId()).isPending(false).monthScore(0).totalScore(0)
+            .build();
+    currentUser.getUserGroups().add(userGroup);
+    User otherUser = userRepo.findById(otherUserId).get();
+    otherUser.getUserGroups().add(userGroup);
+
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);
+    userRepo.save(currentUser);
+    userRepo.save(otherUser);
 
     return ResponseEntity.ok(response);
   }
@@ -178,13 +192,13 @@ public class FriendshipController extends BaseController {
 
     int friendIndex = findFriendIndexInList(otherUserId, currentUserFriends);
     if (friendIndex == -1) {
-      response.setError(new Error(ResolveFriendRequestResponse.NO_FRIEND_REQUEST_EXIST_ERROR));
+      response.setStatus(new Status(Status.NO_FRIEND_REQUEST_EXIST_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
     // Check if the users are already friends.
     if (!currentUserFriends.get(friendIndex).isPending()) {
       response
-          .setError(new Error(ResolveFriendRequestResponse.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
+          .setStatus(new Status(Status.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -201,7 +215,7 @@ public class FriendshipController extends BaseController {
     // Check if the provided id is valid.
     Optional<User> otherUser = userRepo.findById(otherUserId);
     if (!otherUser.isPresent()) {
-      response.setError(new Error(DeleteFriendResponse.USER_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
@@ -214,13 +228,23 @@ public class FriendshipController extends BaseController {
         findFriendIndexInList(otherUserId, currentUserFriendship.getFriends());
 
     if (currentUserAsFriendIndex == -1 || otherUserAsFriendIndex == -1) {
-      response.setError(new Error(DeleteFriendResponse.NO_FRIENDSHIP_ERROR));
+      response.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
+    String groupId = currentUserFriendship.getFriends().get(otherUserAsFriendIndex).getGroupId();
 
     currentUserFriendship.getFriends().remove(otherUserAsFriendIndex);
     otherUserFriendship.getFriends().remove(currentUserAsFriendIndex);
 
+    // Remove Group
+    User currentUser = userRepo.findById(getCurrentUser().getUserId()).get();
+    currentUser.getUserGroups().removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
+    otherUser.get().getUserGroups().removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
+    groupRepo.deleteById(groupId);
+
+    userRepo.save(currentUser);
+    userRepo.save(otherUser.get());
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);
     return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);

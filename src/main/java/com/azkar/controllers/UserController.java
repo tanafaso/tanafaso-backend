@@ -1,8 +1,7 @@
 package com.azkar.controllers;
 
 import com.azkar.entities.User;
-import com.azkar.payload.ResponseBase.Error;
-import com.azkar.payload.usercontroller.AddUserResponse;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.usercontroller.GetUserResponse;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
@@ -11,8 +10,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,7 +27,7 @@ public class UserController extends BaseController {
 
     Optional<User> user = userRepo.findById(id);
     if (!user.isPresent()) {
-      response.setError(new Error(GetUserResponse.USER_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -56,7 +53,7 @@ public class UserController extends BaseController {
     }
 
     GetUserResponse response = new GetUserResponse();
-    response.setError(new Error(GetUserResponse.SEARCH_PARAMETERS_NOT_SPECIFIED));
+    response.setStatus(new Status(Status.SEARCH_PARAMETERS_NOT_SPECIFIED));
     return ResponseEntity.badRequest().body(response);
   }
 
@@ -64,7 +61,7 @@ public class UserController extends BaseController {
     Optional<User> user = userRepo.findByUsername(username);
     GetUserResponse response = new GetUserResponse();
     if (!user.isPresent()) {
-      response.setError(new Error(GetUserResponse.USER_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
     response.setData(user.get());
@@ -75,7 +72,7 @@ public class UserController extends BaseController {
     GetUserResponse response = new GetUserResponse();
     Optional<User> user = userRepo.findByUserFacebookData_UserId(facebookUserId);
     if (!user.isPresent()) {
-      response.setError(new Error(GetUserResponse.USER_NOT_FOUND_ERROR));
+      response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
       return ResponseEntity.unprocessableEntity().body(response);
     }
 
@@ -87,15 +84,6 @@ public class UserController extends BaseController {
   public ResponseEntity<GetUserResponse> getCurrentUserProfile() {
     GetUserResponse response = new GetUserResponse();
     response.setData(userRepo.findById(getCurrentUser().getUserId()).get());
-    return ResponseEntity.ok(response);
-  }
-
-  @PostMapping(path = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<AddUserResponse> addUser(@RequestBody User user) {
-    User newUser = User.builder().name(user.getName()).email(user.getEmail()).build();
-    userRepo.save(newUser);
-    AddUserResponse response = new AddUserResponse();
-    response.setData(newUser);
     return ResponseEntity.ok(response);
   }
 }

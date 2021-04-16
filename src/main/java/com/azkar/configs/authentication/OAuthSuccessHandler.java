@@ -39,18 +39,24 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
       Authentication authentication)
       throws IOException {
     String email = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("email");
-    String name = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("name");
+    String firstName =
+        ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("first_name");
+    String lastName = ((DefaultOAuth2User) authentication.getPrincipal()).getAttribute("last_name");
 
     Optional<User> optionalUser = userRepo.findByEmail(email);
     User currentUser;
     if (optionalUser.isPresent()) {
-      logger.info(String.format("Successful Oauth for user: %s with email: %s", name, email));
+      logger.info(String.format("Successful Oauth for user: %s with email: %s",
+          firstName + " " + lastName,
+          email));
 
       currentUser = optionalUser.get();
     } else {
-      logger.info(String.format("First successful Oauth for user: %s with email: %s", name, email));
+      logger.info(String.format("First successful Oauth for user: %s with email: %s",
+          firstName + " " + lastName,
+          email));
 
-      currentUser = userService.buildNewUser(email, name);
+      currentUser = userService.buildNewUser(email, firstName, lastName);
       userService.addNewUser(currentUser);
     }
     String token = jwtService.generateToken(currentUser);
