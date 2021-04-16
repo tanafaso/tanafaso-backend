@@ -8,7 +8,7 @@ import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
-import com.azkar.payload.usercontroller.GetUserResponse;
+import com.azkar.payload.usercontroller.responses.GetUserResponse;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;

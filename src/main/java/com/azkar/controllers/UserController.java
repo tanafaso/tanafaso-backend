@@ -2,7 +2,9 @@ package com.azkar.controllers;
 
 import com.azkar.entities.User;
 import com.azkar.payload.ResponseBase.Status;
-import com.azkar.payload.usercontroller.GetUserResponse;
+import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody;
+import com.azkar.payload.usercontroller.responses.GetUserResponse;
+import com.azkar.payload.usercontroller.responses.SetNotificationTokenResponse;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,6 +59,18 @@ public class UserController extends BaseController {
     GetUserResponse response = new GetUserResponse();
     response.setStatus(new Status(Status.SEARCH_PARAMETERS_NOT_SPECIFIED));
     return ResponseEntity.badRequest().body(response);
+  }
+
+  @PutMapping(path = "notifications/token")
+  public ResponseEntity<SetNotificationTokenResponse> setNotificationsToken(@RequestBody
+      SetNotificationTokenRequestBody body) {
+    body.validate();
+
+    User user = getCurrentUser(userRepo);
+    user.setNotificationsToken(body.getToken());
+    userRepo.save(user);
+
+    return ResponseEntity.ok(new SetNotificationTokenResponse());
   }
 
   private ResponseEntity<GetUserResponse> searchForUserByUsername(String username) {

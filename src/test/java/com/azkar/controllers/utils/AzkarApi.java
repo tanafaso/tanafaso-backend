@@ -10,6 +10,7 @@ import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
+import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.test.web.servlet.MvcResult;
@@ -31,6 +32,12 @@ public class AzkarApi {
 
   public ResultActions searchForUserByUsername(User user, String username) throws Exception {
     return httpClient.performGetRequest(user, String.format("/users/search?username=%s", username));
+  }
+
+  public ResultActions sendNotificationsToken(User user, SetNotificationTokenRequestBody body)
+      throws Exception {
+    return httpClient.performPutRequest(user, "/users/notifications/token",
+        JsonHandler.toJson(body));
   }
 
   public ResultActions searchForUserByFacebookUserId(User user, String facebookUserId)

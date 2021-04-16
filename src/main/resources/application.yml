@@ -1,7 +1,6 @@
 debug: true
 app:
   jwtSecret: ${JWT_SECRET}
-  firebase-config-path: src/main/java/com/azkar/configs/firebase/firebase-messaging-adminsdk.json
 
 logging.level.org.springframework:
   web: TRACE
