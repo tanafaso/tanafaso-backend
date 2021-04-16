@@ -8,7 +8,6 @@ import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
-import com.azkar.payload.exceptions.DefaultExceptionResponse;
 import com.azkar.payload.usercontroller.GetUserResponse;
 import org.junit.Test;
 import org.springframework.http.MediaType;
