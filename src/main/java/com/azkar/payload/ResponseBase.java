@@ -12,6 +12,7 @@ public abstract class ResponseBase<T> {
   T data;
   Status status = new Status(Status.SUCCESS);
 
+  // NOTE: Please always adapt the API clients for any new error code added.
   @Getter
   @NoArgsConstructor
   @Setter
@@ -63,6 +64,7 @@ public abstract class ResponseBase<T> {
     public static final int EMAIL_NOT_VALID_ERROR = 43;
     public static final int NAME_EMPTY_ERROR = 44;
     public static final int PASSWORD_CHARACTERS_LESS_THAN_8_ERROR = 45;
+    public static final int CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR = 45;
 
     public int code;
 

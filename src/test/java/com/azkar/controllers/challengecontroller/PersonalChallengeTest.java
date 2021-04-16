@@ -3,6 +3,7 @@ package com.azkar.controllers.challengecontroller;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.util.AssertionErrors.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,10 +12,12 @@ import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.User;
+import com.azkar.entities.Zekr;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
+import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.repos.UserRepo;
@@ -82,6 +85,31 @@ public class PersonalChallengeTest extends TestBase {
     String actualResponseJson = result.getResponse().getContentAsString();
     JSONAssert.assertEquals(JsonHandler.toJson(expectedResponse), actualResponseJson, /* strict= */
         false);
+  }
+
+  @Test
+  public void addChallenge_duplicateZekr_shouldNotSucceed() throws Exception {
+    long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
+    AddPersonalChallengeRequest requestBody = createPersonalChallengeRequest(expiryDate);
+
+    SubChallenge subChallenge1 =
+        SubChallenge.builder().repetitions(2).zekr(Zekr.builder().id(1).zekr("zekr").build())
+            .build();
+    SubChallenge subChallenge2 =
+        SubChallenge.builder().repetitions(3).zekr(Zekr.builder().id(1).zekr("zekr").build())
+            .build();
+    requestBody.getChallenge().setSubChallenges(ImmutableList.of(subChallenge1, subChallenge2));
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setStatus(new Status(Status.CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR));
+
+    azkarApi.createPersonalChallenge(USER, requestBody)
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
+
+    List<Challenge> challengesProgress = userRepo.findById(USER.getId()).get()
+        .getPersonalChallenges();
+    assertTrue("Challenges progress list is not empty.", challengesProgress.isEmpty());
   }
 
   @Test

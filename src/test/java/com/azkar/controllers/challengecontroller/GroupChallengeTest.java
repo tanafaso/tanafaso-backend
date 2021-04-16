@@ -130,6 +130,34 @@ public class GroupChallengeTest extends TestBase {
   }
 
   @Test
+  public void addChallenge_duplicateZekr_shouldNotSucceed() throws Exception {
+    long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
+    SubChallenge subChallenge1 =
+        SubChallenge.builder().repetitions(2).zekr(Zekr.builder().id(1).zekr("zekr").build())
+            .build();
+    SubChallenge subChallenge2 =
+        SubChallenge.builder().repetitions(3).zekr(Zekr.builder().id(1).zekr("zekr").build())
+            .build();
+    Challenge challenge = Challenge.builder()
+        .name(ChallengeFactory.CHALLENGE_NAME_BASE)
+        .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
+        .expiryDate(expiryDate)
+        .subChallenges(ImmutableList.of(subChallenge1, subChallenge2))
+        .groupId(validGroup.getId())
+        .build();
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setStatus(new Status(Status.CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR));
+
+    azkarApi.createChallenge(user1, challenge)
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+
+    List<Challenge> challengesProgress = userRepo.findById(user1.getId()).get()
+        .getUserChallenges();
+    assertTrue("Challenges progress list is not empty.", challengesProgress.isEmpty());
+  }
+
+  @Test
   public void addChallenge_invalidGroup_shouldNotSucceed() throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(invalidGroup.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
