@@ -114,8 +114,8 @@ public class FriendshipController extends BaseController {
             .build()
     );
     friendshipRepo.save(otherUserFriendship);
-    notificationsService.sendNotificationToUser(otherUser.get(), "لديك طلب صداقة جديد"
-        , currentUser.getFirstName() + " " + currentUser.getLastName());
+    notificationsService.sendNotificationToUser(otherUser.get(), "لديك طلب صداقة جديد",
+        currentUser.getFirstName() + " " + currentUser.getLastName());
 
     return ResponseEntity.ok(response);
   }
