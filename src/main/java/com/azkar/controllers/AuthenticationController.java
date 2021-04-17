@@ -297,7 +297,7 @@ public class AuthenticationController extends BaseController {
     SimpleMailMessage message = new SimpleMailMessage();
     message.setFrom("azkar_email_name@azkaremaildomain.com");
     message.setSubject("Pin Code from Application تنافسوا");
-    message.setText("The Pin is: " + pin);
+    message.setText("The pin is: " + pin);
     message.setTo(email);
     javaMailSender.send(message);
   }
