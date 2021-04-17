@@ -251,8 +251,8 @@ public class ChallengeController extends BaseController {
     Iterable<User> affectedUsers = userRepo.findAllById(groupUsersIds);
     affectedUsers.forEach(user -> user.getUserChallenges().add(challenge));
     affectedUsers.forEach(affectedUser -> {
-      notificationsService.sendNotificationToUser(affectedUser, "لديك تحد جديد"
-          , "لقد تحداك" + " " + currentUser.getFirstName() + " " + currentUser.getLastName());
+      notificationsService.sendNotificationToUser(affectedUser, "لديك تحد جديد",
+          "لقد تحداك" + " " + currentUser.getFirstName() + " " + currentUser.getLastName());
     });
     userRepo.saveAll(affectedUsers);
 
