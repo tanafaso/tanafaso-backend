@@ -61,7 +61,7 @@ public class UserController extends BaseController {
     return ResponseEntity.badRequest().body(response);
   }
 
-  @PutMapping(path = "notifications/token")
+  @PutMapping(path = "/notifications/token")
   public ResponseEntity<SetNotificationTokenResponse> setNotificationsToken(@RequestBody
       SetNotificationTokenRequestBody body) {
     body.validate();

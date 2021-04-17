@@ -7,10 +7,9 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.Notification;
 import java.io.IOException;
 import javax.annotation.PostConstruct;
-import lombok.Builder;
-import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -19,9 +18,6 @@ import org.springframework.stereotype.Service;
 public class NotificationsService {
 
   private static final Logger logger = LoggerFactory.getLogger(NotificationsService.class);
-
-  private static final String TITLE_MAP_KEY = "title";
-  private static final String BODY_MAP_KEY = "body";
 
   @PostConstruct
   public void initialize() {
@@ -36,28 +32,22 @@ public class NotificationsService {
     }
   }
 
-  public String sendNotificationToUser(Notification notification, User user) {
+  public void sendNotificationToUser(User user, String title, String body) {
+    if (user.getNotificationsToken() == null || user.getNotificationsToken().isEmpty()) {
+      logger.error(String.format("Token not found for user: %s", user.getId()));
+      return;
+    }
     Message message = Message.builder()
-        .putData(TITLE_MAP_KEY, notification.getTitle())
-        .putData(BODY_MAP_KEY, notification.getBody())
         .setToken(user.getNotificationsToken())
+        .setNotification(Notification.builder().setTitle(title).setBody(body).build())
         .build();
 
-    String response = null;
     try {
-      response = FirebaseMessaging.getInstance().send(message);
+      FirebaseMessaging.getInstance().send(message);
     } catch (FirebaseMessagingException e) {
-      logger.error(String.format("Failed to send a notification with title: %s, and body: %s",
-          notification.title, notification.body), e);
+      logger.error(
+          String.format("Failed to send a notification to user: %s with title: %s, and body: %s",
+              user.getId(), title, body), e);
     }
-    return response;
-  }
-
-  @Builder
-  @Getter
-  public static class Notification {
-
-    String title;
-    String body;
   }
 }
