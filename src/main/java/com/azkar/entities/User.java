@@ -25,6 +25,8 @@ public class User extends EntityBase {
   private String email;
   @JsonIgnore
   private String encodedPassword;
+  @JsonIgnore
+  private String notificationsToken;
   // These Challenge instances are not documents in the challenges collection.
   @Indexed(name = "username_index", unique = true)
   @Default

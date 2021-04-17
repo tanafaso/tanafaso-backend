@@ -18,6 +18,7 @@ import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
+import com.azkar.services.NotificationsService;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +47,8 @@ public class ChallengeController extends BaseController {
 
   private static final Logger logger = LoggerFactory.getLogger(ChallengeController.class);
 
+  @Autowired
+  NotificationsService notificationsService;
   @Autowired
   UserRepo userRepo;
   @Autowired
@@ -235,8 +238,9 @@ public class ChallengeController extends BaseController {
       response.setStatus(new Status(Status.NOT_GROUP_MEMBER_ERROR));
       return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
+    User currentUser = getCurrentUser(userRepo);
     Challenge challenge = req.getChallenge().toBuilder()
-        .creatingUserId(getCurrentUser().getUserId())
+        .creatingUserId(currentUser.getId())
         .build();
     challengeRepo.save(challenge);
 
@@ -246,6 +250,10 @@ public class ChallengeController extends BaseController {
     List<String> groupUsersIds = group.get().getUsersIds();
     Iterable<User> affectedUsers = userRepo.findAllById(groupUsersIds);
     affectedUsers.forEach(user -> user.getUserChallenges().add(challenge));
+    affectedUsers.forEach(affectedUser -> {
+      notificationsService.sendNotificationToUser(affectedUser, "لديك تحد جديد"
+          , "لقد تحداك" + " " + currentUser.getFirstName() + " " + currentUser.getLastName());
+    });
     userRepo.saveAll(affectedUsers);
 
     response.setData(challenge);

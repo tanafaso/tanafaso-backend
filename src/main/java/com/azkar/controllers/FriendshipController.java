@@ -6,13 +6,14 @@ import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
 import com.azkar.payload.ResponseBase.Status;
-import com.azkar.payload.usercontroller.AddFriendResponse;
-import com.azkar.payload.usercontroller.DeleteFriendResponse;
-import com.azkar.payload.usercontroller.GetFriendsResponse;
-import com.azkar.payload.usercontroller.ResolveFriendRequestResponse;
+import com.azkar.payload.usercontroller.responses.AddFriendResponse;
+import com.azkar.payload.usercontroller.responses.DeleteFriendResponse;
+import com.azkar.payload.usercontroller.responses.GetFriendsResponse;
+import com.azkar.payload.usercontroller.responses.ResolveFriendRequestResponse;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
+import com.azkar.services.NotificationsService;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +31,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/friends", produces = MediaType.APPLICATION_JSON_VALUE)
 public class FriendshipController extends BaseController {
+
+  @Autowired
+  NotificationsService notificationsService;
 
   @Autowired
   FriendshipRepo friendshipRepo;
@@ -110,6 +114,9 @@ public class FriendshipController extends BaseController {
             .build()
     );
     friendshipRepo.save(otherUserFriendship);
+    notificationsService.sendNotificationToUser(otherUser.get(), "لديك طلب صداقة جديد"
+        , currentUser.getFirstName() + " " + currentUser.getLastName());
+
     return ResponseEntity.ok(response);
   }
 
