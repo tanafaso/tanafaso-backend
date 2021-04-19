@@ -256,9 +256,9 @@ public class GroupChallengeTest extends TestBase {
 
     assertThat(user1AllChallenges.getData().size(), is(2));
     assertThat(user1AllChallenges.getData().get(0).getName(),
-        startsWith(CHALLENGE_NAME_PREFIX_1));
-    assertThat(user1AllChallenges.getData().get(1).getName(),
         startsWith(CHALLENGE_NAME_PREFIX_2));
+    assertThat(user1AllChallenges.getData().get(1).getName(),
+        startsWith(CHALLENGE_NAME_PREFIX_1));
     assertThat(groupMemberAllChallenges.getData().size(), is(2));
     assertThat(nonGroupMemberAllChallenges.getData().size(), is(0));
   }

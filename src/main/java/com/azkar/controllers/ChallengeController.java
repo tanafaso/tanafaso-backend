@@ -20,6 +20,7 @@ import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -168,6 +169,7 @@ public class ChallengeController extends BaseController {
   public ResponseEntity<GetChallengesResponse> getPersonalChallenges() {
     GetChallengesResponse response = new GetChallengesResponse();
     response.setData(getCurrentUser(userRepo).getPersonalChallenges());
+    Collections.reverse(response.getData());
     return ResponseEntity.ok(response);
   }
 
@@ -269,6 +271,7 @@ public class ChallengeController extends BaseController {
   public ResponseEntity<GetChallengesResponse> getAllChallenges() {
     GetChallengesResponse response = new GetChallengesResponse();
     response.setData(getCurrentUser(userRepo).getUserChallenges());
+    Collections.reverse(response.getData());
     return ResponseEntity.ok(response);
   }
 
@@ -287,6 +290,7 @@ public class ChallengeController extends BaseController {
             .filter((challenge -> challenge.getGroupId().equals(groupId))).collect(
             Collectors.toList());
 
+    Collections.reverse(challengesInGroup);
     GetChallengesResponse response = new GetChallengesResponse();
     response.setData(challengesInGroup);
     return ResponseEntity.ok(response);
