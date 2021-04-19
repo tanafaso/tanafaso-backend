@@ -181,8 +181,8 @@ public class PersonalChallengeTest extends TestBase {
     List<Challenge> data = JsonHandler.fromJson(response, GetChallengesResponse.class)
         .getData();
     assertThat(data, hasSize(2));
-    assertUserChallengeConsistentWithRequest(data.get(0), request1);
-    assertUserChallengeConsistentWithRequest(data.get(1), request2);
+    assertUserChallengeConsistentWithRequest(data.get(0), request2);
+    assertUserChallengeConsistentWithRequest(data.get(1), request1);
   }
 
   private void assertUserChallengeConsistentWithRequest(
