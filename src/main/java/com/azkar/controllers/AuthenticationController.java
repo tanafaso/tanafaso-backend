@@ -296,7 +296,7 @@ public class AuthenticationController extends BaseController {
     // TODO(issue#73): Beautify email confirmation body.
     SimpleMailMessage message = new SimpleMailMessage();
     message.setFrom("azkar_email_name@azkaremaildomain.com");
-    message.setSubject("Pin Code from Application تنافسوا");
+    message.setSubject("Tanafaso | Verify Email");
     message.setText("The pin is: " + pin);
     message.setTo(email);
     javaMailSender.send(message);
