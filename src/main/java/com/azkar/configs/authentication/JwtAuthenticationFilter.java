@@ -68,6 +68,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         UserPrincipal userPrincipal = new UserPrincipal();
         userPrincipal.setUserId(userId);
         userPrincipal.setUsername(currentUser.getUsername());
+        logger.info(String.format("The username of the requesting user: %s",
+            currentUser.getUsername()));
         Authentication authToken =
             new PreAuthenticatedAuthenticationToken(
                 userPrincipal, null, userPrincipal.getAuthorities());
