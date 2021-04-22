@@ -2,17 +2,16 @@ package com.azkar.configs;
 
 import com.azkar.entities.Zekr;
 import com.opencsv.CSVReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.ClassPathResource;
 
 @Configuration
 @Getter
@@ -23,17 +22,13 @@ public class AzkarCacher {
 
   ArrayList<Zekr> azkar = new ArrayList<>();
 
-  @Autowired
-  ResourceLoader resourceLoader;
-
   @Bean
   @Primary
   public AzkarCacher parseFromCsv() {
     AzkarCacher cacher = new AzkarCacher();
     try {
       CSVReader csvReader =
-          new CSVReader(new FileReader(
-              resourceLoader.getClassLoader().getResource(AZKAR_FILE).getFile()));
+          new CSVReader(new InputStreamReader(new ClassPathResource(AZKAR_FILE).getInputStream()));
       String[] values;
       while ((values = csvReader.readNext()) != null) {
         if (values.length != 2) {
