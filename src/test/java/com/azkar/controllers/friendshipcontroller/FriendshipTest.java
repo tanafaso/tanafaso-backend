@@ -93,7 +93,7 @@ public class FriendshipTest extends TestBase {
     expectedResponse.setStatus(new Status(Status.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
 
     sendFriendRequest(user1, user2)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -216,7 +216,7 @@ public class FriendshipTest extends TestBase {
     expectedResponse
         .setStatus(new Status(Status.NO_FRIEND_REQUEST_EXIST_ERROR));
     acceptFriendRequest(user1, user2)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -234,12 +234,12 @@ public class FriendshipTest extends TestBase {
         .setStatus(new Status(Status.NO_FRIEND_REQUEST_EXIST_ERROR));
 
     acceptFriendRequest(user1, user2)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     rejectFriendRequest(user2, user1)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
@@ -253,22 +253,22 @@ public class FriendshipTest extends TestBase {
     expectedResponse
         .setStatus(new Status(Status.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
     acceptFriendRequest(user1, user2)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     rejectFriendRequest(user1, user2)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     acceptFriendRequest(user2, user1)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     rejectFriendRequest(user2, user1)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }

@@ -69,7 +69,7 @@ public class ChallengeController extends BaseController {
     if (newSubChallenges.size() != oldSubChallenges.size()) {
       response
           .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
-      return Optional.of(ResponseEntity.unprocessableEntity().body(response));
+      return Optional.of(ResponseEntity.badRequest().body(response));
     }
 
     // Set to make sure that the zekr IDs of both old and modified sub-challenges are identical.
@@ -79,18 +79,18 @@ public class ChallengeController extends BaseController {
       Optional<SubChallenge> subChallenge = findSubChallenge(oldSubChallenges, newSubChallenge);
       if (!subChallenge.isPresent()) {
         response.setStatus(new Status(Status.NON_EXISTENT_SUB_CHALLENGE_ERROR));
-        return Optional.of(ResponseEntity.unprocessableEntity().body(response));
+        return Optional.of(ResponseEntity.badRequest().body(response));
       }
       Optional<Status> error = updateSubChallenge(subChallenge.get(), newSubChallenge);
       if (error.isPresent()) {
         response.setStatus(error.get());
-        return Optional.of(ResponseEntity.unprocessableEntity().body(response));
+        return Optional.of(ResponseEntity.badRequest().body(response));
       }
     }
     if (newZekrIds.size() != oldSubChallenges.size()) {
       response
           .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
-      return Optional.of(ResponseEntity.unprocessableEntity().body(response));
+      return Optional.of(ResponseEntity.badRequest().body(response));
     }
     return Optional.empty();
   }

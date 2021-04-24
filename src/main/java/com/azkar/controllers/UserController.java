@@ -32,7 +32,7 @@ public class UserController extends BaseController {
     Optional<User> user = userRepo.findById(id);
     if (!user.isPresent()) {
       response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     response.setData(user.get());
@@ -78,7 +78,7 @@ public class UserController extends BaseController {
     GetUserResponse response = new GetUserResponse();
     if (!user.isPresent()) {
       response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
     response.setData(user.get());
     return ResponseEntity.ok(response);
@@ -89,7 +89,7 @@ public class UserController extends BaseController {
     Optional<User> user = userRepo.findByUserFacebookData_UserId(facebookUserId);
     if (!user.isPresent()) {
       response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     response.setData(user.get());

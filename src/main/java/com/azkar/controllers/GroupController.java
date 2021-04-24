@@ -190,13 +190,13 @@ public class GroupController extends BaseController {
     // Check if the inviting user is a member of the group.
     if (!isMember(userRepo.findById(getCurrentUser().getUserId()).get(), group.get())) {
       response.setStatus(new Status(Status.INVITING_USER_IS_NOT_MEMBER_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the invited user is already a member of the group.
     if (isMember(invitedUser.get(), group.get())) {
       response.setStatus(new Status(Status.INVITED_USER_ALREADY_MEMBER_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the inviting user has already invited the invited user to this group.
@@ -206,7 +206,7 @@ public class GroupController extends BaseController {
             (userGroup.getGroupId().equals(groupId)
                 && userGroup.getInvitingUserId().equals(invitingUser.getId())))) {
       response.setStatus(new Status(Status.USER_ALREADY_INVITED_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     invitedUser.get().getUserGroups().add(
@@ -236,13 +236,13 @@ public class GroupController extends BaseController {
     // Check if the user is already a member of the group.
     if (isMember(user, group.get())) {
       response.setStatus(new Status(Status.USER_ALREADY_MEMBER_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the user is not invited to the group.
     if (!isInvited(user, group.get())) {
       response.setStatus(new Status(Status.USER_NOT_INVITED_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     // Add the user as a member to this group.
@@ -285,7 +285,7 @@ public class GroupController extends BaseController {
     // Check if the user is not already a member of the group.
     if (!isMember(user, group.get())) {
       response.setStatus(new Status(Status.NOT_MEMBER_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     group.get().getUsersIds().removeIf(userId -> userId.equals(user.getId()));
@@ -314,13 +314,13 @@ public class GroupController extends BaseController {
     // Check if the user is already a member of the group.
     if (isMember(user, group.get())) {
       response.setStatus(new Status(Status.USER_ALREADY_MEMBER_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the user is not invited to the group.
     if (!isInvited(user, group.get())) {
       response.setStatus(new Status(Status.USER_NOT_INVITED_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     List<UserGroup> userGroups = user.getUserGroups();
