@@ -129,7 +129,7 @@ public class GroupControllerTest extends TestBase {
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
     expectedResponse.setStatus(new Status(Status.INVITED_USER_ALREADY_MEMBER_ERROR));
     inviteUserToGroup(user1, user2, user1Group.getId())
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -140,7 +140,7 @@ public class GroupControllerTest extends TestBase {
     InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
     expectedResponse.setStatus(new Status(Status.INVITING_USER_IS_NOT_MEMBER_ERROR));
     inviteUserToGroup(user2, user3, user1Group.getId())
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -160,7 +160,7 @@ public class GroupControllerTest extends TestBase {
     expectedResponse = new InviteToGroupResponse();
     expectedResponse.setStatus(new Status(Status.USER_ALREADY_INVITED_ERROR));
     inviteUserToGroup(user1, user2, user1Group.getId())
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -262,7 +262,7 @@ public class GroupControllerTest extends TestBase {
         new AcceptGroupInvitationResponse();
     expectedResponse.setStatus(new Status(Status.USER_NOT_INVITED_ERROR));
     acceptInvitationToGroup(user2, user1Group.getId())
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -297,7 +297,7 @@ public class GroupControllerTest extends TestBase {
     expectedAcceptGroupInvitationResponse
         .setStatus(new Status(Status.USER_ALREADY_MEMBER_ERROR));
     acceptInvitationToGroup(user2, user1Group.getId())
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedAcceptGroupInvitationResponse)));
 
@@ -344,7 +344,7 @@ public class GroupControllerTest extends TestBase {
         new RejectGroupInvitationResponse();
     expectedResponse.setStatus(new Status(Status.USER_NOT_INVITED_ERROR));
     rejectInvitationToGroup(user2, user1Group.getId())
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -365,7 +365,7 @@ public class GroupControllerTest extends TestBase {
     expectedRejectGroupInvitationResponse
         .setStatus(new Status(Status.USER_ALREADY_MEMBER_ERROR));
     rejectInvitationToGroup(user2, user1Group.getId())
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedRejectGroupInvitationResponse)));
 
@@ -416,7 +416,7 @@ public class GroupControllerTest extends TestBase {
     LeaveGroupResponse expectedResponse = new LeaveGroupResponse();
     expectedResponse.setStatus(new Status(Status.NOT_MEMBER_ERROR));
     leaveGroup(user2, user1Group.getId())
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }

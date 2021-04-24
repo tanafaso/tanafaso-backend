@@ -76,7 +76,7 @@ public class FriendshipController extends BaseController {
     if (otherUserFriendship.getFriends().stream()
         .anyMatch(friend -> friend.getUserId().equals(currentUser.getId()))) {
       response.setStatus(new Status(Status.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the other user already requested friendship with the current user. If this is the
@@ -133,14 +133,14 @@ public class FriendshipController extends BaseController {
         .filter(f -> f.getUserId().equals(otherUserId)).findAny();
     if (!friend.isPresent()) {
       response.setStatus(new Status(Status.NO_FRIEND_REQUEST_EXIST_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     // Check if the users are already friends.
     if (!friend.get().isPending()) {
       response
           .setStatus(new Status(Status.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     Group binaryGroup = generateBinaryGroup(currentUser, friend.get());
@@ -200,13 +200,13 @@ public class FriendshipController extends BaseController {
     int friendIndex = findFriendIndexInList(otherUserId, currentUserFriends);
     if (friendIndex == -1) {
       response.setStatus(new Status(Status.NO_FRIEND_REQUEST_EXIST_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
     // Check if the users are already friends.
     if (!currentUserFriends.get(friendIndex).isPending()) {
       response
           .setStatus(new Status(Status.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
-      return ResponseEntity.unprocessableEntity().body(response);
+      return ResponseEntity.badRequest().body(response);
     }
 
     currentUserFriends.remove(friendIndex);

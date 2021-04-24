@@ -122,7 +122,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .setStatus(new Status(Status.INCREMENTING_LEFT_REPETITIONS_ERROR));
 
     updateChallenge(user, challenge.getId(), requestBody)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -145,7 +145,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .setStatus(new Status(Status.NON_EXISTENT_SUB_CHALLENGE_ERROR));
 
     updateChallenge(user, challenge.getId(), requestBody)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -183,7 +183,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     response.setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
 
     updateChallenge(user, challenge.getId(), requestBody)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(response)));
 
     Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
@@ -205,7 +205,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     response.setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
 
     updateChallenge(user, challenge.getId(), requestBody)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(response)));
 
     Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
@@ -229,7 +229,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     response.setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
 
     updateChallenge(user, challenge.getId(), requestBody)
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(response)));
 
     Challenge updatedChallenge = getChallengeProgressFromApi(challenge);

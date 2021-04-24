@@ -136,7 +136,7 @@ public class LoginWithEmailTest extends TestBase {
     expectedResponse.setStatus(new Status(Status.EMAIL_NOT_VERIFIED_ERROR));
 
     loginWithEmail(JsonHandler.toJson(emailLoginRequestBody))
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }

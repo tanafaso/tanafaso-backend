@@ -62,7 +62,7 @@ public class UserRetrievalTest extends TestBase {
     ResultActions result = performGetRequest(user, String.format("/users/%s", fakeUserId));
 
     result
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
@@ -99,7 +99,7 @@ public class UserRetrievalTest extends TestBase {
     ResultActions result = azkarApi.searchForUserByUsername(user, fakeUsername);
 
     result
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
@@ -132,7 +132,7 @@ public class UserRetrievalTest extends TestBase {
     ResultActions result = azkarApi.searchForUserByFacebookUserId(user, fakeFacebookUserId);
 
     result
-        .andExpect(status().isUnprocessableEntity())
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
