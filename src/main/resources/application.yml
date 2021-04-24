@@ -7,6 +7,13 @@ logging.level.org.springframework:
 
 server:
   port: ${SERVER_PORT}
+  ssl:
+    key-alias: ${KEY_ALIAS}
+    key-store-password: ${KEY_STORE_PASSWORD}
+    key-store-type: PKCS12
+    key-store: classpath:tanafaso.p12
+    enabled: true
+
 
 spring:
   data.mongodb:
