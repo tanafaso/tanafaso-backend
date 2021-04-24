@@ -62,6 +62,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .setRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse expectedResponse = new UpdateChallengeResponse();
+    expectedResponse.setStatus(new Status(Status.SUCCESS));
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk())
