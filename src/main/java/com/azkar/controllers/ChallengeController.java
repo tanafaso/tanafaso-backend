@@ -202,7 +202,7 @@ public class ChallengeController extends BaseController {
       return errorResponse.get();
     }
     userRepo.save(currentUser);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.ok(new UpdateChallengeResponse());
   }
 
   @GetMapping("{challengeId}")
@@ -348,6 +348,6 @@ public class ChallengeController extends BaseController {
       updateScore(currentUser, currentUserChallenge.get().getGroupId());
     }
     userRepo.save(currentUser);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.ok(new UpdateChallengeResponse());
   }
 }
