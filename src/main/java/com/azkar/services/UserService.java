@@ -6,7 +6,6 @@ import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
 import java.util.Random;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +34,6 @@ public class UserService {
   public User buildNewUser(String email, String firstName, String lastName,
       String encodedPassword) {
     return User.builder()
-        .id(new ObjectId().toString())
         .email(email)
         .username(generateUsername(firstName, lastName))
         .firstName(firstName)

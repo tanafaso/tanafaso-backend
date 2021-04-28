@@ -2,6 +2,7 @@ package com.azkar.services;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 
 import com.azkar.TestBase;
@@ -33,6 +34,8 @@ public class UserServiceTest extends TestBase {
     assertThat(user.getEmail(), equalTo(email));
     assertThat(user.getFirstName(), equalTo(firstName));
     assertThat(user.getLastName(), equalTo(lastName));
+    assertThat(user.getUpdatedAt(), greaterThan(0L));
+    assertThat(user.getCreatedAt(), greaterThan(0L));
     assertThatUsernameIsValid(user.getUsername());
   }
 
