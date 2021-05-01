@@ -1,6 +1,7 @@
 package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,12 +15,18 @@ import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
+import com.azkar.repos.ChallengeRepo;
+import com.google.common.collect.Iterators;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 
 public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
+
+  @Autowired
+  ChallengeRepo challengeRepo;
 
   @Before
   public void setup() throws Exception {
@@ -46,15 +53,19 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
     updateChallenge(user1, challenge.getId(), requestBody)
         .andExpect(status().isOk());
 
-    Challenge updatedChallenge = azkarApi.getChallengeAndReturn(user1, challenge.getId());
-    assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(), is(
+    Challenge updatedUserChallenge = azkarApi.getChallengeAndReturn(user1, challenge.getId());
+    assertThat(updatedUserChallenge.getSubChallenges().get(0).getRepetitions(), is(
         0));
-    assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(), is(
+    assertThat(updatedUserChallenge.getSubChallenges().get(1).getRepetitions(), is(
         0));
     User updatedUser1 = userRepo.findById(user1.getId()).get();
     assertThat(updatedUser1.getUserGroups().size(), is(2));
     User updatedUser2 = userRepo.findById(user2InGroup1.getId()).get();
     assertThat(updatedUser2.getUserGroups().size(), is(1));
+
+    Challenge updatedChallenge = challengeRepo.findById(challenge.getId()).get();
+    assertThat(Iterators.getOnlyElement(updatedChallenge.getUsersFinished().iterator()),
+        equalTo(user1.getId()));
 
     List<UserGroup> user1Groups = updatedUser1.getUserGroups();
     UserGroup userGroup1ForUser1 =

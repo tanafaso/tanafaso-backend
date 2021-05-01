@@ -346,6 +346,9 @@ public class ChallengeController extends BaseController {
         oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
     if (newSubChallengesFinished && !oldSubChallengesFinished) {
       updateScore(currentUser, currentUserChallenge.get().getGroupId());
+      Challenge challenge = challengeRepo.findById(challengeId).get();
+      challenge.getUsersFinished().add(currentUser.getId());
+      challengeRepo.save(challenge);
     }
     userRepo.save(currentUser);
     return ResponseEntity.ok(new UpdateChallengeResponse());
