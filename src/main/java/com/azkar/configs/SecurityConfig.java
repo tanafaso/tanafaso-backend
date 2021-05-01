@@ -20,7 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-  public static final String[] PRE_AUTHENTICAITON_ALLOWED_ENDPOINTS = {
+  public static final String[] PRE_AUTHENTICAITON_ALLOWED_ENDPOINT_PATTERNS = {
       AuthenticationController.REGISTER_WITH_EMAIL_PATH,
       AuthenticationController.VERIFY_EMAIL_PATH,
       AuthenticationController.LOGIN_WITH_EMAIL_PATH,
@@ -34,9 +34,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.authorizeRequests()
-        .antMatchers(PRE_AUTHENTICAITON_ALLOWED_ENDPOINTS)
-        .permitAll()
-        .antMatchers()
+        .antMatchers(PRE_AUTHENTICAITON_ALLOWED_ENDPOINT_PATTERNS)
         .permitAll()
         .antMatchers("/**")
         .authenticated()
