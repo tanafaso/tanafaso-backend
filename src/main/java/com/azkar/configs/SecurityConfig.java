@@ -24,7 +24,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       AuthenticationController.REGISTER_WITH_EMAIL_PATH,
       AuthenticationController.VERIFY_EMAIL_PATH,
       AuthenticationController.LOGIN_WITH_EMAIL_PATH,
-      AuthenticationController.LOGIN_WITH_FACEBOOK_PATH
+      AuthenticationController.LOGIN_WITH_FACEBOOK_PATH,
+      AuthenticationController.RESET_PASSWORD_PATH
   };
   @Autowired
   JwtAuthenticationFilter jwtAuthenticationFilter;

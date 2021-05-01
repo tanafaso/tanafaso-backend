@@ -3,6 +3,7 @@ package com.azkar.controllers.utils;
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.payload.authenticationcontroller.requests.ResetPasswordRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
@@ -104,8 +105,7 @@ public class AzkarApi {
   }
 
   public Group addGroupAndReturn(User user, String groupName) throws Exception {
-    AddGroupRequest request = AddGroupRequest.builder().name(groupName).build();
-    MvcResult result = addGroup(user, request).andReturn();
+    MvcResult result = addGroup(user, groupName).andReturn();
     AddGroupResponse response = JsonHandler.fromJson(result.getResponse().getContentAsString(),
         AddGroupResponse.class);
     return response.getData();
@@ -149,5 +149,10 @@ public class AzkarApi {
       throws Exception {
     inviteUserToGroup(invitingUser, user, groupId);
     return acceptInvitationToGroup(user, groupId);
+  }
+
+  public ResultActions resetPassword(String email) throws Exception {
+    return httpClient.performPostRequest("/reset_password",
+        JsonHandler.toJson(ResetPasswordRequest.builder().email(email).build()));
   }
 }

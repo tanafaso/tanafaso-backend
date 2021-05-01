@@ -18,6 +18,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "users")
 @Builder(toBuilder = true)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class User extends EntityBase {
 
   @Id
@@ -43,6 +45,9 @@ public class User extends EntityBase {
   // the challenges collection.
   @Default
   private List<Challenge> userChallenges = new ArrayList();
+  @JsonIgnore
+  @Default
+  private String resetPasswordToken = "";
   @JsonIgnore
   @CreatedDate
   private long createdAt;

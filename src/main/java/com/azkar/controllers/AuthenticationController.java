@@ -8,10 +8,12 @@ import com.azkar.payload.authenticationcontroller.requests.EmailLoginRequestBody
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.FacebookAuthenticationRequest;
+import com.azkar.payload.authenticationcontroller.requests.ResetPasswordRequest;
 import com.azkar.payload.authenticationcontroller.responses.EmailLoginResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailVerificationResponse;
 import com.azkar.payload.authenticationcontroller.responses.FacebookAuthenticationResponse;
+import com.azkar.payload.authenticationcontroller.responses.ResetPasswordResponse;
 import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
@@ -20,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +37,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +52,7 @@ public class AuthenticationController extends BaseController {
   public static final String REGISTER_WITH_EMAIL_PATH = "/register/email";
   public static final String VERIFY_EMAIL_PATH = "/verify/email";
   public static final String LOGIN_WITH_EMAIL_PATH = "/login/email";
+  public static final String RESET_PASSWORD_PATH = "/reset_password";
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
@@ -178,6 +183,22 @@ public class AuthenticationController extends BaseController {
     ResponseEntity<EmailLoginResponse> responseEntity =
         new ResponseEntity(response, httpHeaders, HttpStatus.OK);
     return responseEntity;
+  }
+
+  @PostMapping(value = RESET_PASSWORD_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<ResetPasswordResponse> resetPassword(
+      @RequestBody ResetPasswordRequest request) {
+    Optional<User> user = userRepo.findByEmail(request.getEmail());
+    if (user.isPresent()) {
+      String resetPasswordToken = UUID.randomUUID().toString();
+      user.get().setResetPasswordToken(resetPasswordToken);
+      userRepo.save(user.get());
+      return ResponseEntity.ok().build();
+    } else {
+      ResetPasswordResponse errorResponse = new ResetPasswordResponse();
+      errorResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
   }
 
   /**
