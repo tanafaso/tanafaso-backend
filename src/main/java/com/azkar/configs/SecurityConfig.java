@@ -37,8 +37,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     http.authorizeRequests()
         .antMatchers(PRE_AUTHENTICAITON_ALLOWED_ENDPOINTS)
         .permitAll()
-        .antMatchers()
-        .permitAll()
         .antMatchers("/**")
         .authenticated()
         .and()

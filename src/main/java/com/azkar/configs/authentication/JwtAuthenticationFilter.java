@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
@@ -40,9 +41,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       FilterChain filterChain)
       throws ServletException, IOException {
     // TODO(issue#111): Find a better way to not run JwtAuthenticationFilter for some URLs.
-    if (Arrays.stream(SecurityConfig.PRE_AUTHENTICAITON_ALLOWED_ENDPOINTS).filter(
-        (preAuthenticationAllowedEndpoint) -> preAuthenticationAllowedEndpoint
-            .equals(httpServletRequest.getRequestURI())).findAny().isPresent()) {
+    if (uriMatchesAnyPattern(httpServletRequest.getRequestURI(),
+        SecurityConfig.PRE_AUTHENTICAITON_ALLOWED_ENDPOINTS)) {
       logger.info("No JWT authentication needed.");
 
       filterChain.doFilter(httpServletRequest, httpServletResponse);
@@ -82,6 +82,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
       setUnAuthenticatedResponse(httpServletResponse);
     }
+  }
+
+  private boolean uriMatchesAnyPattern(String uri, String[] patterns) {
+    AntPathMatcher antPathMatcher = new AntPathMatcher();
+    return Arrays.stream(patterns).anyMatch(
+        (preAuthenticationAllowedEndpoint) -> antPathMatcher
+            .match(preAuthenticationAllowedEndpoint, uri)
+    );
   }
 
   private void setUnAuthenticatedResponse(HttpServletResponse httpServletResponse)
