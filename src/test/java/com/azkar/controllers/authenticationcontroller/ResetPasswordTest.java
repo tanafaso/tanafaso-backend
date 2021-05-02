@@ -15,6 +15,7 @@ import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.authenticationcontroller.responses.ResetPasswordResponse;
 import com.azkar.repos.UserRepo;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -23,16 +24,23 @@ public class ResetPasswordTest extends TestBase {
 
   /**
    * TODO: 1. Have /reset_password to save the password token [DONE]
-   * TODO: 2. Have /verify_password_token to check the token
-   * TODO: 3. Have /set_password to set the new password
+   * TODO: 2. Send email with the reset password token
+   * TODO: 3. Have /verify_password_token to check the token [DONE]
+   * TODO: 4. Have /set_password to set the new password
    */
   @Autowired
   UserRepo userRepo;
 
+  User user;
+
+  @Before
+  public void setUp() {
+    user = UserFactory.getNewUser();
+    addNewUser(user);
+  }
+
   @Test
   public void resetPassword_validUser_shouldSaveToken() throws Exception {
-    User user = UserFactory.getNewUser();
-    addNewUser(user);
 
     azkarApi.resetPassword(user.getEmail()).andExpect(status().isOk());
 
@@ -49,12 +57,31 @@ public class ResetPasswordTest extends TestBase {
   }
 
   @Test
-  public void resetPassword_invalidEmail_fails() throws Exception {
+  public void resetPassword_invalidEmail_shouldFail() throws Exception {
     ResetPasswordResponse expectedResponse = new ResetPasswordResponse();
     expectedResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
     azkarApi.resetPassword("invalidEmail@example.com").andExpect(status().isNotFound())
-        .andExpect(content().contentType(
-            MediaType.APPLICATION_JSON))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+  }
+
+  @Test
+  public void validatePasswordToken_validToken_shouldSucceed() throws Exception {
+    azkarApi.resetPassword(user.getEmail()).andExpect(status().isOk());
+    User userFromDb = userRepo.findByEmail(user.getEmail()).get();
+    String token = userFromDb.getResetPasswordToken();
+
+    azkarApi.verifyResetPasswordToken(token).andExpect(status().isOk());
+  }
+
+  @Test
+  public void validatePasswordToken_validToken_shouldFail() throws Exception {
+    azkarApi.resetPassword(user.getEmail()).andExpect(status().isOk());
+    ResetPasswordResponse expectedResponse = new ResetPasswordResponse();
+    expectedResponse.setStatus(new Status(Status.INVALID_RESET_PASSWORD_TOKEN));
+
+    azkarApi.verifyResetPasswordToken("invalid_token").andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 }

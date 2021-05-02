@@ -14,6 +14,7 @@ import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationRes
 import com.azkar.payload.authenticationcontroller.responses.EmailVerificationResponse;
 import com.azkar.payload.authenticationcontroller.responses.FacebookAuthenticationResponse;
 import com.azkar.payload.authenticationcontroller.responses.ResetPasswordResponse;
+import com.azkar.payload.authenticationcontroller.responses.UpdatePasswordResponse;
 import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
@@ -37,10 +38,12 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -53,6 +56,7 @@ public class AuthenticationController extends BaseController {
   public static final String VERIFY_EMAIL_PATH = "/verify/email";
   public static final String LOGIN_WITH_EMAIL_PATH = "/login/email";
   public static final String RESET_PASSWORD_PATH = "/reset_password";
+  public static final String UPDATE_PASSWORD_PATH = "/update_password";
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
@@ -198,6 +202,19 @@ public class AuthenticationController extends BaseController {
       ResetPasswordResponse errorResponse = new ResetPasswordResponse();
       errorResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+  }
+
+  @GetMapping(value = UPDATE_PASSWORD_PATH)
+  public ResponseEntity<UpdatePasswordResponse> verifyResetPasswordToken(
+      @RequestParam String token) {
+    Optional<User> user = userRepo.findByResetPasswordToken(token);
+    if(user.isPresent()) {
+      return ResponseEntity.ok(new UpdatePasswordResponse());
+    } else {
+      UpdatePasswordResponse response = new UpdatePasswordResponse();
+      response.setStatus(new Status(Status.INVALID_RESET_PASSWORD_TOKEN));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
   }
 

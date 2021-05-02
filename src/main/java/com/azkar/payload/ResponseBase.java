@@ -64,6 +64,7 @@ public abstract class ResponseBase<T> {
     public static final int NAME_EMPTY_ERROR = 44;
     public static final int PASSWORD_CHARACTERS_LESS_THAN_8_ERROR = 45;
     public static final int CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR = 46;
+    public static final int INVALID_RESET_PASSWORD_TOKEN = 47;
 
     public int code;
 

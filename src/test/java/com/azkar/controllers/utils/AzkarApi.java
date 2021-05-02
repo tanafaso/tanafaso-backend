@@ -4,6 +4,7 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.payload.authenticationcontroller.requests.ResetPasswordRequest;
+import com.azkar.payload.authenticationcontroller.requests.UpdatePasswordRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
@@ -12,6 +13,7 @@ import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
 import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.test.web.servlet.MvcResult;
@@ -154,5 +156,9 @@ public class AzkarApi {
   public ResultActions resetPassword(String email) throws Exception {
     return httpClient.performPostRequest("/reset_password",
         JsonHandler.toJson(ResetPasswordRequest.builder().email(email).build()));
+  }
+
+  public ResultActions verifyResetPasswordToken(String token) throws Exception {
+    return httpClient.performGetRequest(/* token= */ "", String.format("/update_password/?token=%s", token));
   }
 }
