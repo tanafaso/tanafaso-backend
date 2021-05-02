@@ -254,7 +254,7 @@ public class ChallengeController extends BaseController {
     affectedUsers.forEach(user -> user.getUserChallenges().add(challenge));
     affectedUsers.forEach(affectedUser -> {
       if (!affectedUser.getId().equals(currentUser.getId())) {
-        notificationsService.sendNotificationToUser(affectedUser, "لديك تحدٍ جديد",
+        notificationsService.sendNotificationToUser(affectedUser, "لديك تحدىٍ جديد",
             "تحداك" + " " + currentUser.getFirstName() + " " + currentUser.getLastName());
       }
     });
@@ -346,11 +346,29 @@ public class ChallengeController extends BaseController {
         oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
     if (newSubChallengesFinished && !oldSubChallengesFinished) {
       updateScore(currentUser, currentUserChallenge.get().getGroupId());
+
       Challenge challenge = challengeRepo.findById(challengeId).get();
       challenge.getUsersFinished().add(currentUser.getId());
+
+      sendNotificationOnFinishedChallenge(getCurrentUser(userRepo), challenge);
       challengeRepo.save(challenge);
     }
     userRepo.save(currentUser);
     return ResponseEntity.ok(new UpdateChallengeResponse());
+  }
+
+  private void sendNotificationOnFinishedChallenge(User userFinishedChallenge,
+      Challenge challenge) {
+    Group group = groupRepo.findById(challenge.getGroupId()).get();
+    group.getUsersIds().stream().forEach(userId -> {
+      if (!userId.equals(userFinishedChallenge.getId())) {
+
+        String userFullname = userFinishedChallenge.getFirstName() + " "
+            + userFinishedChallenge.getLastName();
+        notificationsService
+            .sendNotificationToUser(userRepo.findById(userId).get(), "أنهى صديق لك تحدي",
+                userFullname);
+      }
+    });
   }
 }
