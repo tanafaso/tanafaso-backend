@@ -254,7 +254,7 @@ public class ChallengeController extends BaseController {
     affectedUsers.forEach(user -> user.getUserChallenges().add(challenge));
     affectedUsers.forEach(affectedUser -> {
       if (!affectedUser.getId().equals(currentUser.getId())) {
-        notificationsService.sendNotificationToUser(affectedUser, "لديك تحدىٍ جديد",
+        notificationsService.sendNotificationToUser(affectedUser, "لديك تحدٍ جديد",
             "تحداك" + " " + currentUser.getFirstName() + " " + currentUser.getLastName());
       }
     });
@@ -390,7 +390,7 @@ public class ChallengeController extends BaseController {
         String userFullname = userFinishedChallenge.getFirstName() + " "
             + userFinishedChallenge.getLastName();
         notificationsService
-            .sendNotificationToUser(userRepo.findById(userId).get(), "أنهى صديق لك تحدي",
+            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
                 userFullname);
       }
     });
