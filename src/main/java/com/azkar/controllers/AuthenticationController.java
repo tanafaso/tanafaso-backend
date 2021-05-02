@@ -22,6 +22,7 @@ import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.UnsupportedEncodingException;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -58,6 +59,8 @@ public class AuthenticationController extends BaseController {
   public static final String LOGIN_WITH_EMAIL_PATH = "/login/email";
   public static final String RESET_PASSWORD_PATH = "/reset_password";
   public static final String UPDATE_PASSWORD_PATH = "/update_password";
+
+  private static final long RESET_PASSWORD_EXPIRY_TIME_SECONDS = 60 * 60;
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
@@ -198,6 +201,8 @@ public class AuthenticationController extends BaseController {
     if (user.isPresent()) {
       String resetPasswordToken = UUID.randomUUID().toString();
       user.get().setResetPasswordToken(resetPasswordToken);
+      user.get().setResetPasswordTokenExpiryTime(
+          Instant.now().getEpochSecond() + RESET_PASSWORD_EXPIRY_TIME_SECONDS);
       userRepo.save(user.get());
       // TODO(issue#207): When a reset password view is implemented in the frontend,
       //  send an email to the user with an appropriate link.
@@ -226,6 +231,11 @@ public class AuthenticationController extends BaseController {
       boolean dryRun) {
     Optional<User> user = userRepo.findByResetPasswordToken(token);
     if (user.isPresent()) {
+      if (user.get().getResetPasswordTokenExpiryTime() < Instant.now().getEpochSecond()) {
+        UpdatePasswordResponse response = new UpdatePasswordResponse();
+        response.setStatus(new Status(Status.EXPIRED_RESET_PASSWORD_TOKEN));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+      }
       if (!dryRun) {
         user.get().setEncodedPassword(passwordEncoder.encode(password));
         userRepo.save(user.get());
@@ -234,7 +244,7 @@ public class AuthenticationController extends BaseController {
     } else {
       UpdatePasswordResponse response = new UpdatePasswordResponse();
       response.setStatus(new Status(Status.INVALID_RESET_PASSWORD_TOKEN));
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+      return ResponseEntity.badRequest().body(response);
     }
   }
 

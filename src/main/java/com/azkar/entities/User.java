@@ -49,6 +49,8 @@ public class User extends EntityBase {
   @Default
   private String resetPasswordToken = "";
   @JsonIgnore
+  private long resetPasswordTokenExpiryTime;
+  @JsonIgnore
   @CreatedDate
   private long createdAt;
   @JsonIgnore
