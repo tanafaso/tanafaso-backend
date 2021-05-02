@@ -42,6 +42,12 @@ public class HttpClient {
     return mockMvc.perform(requestBuilder);
   }
 
+  public ResultActions performPostRequest(String path, String body) throws Exception {
+    MockHttpServletRequestBuilder requestBuilder = post(path);
+    addRequestBody(requestBuilder, body);
+    return mockMvc.perform(requestBuilder);
+  }
+
   public ResultActions performPostRequest(User user, String path, String body) throws Exception {
     MockHttpServletRequestBuilder requestBuilder = post(path);
     addAuthenticationToken(requestBuilder, user);

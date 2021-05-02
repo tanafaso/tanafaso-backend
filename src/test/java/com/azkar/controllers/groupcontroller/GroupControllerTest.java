@@ -13,7 +13,6 @@ import com.azkar.entities.User.UserGroup;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
-import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AcceptGroupInvitationResponse;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse;
@@ -62,11 +61,10 @@ public class GroupControllerTest extends TestBase {
   @Test
   public void addGroup_normalScenario_shouldSucceed() throws Exception {
     final String TEST_GROUP_NAME = "example_name";
-    AddGroupRequest addGroupRequest = AddGroupRequest.builder().name(TEST_GROUP_NAME).build();
     long groupRepoCountBeforeOperation = groupRepo.count();
 
     MvcResult result =
-        azkarApi.addGroup(user1, addGroupRequest).andExpect(status().isOk()).andReturn();
+        azkarApi.addGroup(user1, TEST_GROUP_NAME).andExpect(status().isOk()).andReturn();
 
     AddGroupResponse response = JsonHandler.fromJson(result.getResponse().getContentAsString(),
         AddGroupResponse.class);

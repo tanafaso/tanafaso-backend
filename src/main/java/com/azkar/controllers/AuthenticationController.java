@@ -8,18 +8,24 @@ import com.azkar.payload.authenticationcontroller.requests.EmailLoginRequestBody
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.FacebookAuthenticationRequest;
+import com.azkar.payload.authenticationcontroller.requests.ResetPasswordRequest;
+import com.azkar.payload.authenticationcontroller.requests.UpdatePasswordRequest;
 import com.azkar.payload.authenticationcontroller.responses.EmailLoginResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailVerificationResponse;
 import com.azkar.payload.authenticationcontroller.responses.FacebookAuthenticationResponse;
+import com.azkar.payload.authenticationcontroller.responses.ResetPasswordResponse;
+import com.azkar.payload.authenticationcontroller.responses.UpdatePasswordResponse;
 import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.UnsupportedEncodingException;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,9 +40,12 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -48,6 +57,10 @@ public class AuthenticationController extends BaseController {
   public static final String REGISTER_WITH_EMAIL_PATH = "/register/email";
   public static final String VERIFY_EMAIL_PATH = "/verify/email";
   public static final String LOGIN_WITH_EMAIL_PATH = "/login/email";
+  public static final String RESET_PASSWORD_PATH = "/reset_password";
+  public static final String UPDATE_PASSWORD_PATH = "/update_password";
+
+  private static final long RESET_PASSWORD_EXPIRY_TIME_SECONDS = 60 * 60;
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
@@ -178,6 +191,61 @@ public class AuthenticationController extends BaseController {
     ResponseEntity<EmailLoginResponse> responseEntity =
         new ResponseEntity(response, httpHeaders, HttpStatus.OK);
     return responseEntity;
+  }
+
+  @PostMapping(value = RESET_PASSWORD_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<ResetPasswordResponse> resetPassword(
+      @RequestBody ResetPasswordRequest request) {
+    request.validate();
+    Optional<User> user = userRepo.findByEmail(request.getEmail());
+    if (user.isPresent()) {
+      String resetPasswordToken = UUID.randomUUID().toString();
+      user.get().setResetPasswordToken(resetPasswordToken);
+      user.get().setResetPasswordTokenExpiryTime(
+          Instant.now().getEpochSecond() + RESET_PASSWORD_EXPIRY_TIME_SECONDS);
+      userRepo.save(user.get());
+      // TODO(issue#207): When a reset password view is implemented in the frontend,
+      //  send an email to the user with an appropriate link.
+      return ResponseEntity.ok().build();
+    } else {
+      ResetPasswordResponse errorResponse = new ResetPasswordResponse();
+      errorResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+  }
+
+  @GetMapping(value = UPDATE_PASSWORD_PATH)
+  public ResponseEntity<UpdatePasswordResponse> verifyResetPasswordToken(
+      @RequestParam String token) {
+    return updatePassword(token, /* password= */ "", /* dryRun= */ true);
+  }
+
+  @PutMapping(value = UPDATE_PASSWORD_PATH)
+  public ResponseEntity<UpdatePasswordResponse> updatePassword(
+      @RequestParam String token, @RequestBody UpdatePasswordRequest request) {
+    request.validate();
+    return updatePassword(token, request.getPassword(), /* dryRun= */ false);
+  }
+
+  private ResponseEntity<UpdatePasswordResponse> updatePassword(String token, String password,
+      boolean dryRun) {
+    Optional<User> user = userRepo.findByResetPasswordToken(token);
+    if (user.isPresent()) {
+      if (user.get().getResetPasswordTokenExpiryTime() < Instant.now().getEpochSecond()) {
+        UpdatePasswordResponse response = new UpdatePasswordResponse();
+        response.setStatus(new Status(Status.EXPIRED_RESET_PASSWORD_TOKEN));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+      }
+      if (!dryRun) {
+        user.get().setEncodedPassword(passwordEncoder.encode(password));
+        userRepo.save(user.get());
+      }
+      return ResponseEntity.ok(new UpdatePasswordResponse());
+    } else {
+      UpdatePasswordResponse response = new UpdatePasswordResponse();
+      response.setStatus(new Status(Status.INVALID_RESET_PASSWORD_TOKEN));
+      return ResponseEntity.badRequest().body(response);
+    }
   }
 
   /**
