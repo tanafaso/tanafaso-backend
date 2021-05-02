@@ -53,16 +53,23 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
     updateChallenge(user1, challenge.getId(), requestBody)
         .andExpect(status().isOk());
 
-    Challenge updatedUserChallenge = azkarApi.getChallengeAndReturn(user1, challenge.getId());
-    assertThat(updatedUserChallenge.getSubChallenges().get(0).getRepetitions(), is(
+    Challenge updatedUser1Challenge = azkarApi.getChallengeAndReturn(user1, challenge.getId());
+    Challenge updatedUser2Challenge =
+        azkarApi.getChallengeAndReturn(user2InGroup1, challenge.getId());
+    assertThat(updatedUser1Challenge.getSubChallenges().get(0).getRepetitions(), is(
         0));
-    assertThat(updatedUserChallenge.getSubChallenges().get(1).getRepetitions(), is(
+    assertThat(updatedUser1Challenge.getSubChallenges().get(1).getRepetitions(), is(
         0));
+
     User updatedUser1 = userRepo.findById(user1.getId()).get();
     assertThat(updatedUser1.getUserGroups().size(), is(2));
     User updatedUser2 = userRepo.findById(user2InGroup1.getId()).get();
     assertThat(updatedUser2.getUserGroups().size(), is(1));
 
+    assertThat(Iterators.getOnlyElement(updatedUser1Challenge.getUsersFinished().iterator()),
+        equalTo(user1.getId()));
+    assertThat(Iterators.getOnlyElement(updatedUser2Challenge.getUsersFinished().iterator()),
+        equalTo(user1.getId()));
     Challenge updatedChallenge = challengeRepo.findById(challenge.getId()).get();
     assertThat(Iterators.getOnlyElement(updatedChallenge.getUsersFinished().iterator()),
         equalTo(user1.getId()));

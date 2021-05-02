@@ -313,6 +313,9 @@ public class ChallengeController extends BaseController {
     return null;
   }
 
+  // TODO(issue/204): This is not an atomic operation anymore, i.e. it is not guranteed that if
+  //  something wrong happened in the middle of handling a request, the state will remain the
+  //  same as before doing the request.
   @PutMapping(path = "/{challengeId}", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<UpdateChallengeResponse> updateChallenge(
       @PathVariable(value = "challengeId") String challengeId,
@@ -346,15 +349,36 @@ public class ChallengeController extends BaseController {
         oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
     if (newSubChallengesFinished && !oldSubChallengesFinished) {
       updateScore(currentUser, currentUserChallenge.get().getGroupId());
+      userRepo.save(currentUser);
 
       Challenge challenge = challengeRepo.findById(challengeId).get();
-      challenge.getUsersFinished().add(currentUser.getId());
+      updateChallengeOnUserFinished(challenge, currentUser);
+      // Invalidate current user because it may have changed indirectly (by changing only the
+      // database instance) after calling updateChallengeOnUserFinished.
+      currentUser = userRepo.findById(currentUser.getId()).get();
 
       sendNotificationOnFinishedChallenge(getCurrentUser(userRepo), challenge);
       challengeRepo.save(challenge);
     }
     userRepo.save(currentUser);
+
     return ResponseEntity.ok(new UpdateChallengeResponse());
+  }
+
+  private void updateChallengeOnUserFinished(Challenge challenge, User currentUser) {
+    // Update the original copy of the challenge
+    challenge.getUsersFinished().add(currentUser.getId());
+
+    // Update users copies of the challenge
+    groupRepo.findById(challenge.getGroupId()).get().getUsersIds().forEach(groupMember -> {
+      User user = userRepo.findById(groupMember).get();
+      user.getUserChallenges().forEach(userChallenge -> {
+        if (userChallenge.getId().equals(challenge.getId())) {
+          userChallenge.getUsersFinished().add(currentUser.getId());
+        }
+      });
+      userRepo.save(user);
+    });
   }
 
   private void sendNotificationOnFinishedChallenge(User userFinishedChallenge,
