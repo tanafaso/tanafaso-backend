@@ -1,6 +1,7 @@
 package com.azkar.payload.authenticationcontroller.requests;
 
-import javax.validation.constraints.NotNull;
+import com.azkar.payload.RequestBodyBase;
+import com.azkar.payload.exceptions.BadRequestException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,8 +13,12 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ResetPasswordRequest {
+public class ResetPasswordRequest extends RequestBodyBase {
 
-  @NotNull
   String email;
+
+  @Override
+  public void validate() throws BadRequestException {
+    checkNotNull(email);
+  }
 }

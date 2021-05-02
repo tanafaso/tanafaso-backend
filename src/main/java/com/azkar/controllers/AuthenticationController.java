@@ -9,6 +9,7 @@ import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequ
 import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.FacebookAuthenticationRequest;
 import com.azkar.payload.authenticationcontroller.requests.ResetPasswordRequest;
+import com.azkar.payload.authenticationcontroller.requests.UpdatePasswordRequest;
 import com.azkar.payload.authenticationcontroller.responses.EmailLoginResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailVerificationResponse;
@@ -192,6 +193,7 @@ public class AuthenticationController extends BaseController {
   @PostMapping(value = RESET_PASSWORD_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<ResetPasswordResponse> resetPassword(
       @RequestBody ResetPasswordRequest request) {
+    request.validate();
     Optional<User> user = userRepo.findByEmail(request.getEmail());
     if (user.isPresent()) {
       String resetPasswordToken = UUID.randomUUID().toString();
@@ -208,8 +210,24 @@ public class AuthenticationController extends BaseController {
   @GetMapping(value = UPDATE_PASSWORD_PATH)
   public ResponseEntity<UpdatePasswordResponse> verifyResetPasswordToken(
       @RequestParam String token) {
+    return updatePassword(token, /* password= */ "", /* dryRun= */ true);
+  }
+
+  @PutMapping(value = UPDATE_PASSWORD_PATH)
+  public ResponseEntity<UpdatePasswordResponse> updatePassword(
+      @RequestParam String token, @RequestBody UpdatePasswordRequest request) {
+    request.validate();
+    return updatePassword(token, request.getPassword(), /* dryRun= */ false);
+  }
+
+  private ResponseEntity<UpdatePasswordResponse> updatePassword(String token, String password,
+      boolean dryRun) {
     Optional<User> user = userRepo.findByResetPasswordToken(token);
-    if(user.isPresent()) {
+    if (user.isPresent()) {
+      if (!dryRun) {
+        user.get().setEncodedPassword(passwordEncoder.encode(password));
+        userRepo.save(user.get());
+      }
       return ResponseEntity.ok(new UpdatePasswordResponse());
     } else {
       UpdatePasswordResponse response = new UpdatePasswordResponse();

@@ -13,7 +13,6 @@ import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
 import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.test.web.servlet.MvcResult;
@@ -159,6 +158,12 @@ public class AzkarApi {
   }
 
   public ResultActions verifyResetPasswordToken(String token) throws Exception {
-    return httpClient.performGetRequest(/* token= */ "", String.format("/update_password/?token=%s", token));
+    return httpClient
+        .performGetRequest(/* token= */ "", String.format("/update_password/?token=%s", token));
+  }
+
+  public ResultActions updatePassword(String token, String password) throws Exception {
+    return httpClient.performPutRequest(String.format("/update_password/?token=%s", token),
+        JsonHandler.toJson(UpdatePasswordRequest.builder().password(password).build()));
   }
 }
