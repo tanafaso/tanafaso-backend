@@ -3,8 +3,8 @@ package com.azkar.controllers.authenticationcontroller;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.emptyString;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -24,21 +24,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 public class ResetPasswordTest extends TestBase {
 
-  /**
-   * TODO: 1. Have /reset_password to save the password token [DONE]
-   * TODO: 2. Send email with the reset password token
-   * TODO: 3. Have /verify_password_token to check the token [DONE]
-   * TODO: 4. Have /set_password to set the new password [DONE]
-   */
-  @Autowired
-  UserRepo userRepo;
-
-  @Autowired
-  PasswordEncoder passwordEncoder;
-
-  User user;
   private static final String NEW_PASSWORD = "new_password";
   private static final String INVALID_PASSWORD_TOO_SHORT = "123";
+  @Autowired
+  UserRepo userRepo;
+  @Autowired
+  PasswordEncoder passwordEncoder;
+  User user;
 
   @Before
   public void setUp() {

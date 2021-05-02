@@ -199,6 +199,8 @@ public class AuthenticationController extends BaseController {
       String resetPasswordToken = UUID.randomUUID().toString();
       user.get().setResetPasswordToken(resetPasswordToken);
       userRepo.save(user.get());
+      // TODO(issue#207): When a reset password view is implemented in the frontend,
+      //  send an email to the user with an appropriate link.
       return ResponseEntity.ok().build();
     } else {
       ResetPasswordResponse errorResponse = new ResetPasswordResponse();
