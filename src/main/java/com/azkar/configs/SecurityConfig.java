@@ -3,6 +3,7 @@ package com.azkar.configs;
 import com.azkar.configs.authentication.JwtAuthenticationFilter;
 import com.azkar.configs.authentication.OAuthSuccessHandler;
 import com.azkar.controllers.AuthenticationController;
+import com.azkar.controllers.UpdatePasswordController;
 import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +22,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   public static final String[] PRE_AUTHENTICAITON_ALLOWED_ENDPOINT_PATTERNS = {
-      AuthenticationController.UPDATE_PASSWORD_PATH + "/**", // allow all subdirectories
+      "/images/**",
+      UpdatePasswordController.UPDATE_PASSWORD_PATH + "/**", // allow all subdirectories
       AuthenticationController.REGISTER_WITH_EMAIL_PATH,
       AuthenticationController.VERIFY_EMAIL_PATH,
       AuthenticationController.LOGIN_WITH_EMAIL_PATH,
