@@ -48,6 +48,15 @@ public class HttpClient {
     return mockMvc.perform(requestBuilder);
   }
 
+  public ResultActions submitUpdatePasswordForm(String passwordToken, String password)
+      throws Exception {
+    MockHttpServletRequestBuilder requestBuilder = post("/update_password/");
+    requestBuilder.contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE);
+    requestBuilder.param("token", passwordToken);
+    requestBuilder.param("password", password);
+    return mockMvc.perform(requestBuilder);
+  }
+
   public ResultActions performPostRequest(User user, String path, String body) throws Exception {
     MockHttpServletRequestBuilder requestBuilder = post(path);
     addAuthenticationToken(requestBuilder, user);

@@ -4,7 +4,6 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.payload.authenticationcontroller.requests.ResetPasswordRequest;
-import com.azkar.payload.authenticationcontroller.requests.UpdatePasswordRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
@@ -163,7 +162,6 @@ public class AzkarApi {
   }
 
   public ResultActions updatePassword(String token, String password) throws Exception {
-    return httpClient.performPutRequest(String.format("/update_password/?token=%s", token),
-        JsonHandler.toJson(UpdatePasswordRequest.builder().password(password).build()));
+    return httpClient.submitUpdatePasswordForm(token, password);
   }
 }
