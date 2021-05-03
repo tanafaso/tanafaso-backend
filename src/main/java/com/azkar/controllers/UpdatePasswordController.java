@@ -52,8 +52,8 @@ public class UpdatePasswordController {
   }
 
   private boolean isResetPasswordTokenValid(Optional<User> user) {
-    return user.isPresent() &&
-        user.get().getResetPasswordTokenExpiryTime() > Instant.now().getEpochSecond();
+    return user.isPresent()
+        && user.get().getResetPasswordTokenExpiryTime() > Instant.now().getEpochSecond();
   }
 
   @PostMapping(value = "update_password", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
