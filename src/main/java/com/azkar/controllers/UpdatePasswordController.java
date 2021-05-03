@@ -67,6 +67,7 @@ public class UpdatePasswordController {
     Optional<User> user = userRepo.findByResetPasswordToken(token);
     if (isResetPasswordTokenValid(user)) {
       user.get().setEncodedPassword(passwordEncoder.encode(password));
+      user.get().setResetPasswordTokenExpiryTime(Instant.now().getEpochSecond());
       userRepo.save(user.get());
       return UPDATE_PASSWORD_SUCCESS_VIEW_NAME;
     } else {

@@ -100,6 +100,18 @@ public class ResetPasswordTest extends TestBase {
   }
 
   @Test
+  public void updatePasswordToken_tokenUsedTwice_shouldFailTheSecondTime() throws Exception {
+    azkarApi.resetPassword(user.getEmail()).andExpect(status().isOk());
+
+    String resetPasswordToken = userRepo.findByEmail(user.getEmail()).get().getResetPasswordToken();
+    azkarApi.updatePassword(resetPasswordToken, NEW_PASSWORD).andExpect(status().isOk())
+        .andExpect(view().name(UpdatePasswordController.UPDATE_PASSWORD_SUCCESS_VIEW_NAME));
+
+    azkarApi.updatePassword(resetPasswordToken, NEW_PASSWORD).andExpect(status().isBadRequest())
+        .andExpect(view().name(UpdatePasswordController.INVALID_TOKEN_VIEW_NAME));
+  }
+
+  @Test
   public void updatePasswordToken_invalidToken_shouldFail() throws Exception {
     azkarApi.resetPassword(user.getEmail()).andExpect(status().isOk());
     String oldEncodedPassword = userRepo.findByEmail(user.getEmail()).get().getEncodedPassword();
