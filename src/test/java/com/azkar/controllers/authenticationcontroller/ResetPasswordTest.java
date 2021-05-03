@@ -39,6 +39,7 @@ public class ResetPasswordTest extends TestBase {
   public void setUp() {
     user = UserFactory.getNewUser();
     user.setEncodedPassword("encoded_pass");
+    user.setEmail("test_email@test.com");
     addNewUser(user);
   }
 

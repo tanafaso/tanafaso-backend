@@ -55,7 +55,7 @@ public class AuthenticationController extends BaseController {
   public static final String LOGIN_WITH_EMAIL_PATH = "/login/email";
   public static final String RESET_PASSWORD_PATH = "/reset_password";
 
-  private static final long RESET_PASSWORD_EXPIRY_TIME_SECONDS = 60 * 60;
+  private static final long RESET_PASSWORD_EXPIRY_TIME_SECONDS = 30 * 60;
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
@@ -199,8 +199,7 @@ public class AuthenticationController extends BaseController {
       user.get().setResetPasswordTokenExpiryTime(
           Instant.now().getEpochSecond() + RESET_PASSWORD_EXPIRY_TIME_SECONDS);
       userRepo.save(user.get());
-      // TODO(issue#207): When a reset password view is implemented in the frontend,
-      //  send an email to the user with an appropriate link.
+      sendResetPasswordEmail(request.getEmail(), resetPasswordToken);
       return ResponseEntity.ok().build();
     } else {
       ResetPasswordResponse errorResponse = new ResetPasswordResponse();
@@ -323,10 +322,30 @@ public class AuthenticationController extends BaseController {
 
   private void sendVerificationEmail(String email, int pin) {
     // TODO(issue#73): Beautify email confirmation body.
+    String subject = "Tanafaso | Verify Email";
+    String body = "The pin is: " + pin;
+    sendEmail(email, subject, body);
+  }
+
+  private void sendResetPasswordEmail(String email, String token) {
+    // TODO(issue#73): Beautify email reset password body.
+    String subject = "Tanafaso | Reset Password";
+    String url = String.format("https://tanafaso.com/update_password?token=%s", token);
+    String text = String.join("\n",
+        "مرحبا،",
+        "لقد تلقينا طلبًا لاسترجاع كلمة مرور الخاصة بك."
+            + " اضغط على الرابط التالي لاختيار كلمة مرور جديدة:",
+        url,
+        "",
+        "إذا لم تطلب إسترجاع كلمة المرور ،يمكنك تجاهل هذه الرسالة.");
+    sendEmail(email, subject, text);
+  }
+
+  private void sendEmail(String email, String subject, String body) {
     SimpleMailMessage message = new SimpleMailMessage();
     message.setFrom("azkar_email_name@azkaremaildomain.com");
-    message.setSubject("Tanafaso | Verify Email");
-    message.setText("The pin is: " + pin);
+    message.setSubject(subject);
+    message.setText(body);
     message.setTo(email);
     javaMailSender.send(message);
   }
