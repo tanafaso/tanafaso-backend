@@ -24,6 +24,8 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +35,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -58,13 +60,20 @@ public class AuthenticationController extends BaseController {
   private static final long RESET_PASSWORD_EXPIRY_TIME_SECONDS = 30 * 60;
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
-
+  private static final String RESET_PASSWORD_TEMPLATE =
+      "<div style=\"direction: rtl;\">\n"
+          + "    <p>مرحبًا,</p>\n"
+          + "    <p>لقد تلقينا طلبًا لاسترجاع كلمة مرور الخاصة بك. "
+          + "اضغط على الرابط التالي لاختيار كلمة مرور جديدة:</p>\n"
+          + "    <p>URL</p>\n"
+          + "    <p>إذا لم تطلب إسترجاع كلمة المرور ،يمكنك تجاهل هذه الرسالة.</p>\n"
+          + "    <br>\n"
+          + "    <span style=\"display: none;\">RANDOM</span>\n"
+          + "</div>";
   @Autowired
   UserRepo userRepo;
-
   @Autowired
   UserService userService;
-
   @Autowired
   JwtService jwtService;
   @Autowired
@@ -81,7 +90,7 @@ public class AuthenticationController extends BaseController {
 
   @PutMapping(value = REGISTER_WITH_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<EmailRegistrationResponse> registerWithEmail(
-      @RequestBody EmailRegistrationRequestBody body) {
+      @RequestBody EmailRegistrationRequestBody body) throws MessagingException {
     EmailRegistrationResponse response = new EmailRegistrationResponse();
     body.validate();
 
@@ -190,7 +199,7 @@ public class AuthenticationController extends BaseController {
 
   @PostMapping(value = RESET_PASSWORD_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<ResetPasswordResponse> resetPassword(
-      @RequestBody ResetPasswordRequest request) {
+      @RequestBody ResetPasswordRequest request) throws MessagingException {
     request.validate();
     Optional<User> user = userRepo.findByEmail(request.getEmail());
     if (user.isPresent()) {
@@ -276,7 +285,6 @@ public class AuthenticationController extends BaseController {
     return responseEntity;
   }
 
-
   /**
    * This mapping should only be used in case of a logged in user who wants to connect their account
    * with facebook. Note, that maybe they have already connected an account; in that case the new
@@ -320,34 +328,31 @@ public class AuthenticationController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private void sendVerificationEmail(String email, int pin) {
+  private void sendVerificationEmail(String email, int pin) throws MessagingException {
     // TODO(issue#73): Beautify email confirmation body.
-    String subject = "Tanafaso | Verify Email";
+    String subject = "تنافسوا | تأكيد البريد الإلكتروني";
     String body = "The pin is: " + pin;
     sendEmail(email, subject, body);
   }
 
-  private void sendResetPasswordEmail(String email, String token) {
+  private void sendResetPasswordEmail(String email, String token) throws MessagingException {
     // TODO(issue#73): Beautify email reset password body.
-    String subject = "Tanafaso | Reset Password";
+    String subject = "تنافسوا | إعادة ضبط كلمة المرور";
     String url = String.format("https://tanafaso.com/update_password?token=%s", token);
-    String text = String.join("\n",
-        "مرحبا،",
-        "لقد تلقينا طلبًا لاسترجاع كلمة مرور الخاصة بك."
-            + " اضغط على الرابط التالي لاختيار كلمة مرور جديدة:",
-        url,
-        "",
-        "إذا لم تطلب إسترجاع كلمة المرور ،يمكنك تجاهل هذه الرسالة.");
+    // adding a random number at the end to make sure that gmail does not collapse the email ending.
+    String text = RESET_PASSWORD_TEMPLATE.replaceAll("URL", url)
+        .replaceAll("RANDOM", "" + new Random().nextInt(100));
     sendEmail(email, subject, text);
   }
 
-  private void sendEmail(String email, String subject, String body) {
-    SimpleMailMessage message = new SimpleMailMessage();
-    message.setFrom("azkar_email_name@azkaremaildomain.com");
-    message.setSubject(subject);
-    message.setText(body);
-    message.setTo(email);
-    javaMailSender.send(message);
+  private void sendEmail(String email, String subject, String body) throws MessagingException {
+    MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+    MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+    helper.setFrom("azkar_email_name@azkaremaildomain.com");
+    helper.setSubject(subject);
+    helper.setText(body, /* html= */ true);
+    helper.setTo(email);
+    javaMailSender.send(mimeMessage);
   }
 
   private int generatePin() {
