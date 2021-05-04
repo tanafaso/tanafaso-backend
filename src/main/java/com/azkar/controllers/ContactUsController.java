@@ -1,6 +1,10 @@
 package com.azkar.controllers;
 
 import java.io.FileWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,10 +14,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller()
 public class ContactUsController {
 
+  private static final Logger logger = LoggerFactory.getLogger(ContactUsController.class);
+
   public static final String CONTACT_US_PAGE_PATH = "contact_us_page";
   private static final String SUCCESS_MESSAGE = "تم إرسال رسالتك بنجاح.";
   private static final String ERROR_MESSAGE = "حدث خطأ. برجاء المحاولة مرة أخرى.";
-  private static final String FEEDBACK_FILE_PATH = "./src/main/resources/feedback.csv";
+  private static final String FEEDBACK_FILE_PATH = "feedback.csv";
+
+  @Autowired
+  ResourceLoader resourceLoader;
 
   @GetMapping(value = "/contact")
   public String contactUs() {
@@ -24,7 +33,8 @@ public class ContactUsController {
   public String submitFeedback(@RequestParam String name, @RequestParam String email,
       @RequestParam String subject, @RequestParam String msg, Model model) {
     try {
-      FileWriter pw = new FileWriter(FEEDBACK_FILE_PATH, /* append= */true);
+      FileWriter pw =
+          new FileWriter(FEEDBACK_FILE_PATH, /* append= */true);
       pw.append(String.join(",",
           name, email, subject, msg));
       pw.append("\n");
@@ -33,6 +43,7 @@ public class ContactUsController {
       model.addAttribute("successMessage", SUCCESS_MESSAGE);
       return UpdatePasswordController.SUCCESS_PAGE_VIEW_NAME;
     } catch (Exception e) {
+      logger.error(String.format("Cannot write to %s file.", FEEDBACK_FILE_PATH), e);
       model.addAttribute("errorMessage", ERROR_MESSAGE);
       return UpdatePasswordController.ERROR_PAGE_VIEW_NAME;
     }
