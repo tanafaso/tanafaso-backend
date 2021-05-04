@@ -200,7 +200,7 @@ public class AuthenticationController extends BaseController {
           Instant.now().getEpochSecond() + RESET_PASSWORD_EXPIRY_TIME_SECONDS);
       userRepo.save(user.get());
       sendResetPasswordEmail(request.getEmail(), resetPasswordToken);
-      return ResponseEntity.ok().build();
+      return ResponseEntity.ok(new ResetPasswordResponse());
     } else {
       ResetPasswordResponse errorResponse = new ResetPasswordResponse();
       errorResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
