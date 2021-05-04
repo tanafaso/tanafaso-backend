@@ -1,0 +1,42 @@
+package com.azkar.controllers;
+
+import java.io.FileWriter;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+@Controller()
+public class ContactUsController {
+
+  public static final String CONTACT_US_PAGE_PATH = "contact_us_page";
+  private static final String SUCCESS_MESSAGE = "تم إرسال رسالتك بنجاح.";
+  private static final String ERROR_MESSAGE = "حدث خطأ. برجاء المحاولة مرة أخرى.";
+  private static final String FEEDBACK_FILE_PATH = "./src/main/resources/feedback.csv";
+
+  @GetMapping(value = "/contact")
+  public String contactUs() {
+    return CONTACT_US_PAGE_PATH;
+  }
+
+  @PostMapping(value = "/feedback")
+  public String submitFeedback(@RequestParam String name, @RequestParam String email,
+      @RequestParam String subject, @RequestParam String msg, Model model) {
+    try {
+      FileWriter pw = new FileWriter(FEEDBACK_FILE_PATH, /* append= */true);
+      pw.append(String.join(",",
+          name, email, subject, msg));
+      pw.append("\n");
+      pw.flush();
+      pw.close();
+      model.addAttribute("successMessage", SUCCESS_MESSAGE);
+      return UpdatePasswordController.SUCCESS_PAGE_VIEW_NAME;
+    } catch (Exception e) {
+      model.addAttribute("errorMessage", ERROR_MESSAGE);
+      return UpdatePasswordController.ERROR_PAGE_VIEW_NAME;
+    }
+
+  }
+
+}

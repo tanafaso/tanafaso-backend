@@ -23,13 +23,14 @@ public class UpdatePasswordController {
 
   public static final String UPDATE_PASSWORD_PATH = "/update_password";
   public static final String UPDATE_PASSWORD_VIEW_NAME = "update_password";
-  public static final String INVALID_TOKEN_VIEW_NAME = "error_page";
-  public static final String UPDATE_PASSWORD_SUCCESS_VIEW_NAME = "update_password_success";
+  public static final String ERROR_PAGE_VIEW_NAME = "error_page";
+  public static final String SUCCESS_PAGE_VIEW_NAME = "success_page";
 
   public static final String INVALID_TOKEN_ERROR =
       "هذا الرابط منتهي أو غير صحيح. من فضلك اطلب استعادة كلمة المرور مرة أخرى.";
   public static final String PASSWORD_MALFORMED_ERROR =
       "يجب ألا تقل كلمة المرور عن 8 أحرف.";
+  private static final String UPDATE_SUCCESSFUL_MESSAGE = "تم تغيير كلمة المرور بنجاح.";
 
   @Autowired
   UserRepo userRepo;
@@ -47,7 +48,7 @@ public class UpdatePasswordController {
     } else {
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       model.addAttribute("errorMessage", INVALID_TOKEN_ERROR);
-      return INVALID_TOKEN_VIEW_NAME;
+      return ERROR_PAGE_VIEW_NAME;
     }
   }
 
@@ -62,18 +63,19 @@ public class UpdatePasswordController {
     if (password == null || password.length() < 8) {
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       model.addAttribute("errorMessage", PASSWORD_MALFORMED_ERROR);
-      return INVALID_TOKEN_VIEW_NAME;
+      return ERROR_PAGE_VIEW_NAME;
     }
     Optional<User> user = userRepo.findByResetPasswordToken(token);
     if (isResetPasswordTokenValid(user)) {
       user.get().setEncodedPassword(passwordEncoder.encode(password));
       user.get().setResetPasswordTokenExpiryTime(Instant.now().getEpochSecond());
       userRepo.save(user.get());
-      return UPDATE_PASSWORD_SUCCESS_VIEW_NAME;
+      model.addAttribute("successMessage", UPDATE_SUCCESSFUL_MESSAGE);
+      return SUCCESS_PAGE_VIEW_NAME;
     } else {
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       model.addAttribute("errorMessage", INVALID_TOKEN_ERROR);
-      return INVALID_TOKEN_VIEW_NAME;
+      return ERROR_PAGE_VIEW_NAME;
     }
   }
 }
