@@ -66,8 +66,9 @@ public class AuthenticationController extends BaseController {
   private static final long RESET_PASSWORD_EXPIRY_TIME_SECONDS = 30 * 60;
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
-  private static final String RESET_PASSWORD_EMAIL_PATH =
+  private static final String RESET_PASSWORD_EMAIL_TEMPLATE_PATH =
       "emailTemplates/reset_password_email.html";
+  private static final String VERIFY_EMAIL_TEMPLATE_PATH = "emailTemplates/verify_email.html";
 
   @Autowired
   UserRepo userRepo;
@@ -90,7 +91,7 @@ public class AuthenticationController extends BaseController {
   @PutMapping(value = REGISTER_WITH_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<EmailRegistrationResponse> registerWithEmail(
       @RequestBody EmailRegistrationRequestBody body)
-      throws MessagingException, UnsupportedEncodingException {
+      throws MessagingException, IOException {
     EmailRegistrationResponse response = new EmailRegistrationResponse();
     body.validate();
 
@@ -329,11 +330,12 @@ public class AuthenticationController extends BaseController {
   }
 
   private void sendVerificationEmail(String email, int pin)
-      throws MessagingException, UnsupportedEncodingException {
+      throws MessagingException, IOException {
     // TODO(issue#73): Beautify email confirmation body.
     String subject = "تأكيد البريد الإلكتروني";
-    String body = "The pin is: " + pin;
-    sendEmail(email, subject, body);
+    String text = getEmailTemplate(VERIFY_EMAIL_TEMPLATE_PATH)
+        .replaceAll("PIN", "" + pin);
+    sendEmail(email, subject, text);
   }
 
   private void sendResetPasswordEmail(String email, String token)
@@ -342,14 +344,15 @@ public class AuthenticationController extends BaseController {
     String subject = "إعادة ضبط كلمة المرور";
     String url = String.format("https://www.tanafaso.com/update_password?token=%s", token);
     // adding a random number at the end to make sure that gmail does not collapse the email ending.
-    String text = getResetPasswordEmailTemplate().replaceAll("URL", url)
+    String text = getEmailTemplate(RESET_PASSWORD_EMAIL_TEMPLATE_PATH)
+        .replaceAll("URL", url)
         .replaceAll("RANDOM", RandomStringUtils.randomNumeric(2));
     sendEmail(email, subject, text);
   }
 
-  private String getResetPasswordEmailTemplate() throws IOException {
+  private String getEmailTemplate(String path) throws IOException {
     return IOUtils.toString(
-        new InputStreamReader(new ClassPathResource(RESET_PASSWORD_EMAIL_PATH).getInputStream()));
+        new InputStreamReader(new ClassPathResource(path).getInputStream()));
   }
 
   private void sendEmail(String email, String subject, String body)
