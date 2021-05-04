@@ -19,18 +19,24 @@ import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import lombok.Data;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -60,16 +66,9 @@ public class AuthenticationController extends BaseController {
   private static final long RESET_PASSWORD_EXPIRY_TIME_SECONDS = 30 * 60;
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
-  private static final String RESET_PASSWORD_TEMPLATE =
-      "<div style=\"direction: rtl;\">\n"
-          + "    <p>مرحبًا,</p>\n"
-          + "    <p>لقد تلقينا طلبًا لاسترجاع كلمة مرور الخاصة بك. "
-          + "اضغط على الرابط التالي لاختيار كلمة مرور جديدة:</p>\n"
-          + "    <p>URL</p>\n"
-          + "    <p>إذا لم تطلب إسترجاع كلمة المرور ،يمكنك تجاهل هذه الرسالة.</p>\n"
-          + "    <br>\n"
-          + "    <span style=\"display: none;\">RANDOM</span>\n"
-          + "</div>";
+  private static final String RESET_PASSWORD_EMAIL_PATH =
+      "emailTemplates/reset_password_email.html";
+
   @Autowired
   UserRepo userRepo;
   @Autowired
@@ -90,7 +89,8 @@ public class AuthenticationController extends BaseController {
 
   @PutMapping(value = REGISTER_WITH_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<EmailRegistrationResponse> registerWithEmail(
-      @RequestBody EmailRegistrationRequestBody body) throws MessagingException {
+      @RequestBody EmailRegistrationRequestBody body)
+      throws MessagingException, UnsupportedEncodingException {
     EmailRegistrationResponse response = new EmailRegistrationResponse();
     body.validate();
 
@@ -199,7 +199,7 @@ public class AuthenticationController extends BaseController {
 
   @PostMapping(value = RESET_PASSWORD_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<ResetPasswordResponse> resetPassword(
-      @RequestBody ResetPasswordRequest request) throws MessagingException {
+      @RequestBody ResetPasswordRequest request) throws MessagingException, IOException {
     request.validate();
     Optional<User> user = userRepo.findByEmail(request.getEmail());
     if (user.isPresent()) {
@@ -328,27 +328,37 @@ public class AuthenticationController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private void sendVerificationEmail(String email, int pin) throws MessagingException {
+  private void sendVerificationEmail(String email, int pin)
+      throws MessagingException, UnsupportedEncodingException {
     // TODO(issue#73): Beautify email confirmation body.
-    String subject = "تنافسوا | تأكيد البريد الإلكتروني";
+    String subject = "تأكيد البريد الإلكتروني";
     String body = "The pin is: " + pin;
     sendEmail(email, subject, body);
   }
 
-  private void sendResetPasswordEmail(String email, String token) throws MessagingException {
+  private void sendResetPasswordEmail(String email, String token)
+      throws MessagingException, IOException {
     // TODO(issue#73): Beautify email reset password body.
-    String subject = "تنافسوا | إعادة ضبط كلمة المرور";
-    String url = String.format("https://tanafaso.com/update_password?token=%s", token);
+    String subject = "إعادة ضبط كلمة المرور";
+    String url = String.format("https://www.tanafaso.com/update_password?token=%s", token);
     // adding a random number at the end to make sure that gmail does not collapse the email ending.
-    String text = RESET_PASSWORD_TEMPLATE.replaceAll("URL", url)
-        .replaceAll("RANDOM", "" + new Random().nextInt(100));
+    String text = getResetPasswordEmailTemplate().replaceAll("URL", url)
+        .replaceAll("RANDOM", RandomStringUtils.randomNumeric(2));
     sendEmail(email, subject, text);
   }
 
-  private void sendEmail(String email, String subject, String body) throws MessagingException {
+  private String getResetPasswordEmailTemplate() throws IOException {
+    return IOUtils.toString(
+        new InputStreamReader(new ClassPathResource(RESET_PASSWORD_EMAIL_PATH).getInputStream()));
+  }
+
+  private void sendEmail(String email, String subject, String body)
+      throws MessagingException, UnsupportedEncodingException {
     MimeMessage mimeMessage = javaMailSender.createMimeMessage();
     MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
-    helper.setFrom("azkar_email_name@azkaremaildomain.com");
+    InternetAddress fromAddress = new InternetAddress("azkar_email_name@azkaremaildomain.com",
+        "تنافسوا");
+    helper.setFrom(fromAddress);
     helper.setSubject(subject);
     helper.setText(body, /* html= */ true);
     helper.setTo(email);
