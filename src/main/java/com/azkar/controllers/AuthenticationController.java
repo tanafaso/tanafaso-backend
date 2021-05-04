@@ -19,22 +19,30 @@ import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import lombok.Data;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -58,13 +66,14 @@ public class AuthenticationController extends BaseController {
   private static final long RESET_PASSWORD_EXPIRY_TIME_SECONDS = 30 * 60;
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
+  private static final String RESET_PASSWORD_EMAIL_TEMPLATE_PATH =
+      "emailTemplates/reset_password_email.html";
+  private static final String VERIFY_EMAIL_TEMPLATE_PATH = "emailTemplates/verify_email.html";
 
   @Autowired
   UserRepo userRepo;
-
   @Autowired
   UserService userService;
-
   @Autowired
   JwtService jwtService;
   @Autowired
@@ -81,7 +90,8 @@ public class AuthenticationController extends BaseController {
 
   @PutMapping(value = REGISTER_WITH_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<EmailRegistrationResponse> registerWithEmail(
-      @RequestBody EmailRegistrationRequestBody body) {
+      @RequestBody EmailRegistrationRequestBody body)
+      throws MessagingException, IOException {
     EmailRegistrationResponse response = new EmailRegistrationResponse();
     body.validate();
 
@@ -190,7 +200,7 @@ public class AuthenticationController extends BaseController {
 
   @PostMapping(value = RESET_PASSWORD_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<ResetPasswordResponse> resetPassword(
-      @RequestBody ResetPasswordRequest request) {
+      @RequestBody ResetPasswordRequest request) throws MessagingException, IOException {
     request.validate();
     Optional<User> user = userRepo.findByEmail(request.getEmail());
     if (user.isPresent()) {
@@ -276,7 +286,6 @@ public class AuthenticationController extends BaseController {
     return responseEntity;
   }
 
-
   /**
    * This mapping should only be used in case of a logged in user who wants to connect their account
    * with facebook. Note, that maybe they have already connected an account; in that case the new
@@ -320,34 +329,43 @@ public class AuthenticationController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private void sendVerificationEmail(String email, int pin) {
+  private void sendVerificationEmail(String email, int pin)
+      throws MessagingException, IOException {
     // TODO(issue#73): Beautify email confirmation body.
-    String subject = "Tanafaso | Verify Email";
-    String body = "The pin is: " + pin;
-    sendEmail(email, subject, body);
-  }
-
-  private void sendResetPasswordEmail(String email, String token) {
-    // TODO(issue#73): Beautify email reset password body.
-    String subject = "Tanafaso | Reset Password";
-    String url = String.format("https://tanafaso.com/update_password?token=%s", token);
-    String text = String.join("\n",
-        "مرحبا،",
-        "لقد تلقينا طلبًا لاسترجاع كلمة مرور الخاصة بك."
-            + " اضغط على الرابط التالي لاختيار كلمة مرور جديدة:",
-        url,
-        "",
-        "إذا لم تطلب إسترجاع كلمة المرور ،يمكنك تجاهل هذه الرسالة.");
+    String subject = "تأكيد البريد الإلكتروني";
+    String text = getEmailTemplate(VERIFY_EMAIL_TEMPLATE_PATH)
+        .replaceAll("PIN", "" + pin);
     sendEmail(email, subject, text);
   }
 
-  private void sendEmail(String email, String subject, String body) {
-    SimpleMailMessage message = new SimpleMailMessage();
-    message.setFrom("azkar_email_name@azkaremaildomain.com");
-    message.setSubject(subject);
-    message.setText(body);
-    message.setTo(email);
-    javaMailSender.send(message);
+  private void sendResetPasswordEmail(String email, String token)
+      throws MessagingException, IOException {
+    // TODO(issue#73): Beautify email reset password body.
+    String subject = "إعادة ضبط كلمة المرور";
+    String url = String.format("https://www.tanafaso.com/update_password?token=%s", token);
+    // adding a random number at the end to make sure that gmail does not collapse the email ending.
+    String text = getEmailTemplate(RESET_PASSWORD_EMAIL_TEMPLATE_PATH)
+        .replaceAll("URL", url)
+        .replaceAll("RANDOM", RandomStringUtils.randomNumeric(2));
+    sendEmail(email, subject, text);
+  }
+
+  private String getEmailTemplate(String path) throws IOException {
+    return IOUtils.toString(
+        new InputStreamReader(new ClassPathResource(path).getInputStream()));
+  }
+
+  private void sendEmail(String email, String subject, String body)
+      throws MessagingException, UnsupportedEncodingException {
+    MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+    MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+    InternetAddress fromAddress = new InternetAddress("azkar_email_name@azkaremaildomain.com",
+        "تنافسوا");
+    helper.setFrom(fromAddress);
+    helper.setSubject(subject);
+    helper.setText(body, /* html= */ true);
+    helper.setTo(email);
+    javaMailSender.send(mimeMessage);
   }
 
   private int generatePin() {
