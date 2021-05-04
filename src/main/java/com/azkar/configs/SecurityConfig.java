@@ -22,6 +22,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   public static final String[] PRE_AUTHENTICAITON_ALLOWED_ENDPOINT_PATTERNS = {
+      "/contact",
+      "/feedback",
       "/images/**",
       UpdatePasswordController.UPDATE_PASSWORD_PATH + "/**", // allow all subdirectories
       AuthenticationController.REGISTER_WITH_EMAIL_PATH,
