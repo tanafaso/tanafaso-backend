@@ -16,6 +16,7 @@ import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequ
 import com.azkar.payload.authenticationcontroller.responses.EmailLoginResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
 import com.azkar.payload.homecontroller.GetHomeResponse;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -116,6 +117,7 @@ public class LoginWithEmailTest extends TestBase {
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
+  @Ignore("issue/108: Email tests are flaky")
   @Test
   public void loginWithEmail_emailConfirmationSentAndStillPending_shouldNotSucceed()
       throws Exception {
