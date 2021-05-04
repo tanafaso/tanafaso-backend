@@ -331,7 +331,6 @@ public class AuthenticationController extends BaseController {
 
   private void sendVerificationEmail(String email, int pin)
       throws MessagingException, IOException {
-    // TODO(issue#73): Beautify email confirmation body.
     String subject = "تأكيد البريد الإلكتروني";
     String text = getEmailTemplate(VERIFY_EMAIL_TEMPLATE_PATH)
         .replaceAll("PIN", "" + pin);
@@ -340,7 +339,6 @@ public class AuthenticationController extends BaseController {
 
   private void sendResetPasswordEmail(String email, String token)
       throws MessagingException, IOException {
-    // TODO(issue#73): Beautify email reset password body.
     String subject = "إعادة ضبط كلمة المرور";
     String url = String.format("https://www.tanafaso.com/update_password?token=%s", token);
     // adding a random number at the end to make sure that gmail does not collapse the email ending.
