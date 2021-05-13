@@ -14,9 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller()
 public class ContactUsController {
 
-  private static final Logger logger = LoggerFactory.getLogger(ContactUsController.class);
-
   public static final String CONTACT_US_PAGE_PATH = "contact_us_page";
+  private static final Logger logger = LoggerFactory.getLogger(ContactUsController.class);
   private static final String SUCCESS_MESSAGE = "تم إرسال رسالتك بنجاح.";
   private static final String ERROR_MESSAGE = "حدث خطأ. برجاء المحاولة مرة أخرى.";
   private static final String FEEDBACK_FILE_PATH = "feedback.csv";

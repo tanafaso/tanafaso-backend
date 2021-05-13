@@ -18,15 +18,14 @@ import org.springframework.core.io.ClassPathResource;
 @Getter
 public class AzkarCacher {
 
+  private static final Logger logger = LoggerFactory.getLogger(AzkarCacher.class);
   @Value("${files.azkar}")
   public String AZKAR_FILE;
-  private static final Logger logger = LoggerFactory.getLogger(AzkarCacher.class);
-
   ArrayList<Zekr> azkar = new ArrayList<>();
 
   @Bean
   @Primary
-  public AzkarCacher parseFromCsv() {
+  public AzkarCacher parseAzkarFromCsv() {
     AzkarCacher cacher = new AzkarCacher();
     try {
       CSVReader csvReader =
@@ -34,7 +33,7 @@ public class AzkarCacher {
       String[] values;
       while ((values = csvReader.readNext()) != null) {
         if (values.length != 2) {
-          throw new IOException("Didn't find exactly 2 columns per row in CSV file.");
+          throw new IOException("Didn't find exactly 2 columns per row in CSV file: " + AZKAR_FILE);
         }
 
         Zekr zekr = Zekr.builder().id(Integer.parseInt(values[0])).zekr(values[1]).build();
