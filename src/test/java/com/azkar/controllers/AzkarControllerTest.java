@@ -1,22 +1,17 @@
 package com.azkar.controllers;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
+import com.azkar.configs.AzkarCacher;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.User;
 import com.azkar.entities.Zekr;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.azkarcontroller.responses.GetAzkarResponse;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.ArrayList;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.StringTokenizer;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -32,21 +27,12 @@ public class AzkarControllerTest extends TestBase {
     User user = UserFactory.getNewUser();
     addNewUser(user);
 
-    List<Zekr> expectedAzkar = new ArrayList<>();
-    // Read the CSV file lines using a different way than the controller to validate the response.
-    // Note: CSV cells with strings are saved using quotations which is read by the
-    // BufferedReader which is different from CSVReader which is used in the controller under test.
-    BufferedReader bufferedReader =
-        new BufferedReader(
-            new FileReader(resourceLoader.getClassLoader().getResource("azkar.csv").getFile()));
-    while (bufferedReader.ready()) {
-      String line = bufferedReader.readLine();
-      assertThat(line.length(), greaterThanOrEqualTo(2));
-      StringTokenizer stringTokenizer = new StringTokenizer(line, ",");
-      assertThat(stringTokenizer.countTokens(), equalTo(2));
-      expectedAzkar.add(new Zekr(Integer.parseInt(stringTokenizer.nextToken()),
-          stringTokenizer.nextToken()));
-    }
+    String zekr1 = "اللهم أنت ربي، لا إله إلا أنت، خلَقتني وأنا عبدك، وأنا على عهدك ووعدك ما "
+        + "استطعت، أعوذ بك من شرِّ ما صنعت، أبُوء لك بنعمتك عليّ وأبوء بذنبي، فاغفر لي؛ فإنه لا يغفر الذنوب إلا أنت'، قال: 'مَن قالها من النهار موقنًا بها، فمات من يومه قبل أن يُمسي، فهو من أهل الجنة، ومن قالها من الليل وهو مُوقن بها، فمات قبل أن يُصبح، فهو من أهل الجنة";
+    String zekr2 = "اللهم بك أصبحنا، وبك أمسينا، وبك نحيا، وبك نموت، وإليك النشور";
+    List<Zekr> expectedAzkar = ImmutableList.of(
+        Zekr.builder().id(0).zekr(zekr1).build(),
+        Zekr.builder().id(1).zekr(zekr2).build());
 
     GetAzkarResponse expectedResponse = new GetAzkarResponse();
     expectedResponse.setData(expectedAzkar);
