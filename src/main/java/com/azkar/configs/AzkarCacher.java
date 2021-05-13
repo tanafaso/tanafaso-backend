@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -17,7 +18,8 @@ import org.springframework.core.io.ClassPathResource;
 @Getter
 public class AzkarCacher {
 
-  private static final String AZKAR_FILE = "azkar.csv";
+  @Value("${files.azkar}")
+  public String AZKAR_FILE;
   private static final Logger logger = LoggerFactory.getLogger(AzkarCacher.class);
 
   ArrayList<Zekr> azkar = new ArrayList<>();
