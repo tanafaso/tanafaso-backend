@@ -20,7 +20,7 @@ public class AzkarCacher {
 
   private static final Logger logger = LoggerFactory.getLogger(AzkarCacher.class);
   @Value("${files.azkar}")
-  public String AZKAR_FILE;
+  public String azkarFile;
   ArrayList<Zekr> azkar = new ArrayList<>();
 
   @Bean
@@ -29,11 +29,11 @@ public class AzkarCacher {
     AzkarCacher cacher = new AzkarCacher();
     try {
       CSVReader csvReader =
-          new CSVReader(new InputStreamReader(new ClassPathResource(AZKAR_FILE).getInputStream()));
+          new CSVReader(new InputStreamReader(new ClassPathResource(azkarFile).getInputStream()));
       String[] values;
       while ((values = csvReader.readNext()) != null) {
         if (values.length != 2) {
-          throw new IOException("Didn't find exactly 2 columns per row in CSV file: " + AZKAR_FILE);
+          throw new IOException("Didn't find exactly 2 columns per row in CSV file: " + azkarFile);
         }
 
         Zekr zekr = Zekr.builder().id(Integer.parseInt(values[0])).zekr(values[1]).build();
@@ -41,7 +41,7 @@ public class AzkarCacher {
       }
 
       if (azkar.size() == 0) {
-        throw new IOException("Error while parsing file: " + AZKAR_FILE);
+        throw new IOException("Error while parsing file: " + azkarFile);
       }
       cacher.azkar = azkar;
     } catch (Exception e) {
