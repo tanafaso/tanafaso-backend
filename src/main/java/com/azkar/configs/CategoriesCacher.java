@@ -24,7 +24,7 @@ public class CategoriesCacher {
 
   private static final Logger logger = LoggerFactory.getLogger(CategoriesCacher.class);
   @Value("${files.categories}")
-  public String CATEGORIES_FILE;
+  public String categoriesFile;
   @Autowired
   AzkarCacher azkarCacher;
   List<Category> categories = new ArrayList<>();
@@ -39,12 +39,12 @@ public class CategoriesCacher {
     try {
       CSVReader csvReader =
           new CSVReader(
-              new InputStreamReader(new ClassPathResource(CATEGORIES_FILE).getInputStream()));
+              new InputStreamReader(new ClassPathResource(categoriesFile).getInputStream()));
       String[] values;
       while ((values = csvReader.readNext()) != null) {
         if (values.length < 2) {
           throw new IOException(
-              "Found less than 2 columns per row in CSV file: " + CATEGORIES_FILE);
+              "Found less than 2 columns per row in CSV file: " + categoriesFile);
         }
 
         List<Zekr> azkarInCategory = new ArrayList<>();
@@ -59,7 +59,7 @@ public class CategoriesCacher {
       }
 
       if (categories.size() == 0) {
-        throw new IOException("Error while parsing file: " + CATEGORIES_FILE);
+        throw new IOException("Error while parsing file: " + categoriesFile);
       }
       categoriesCacher.categories = categories;
     } catch (Exception e) {
