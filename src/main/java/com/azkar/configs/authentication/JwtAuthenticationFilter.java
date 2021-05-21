@@ -1,6 +1,7 @@
 package com.azkar.configs.authentication;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.azkar.configs.SecurityConfig;
 import com.azkar.entities.User;
 import com.azkar.payload.ResponseBase.Status;
@@ -63,24 +64,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     try {
       String userId = jwtService.getVerifier().verify(token).getSubject();
-      User currentUser = userService.loadUserById(userId);
-      if (currentUser != null) {
-        UserPrincipal userPrincipal = new UserPrincipal();
-        userPrincipal.setUserId(userId);
-        userPrincipal.setUsername(currentUser.getUsername());
-        logger.info(String.format("The username of the requesting user: %s",
-            currentUser.getUsername()));
-        Authentication authToken =
-            new PreAuthenticatedAuthenticationToken(
-                userPrincipal, null, userPrincipal.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authToken);
-      }
-
+      populateSecurityContextWithUser(userId);
+      filterChain.doFilter(httpServletRequest, httpServletResponse);
+    } catch (TokenExpiredException exception) {
+      logger.info("Token used is expired.");
+      String userId = jwtService.decode(token).getSubject();
+      populateSecurityContextWithUser(userId);
       filterChain.doFilter(httpServletRequest, httpServletResponse);
     } catch (JWTVerificationException exception) {
       logger.info("Token used is invalid.");
-
       setUnAuthenticatedResponse(httpServletResponse);
+    }
+  }
+
+  private void populateSecurityContextWithUser(String userId) {
+    User currentUser = userService.loadUserById(userId);
+    if (currentUser != null) {
+      UserPrincipal userPrincipal = new UserPrincipal();
+      userPrincipal.setUserId(userId);
+      userPrincipal.setUsername(currentUser.getUsername());
+      logger.info(String.format("The username of the requesting user: %s",
+              currentUser.getUsername()));
+      Authentication authToken =
+              new PreAuthenticatedAuthenticationToken(
+                      userPrincipal, null, userPrincipal.getAuthorities());
+      SecurityContextHolder.getContext().setAuthentication(authToken);
     }
   }
 
