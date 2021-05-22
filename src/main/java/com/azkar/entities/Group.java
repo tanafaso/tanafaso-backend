@@ -1,6 +1,7 @@
 package com.azkar.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -23,6 +24,9 @@ public class Group extends EntityBase {
 
   @Id
   private String id;
+  @Deprecated
+  @JsonProperty("binary")
+  private boolean isBinary = true;
   // Group name can be null in case of auto-generated groups. Groups are auto-generated in the
   // following two cases.
   // 1- A group is auto-generated for every pair of friends so that it is easier to challenge a
