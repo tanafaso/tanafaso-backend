@@ -303,13 +303,6 @@ public class GroupChallengeTest extends TestBase {
     assertThat(anotherGroupAllChallenges.getData(), empty());
   }
 
-  private User createNewGroupMember(Group group) throws Exception {
-    User newGroupMember = getNewRegisteredUser();
-    User groupAdmin = userRepo.findById(group.getCreatorId()).get();
-    azkarApi.addUserToGroup(groupAdmin, newGroupMember, group.getId());
-    return newGroupMember;
-  }
-
   private GetChallengesResponse getAllChallengesInGroup(User user, String groupId)
       throws Exception {
     ResultActions resultActions = azkarApi.getAllChallengesInGroup(user, groupId)
@@ -320,18 +313,6 @@ public class GroupChallengeTest extends TestBase {
   private GetChallengesResponse getUserAllChallenges(User user) throws Exception {
     ResultActions resultActions = azkarApi.getAllChallenges(user).andExpect(status().isOk());
     return getResponse(resultActions, GetChallengesResponse.class);
-  }
-
-  private ResultActions inviteUserToGroup(User invitingUser, User invitedUser, String groupId)
-      throws Exception {
-    return performPutRequest(invitingUser, String.format("/groups/%s/invite/%s", groupId,
-        invitedUser.getId()),
-        /*body=*/ null);
-  }
-
-  private ResultActions acceptInvitationToGroup(User user, String groupId)
-      throws Exception {
-    return performPutRequest(user, String.format("/groups/%s/accept/", groupId), /*body=*/ null);
   }
 
   private ResultActions addNewValidChallenge(User creatingUser, String challengeNamePrefix,
