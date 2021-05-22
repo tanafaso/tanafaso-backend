@@ -84,10 +84,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       userPrincipal.setUserId(userId);
       userPrincipal.setUsername(currentUser.getUsername());
       logger.info(String.format("The username of the requesting user: %s",
-              currentUser.getUsername()));
+          currentUser.getUsername()));
       Authentication authToken =
-              new PreAuthenticatedAuthenticationToken(
-                      userPrincipal, null, userPrincipal.getAuthorities());
+          new PreAuthenticatedAuthenticationToken(
+              userPrincipal, null, userPrincipal.getAuthorities());
       SecurityContextHolder.getContext().setAuthentication(authToken);
     }
   }

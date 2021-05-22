@@ -285,20 +285,20 @@ public class FriendshipTest extends TestBase {
     // user1 expected friends.
     List<Friend> expectedUser1Friends = new ArrayList();
     expectedUser1Friends.add(Friend.builder()
-        .userId(user2.getId())
-        .username(user2.getUsername())
-        .firstName(user2.getFirstName())
-        .lastName(user2.getLastName())
-        .isPending(false)
-        .build()
+                                   .userId(user2.getId())
+                                   .username(user2.getUsername())
+                                   .firstName(user2.getFirstName())
+                                   .lastName(user2.getLastName())
+                                   .isPending(false)
+                                   .build()
     );
     expectedUser1Friends.add(Friend.builder()
-        .userId(user3.getId())
-        .username(user3.getUsername())
-        .firstName(user3.getFirstName())
-        .lastName(user3.getLastName())
-        .isPending(false)
-        .build()
+                                   .userId(user3.getId())
+                                   .username(user3.getUsername())
+                                   .firstName(user3.getFirstName())
+                                   .lastName(user3.getLastName())
+                                   .isPending(false)
+                                   .build()
     );
 
     MvcResult mvcResult =
@@ -315,11 +315,11 @@ public class FriendshipTest extends TestBase {
     // user5 expected friends.
     List<Friend> expectedUser5Friends = new ArrayList();
     expectedUser5Friends.add(Friend.builder()
-        .userId(user1.getId())
-        .username(user1.getUsername())
-        .firstName(user1.getFirstName())
-        .lastName(user1.getLastName()).isPending(true)
-        .build()
+                                   .userId(user1.getId())
+                                   .username(user1.getUsername())
+                                   .firstName(user1.getFirstName())
+                                   .lastName(user1.getLastName()).isPending(true)
+                                   .build()
     );
     mvcResult = performGetRequest(user5, "/friends")
         .andExpect(status().isOk())

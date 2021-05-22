@@ -116,12 +116,12 @@ public class AuthenticationController extends BaseController {
 
     registrationPinRepo.save(
         RegistrationEmailConfirmationState.builder()
-            .email(body.getEmail())
-            .password(passwordEncoder.encode(body.getPassword()))
-            .pin(pin)
-            .firstName(body.getFirstName())
-            .lastName(body.getLastName())
-            .build());
+                                          .email(body.getEmail())
+                                          .password(passwordEncoder.encode(body.getPassword()))
+                                          .pin(pin)
+                                          .firstName(body.getFirstName())
+                                          .lastName(body.getLastName())
+                                          .build());
     return ResponseEntity.ok(response);
   }
 
@@ -162,7 +162,7 @@ public class AuthenticationController extends BaseController {
     body.validate();
 
     if (!(SecurityContextHolder.getContext()
-        .getAuthentication() instanceof AnonymousAuthenticationToken)) {
+                               .getAuthentication() instanceof AnonymousAuthenticationToken)) {
       response
           .setStatus(new Status(Status.USER_ALREADY_LOGGED_IN_ERROR));
       return ResponseEntity.badRequest().body(response);
@@ -236,7 +236,7 @@ public class AuthenticationController extends BaseController {
     FacebookAuthenticationResponse response = new FacebookAuthenticationResponse();
 
     if (!(SecurityContextHolder.getContext()
-        .getAuthentication() instanceof AnonymousAuthenticationToken)) {
+                               .getAuthentication() instanceof AnonymousAuthenticationToken)) {
       response
           .setStatus(new Status(Status.USER_ALREADY_LOGGED_IN_ERROR));
       return ResponseEntity.badRequest().body(response);
@@ -263,11 +263,11 @@ public class AuthenticationController extends BaseController {
       }
 
       UserFacebookData userFacebookData = UserFacebookData.builder()
-          .accessToken(requestBody.getToken())
-          .userId(facebookResponse.id)
-          .firstName(facebookResponse.firstName)
-          .lastName(facebookResponse.lastName)
-          .email(facebookResponse.email).build();
+                                                          .accessToken(requestBody.getToken())
+                                                          .userId(facebookResponse.id)
+                                                          .firstName(facebookResponse.firstName)
+                                                          .lastName(facebookResponse.lastName)
+                                                          .email(facebookResponse.email).build();
       user.setUserFacebookData(userFacebookData);
       user.setFirstName(userFacebookData.getFirstName());
       user.setLastName(userFacebookData.getLastName());
@@ -308,7 +308,7 @@ public class AuthenticationController extends BaseController {
 
     User user =
         userRepo.findByUserFacebookData_UserId(facebookResponse.getId())
-            .orElse(userRepo.findById(getCurrentUser().getUserId()).get());
+                .orElse(userRepo.findById(getCurrentUser().getUserId()).get());
     if (!user.getId().equals(getCurrentUser().getUserId())) {
       logger.warn("The user is attempting to connect a facebook account already connected to "
           + "another account.");
@@ -318,11 +318,11 @@ public class AuthenticationController extends BaseController {
     }
 
     UserFacebookData userFacebookData = UserFacebookData.builder()
-        .accessToken(requestBody.getToken())
-        .userId(facebookResponse.id)
-        .firstName(facebookResponse.firstName)
-        .lastName(facebookResponse.lastName)
-        .email(facebookResponse.email).build();
+                                                        .accessToken(requestBody.getToken())
+                                                        .userId(facebookResponse.id)
+                                                        .firstName(facebookResponse.firstName)
+                                                        .lastName(facebookResponse.lastName)
+                                                        .email(facebookResponse.email).build();
     user.setUserFacebookData(userFacebookData);
     userRepo.save(user);
 

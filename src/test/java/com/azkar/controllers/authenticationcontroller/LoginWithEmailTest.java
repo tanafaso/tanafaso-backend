@@ -133,7 +133,7 @@ public class LoginWithEmailTest extends TestBase {
 
     EmailLoginRequestBody emailLoginRequestBody =
         EmailLoginRequestBody.builder().email(emailRegistrationRequestBody.getEmail())
-            .password(emailRegistrationRequestBody.getPassword()).build();
+                             .password(emailRegistrationRequestBody.getPassword()).build();
     EmailLoginResponse expectedResponse = new EmailLoginResponse();
     expectedResponse.setStatus(new Status(Status.EMAIL_NOT_VERIFIED_ERROR));
 

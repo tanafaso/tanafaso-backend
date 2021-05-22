@@ -116,10 +116,6 @@ public class AzkarApi {
         JsonHandler.toJson(AddGroupRequest.builder().name(name).build()));
   }
 
-  public ResultActions addGroup(User user, AddGroupRequest body) throws Exception {
-    return httpClient.performPostRequest(user, "/groups", JsonHandler.toJson(body));
-  }
-
   public ResultActions getGroup(User user, String groupId) throws Exception {
     return httpClient.performGetRequest(user, String.format("/groups/%s", groupId));
   }
@@ -132,23 +128,11 @@ public class AzkarApi {
     return httpClient.performGetRequest(user, String.format("/groups/%s/leaderboard", groupId));
   }
 
-  public ResultActions inviteUserToGroup(User invitingUser, User invitedUser, String groupId)
+  public ResultActions addUserToGroup(User invitingUser, User invitedUser, String groupId)
       throws Exception {
-    return httpClient.performPutRequest(invitingUser, String.format("/groups/%s/invite/%s", groupId,
+    return httpClient.performPutRequest(invitingUser, String.format("/groups/%s/add/%s", groupId,
         invitedUser.getId()),
         /*body=*/ null);
-  }
-
-  public ResultActions acceptInvitationToGroup(User user, String groupId)
-      throws Exception {
-    return httpClient.performPutRequest(user, String.format("/groups/%s/accept/", groupId),
-        /*body=*/ null);
-  }
-
-  public ResultActions addUserToGroup(User user, User invitingUser, String groupId)
-      throws Exception {
-    inviteUserToGroup(invitingUser, user, groupId);
-    return acceptInvitationToGroup(user, groupId);
   }
 
   public ResultActions resetPassword(String email) throws Exception {

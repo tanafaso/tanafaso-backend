@@ -65,11 +65,10 @@ public class User extends EntityBase {
 
     @NotNull
     private String groupId;
-    @NotNull
+    // Group name can be empty or null in case it is an auto-generated group.
     private String groupName;
-    // Can be null in case of a non-pending group.
+    @NotNull
     private String invitingUserId;
-    private boolean isPending;
     @Default
     private int monthScore = 0;
     @Default

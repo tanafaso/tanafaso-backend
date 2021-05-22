@@ -1,5 +1,6 @@
 package com.azkar.controllers.groupcontroller;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -13,15 +14,13 @@ import com.azkar.entities.User.UserGroup;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
-import com.azkar.payload.groupcontroller.responses.AcceptGroupInvitationResponse;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
+import com.azkar.payload.groupcontroller.responses.AddToGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse.UserScore;
 import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
-import com.azkar.payload.groupcontroller.responses.InviteToGroupResponse;
 import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
-import com.azkar.payload.groupcontroller.responses.RejectGroupInvitationResponse;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import java.util.ArrayList;
@@ -75,12 +74,12 @@ public class GroupControllerTest extends TestBase {
   }
 
   @Test
-  public void invite_normalScenario_shouldSucceed() throws Exception {
-    InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
-    inviteUserToGroup(user1, user2, user1Group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+  public void addUser_normalScenario_shouldSucceed() throws Exception {
+    AddToGroupResponse expectedResponse = new AddToGroupResponse();
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, user1Group.getId())
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
@@ -89,29 +88,33 @@ public class GroupControllerTest extends TestBase {
     UserGroup user2Group = user2Groups.get(0);
     assertThat(user2Group.getGroupId(), is(user1Group.getId()));
     assertThat(user2Group.getInvitingUserId(), is(user1.getId()));
-    assertThat(user2Group.isPending(), is(true));
+
+    Group updatedGroup = groupRepo.findById(user1Group.getId()).get();
+    assertThat(updatedGroup.getUsersIds().size(), is(2));
+    assertThat(updatedGroup.getUsersIds().get(0), equalTo(user1.getId()));
+    assertThat(updatedGroup.getUsersIds().get(1), equalTo(user2.getId()));
   }
 
   @Test
-  public void invite_invalidOtherUser_shouldNotSucceed() throws Exception {
-    InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
+  public void addUser_invalidOtherUser_shouldNotSucceed() throws Exception {
+    AddToGroupResponse expectedResponse = new AddToGroupResponse();
     expectedResponse.setStatus(new Status(Status.INVITED_USER_INVALID_ERROR));
-    inviteUserToGroup(user1, invalidUser, user1Group.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, invalidUser, user1Group.getId())
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
-  public void invite_invalidGroup_shouldNotSucceed() throws Exception {
+  public void addUser_invalidGroup_shouldNotSucceed() throws Exception {
     Group unSavedGroup = GroupFactory.getNewGroup(user1.getId());
 
-    InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
+    AddToGroupResponse expectedResponse = new AddToGroupResponse();
     expectedResponse.setStatus(new Status(Status.GROUP_INVALID_ERROR));
-    inviteUserToGroup(user1, user2, unSavedGroup.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, unSavedGroup.getId())
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
@@ -121,26 +124,26 @@ public class GroupControllerTest extends TestBase {
   }
 
   @Test
-  public void invite_otherUserAlreadyMember_shouldNotSucceed() throws Exception {
-    addUserToGroup(user2, /*invitingUser=*/user1, user1Group.getId());
+  public void addUser_otherUserAlreadyMember_shouldNotSucceed() throws Exception {
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, user1Group.getId());
 
-    InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
+    AddToGroupResponse expectedResponse = new AddToGroupResponse();
     expectedResponse.setStatus(new Status(Status.INVITED_USER_ALREADY_MEMBER_ERROR));
-    inviteUserToGroup(user1, user2, user1Group.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, user1Group.getId())
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
   }
 
   @Test
-  public void invite_invitingUserIsNotMember_shouldNotSucceed() throws Exception {
-    InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
+  public void addUser_invitingUserIsNotMember_shouldNotSucceed() throws Exception {
+    AddToGroupResponse expectedResponse = new AddToGroupResponse();
     expectedResponse.setStatus(new Status(Status.INVITING_USER_IS_NOT_MEMBER_ERROR));
-    inviteUserToGroup(user2, user3, user1Group.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+    azkarApi.addUserToGroup(/*invitingUser=*/user2, user3, user1Group.getId())
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     User user3InRepo = userRepo.findById(user3.getId()).get();
     List<UserGroup> user3Groups = user3InRepo.getUserGroups();
@@ -148,240 +151,8 @@ public class GroupControllerTest extends TestBase {
   }
 
   @Test
-  public void invite_invitingUserAlreadyInvitedOtherUser_shouldNotSucceed() throws Exception {
-    InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
-    inviteUserToGroup(user1, user2, user1Group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-
-    expectedResponse = new InviteToGroupResponse();
-    expectedResponse.setStatus(new Status(Status.USER_ALREADY_INVITED_ERROR));
-    inviteUserToGroup(user1, user2, user1Group.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-
-    User user2InRepo = userRepo.findById(user2.getId()).get();
-    List<UserGroup> user2Groups = user2InRepo.getUserGroups();
-    assertThat(user2Groups.size(), is(1));
-
-    UserGroup user2Group = user2Groups.get(0);
-    assertThat(user2Group.getGroupId(), is(user1Group.getId()));
-    assertThat(user2Group.getInvitingUserId(), is(user1.getId()));
-    assertThat(user2Group.isPending(), is(true));
-  }
-
-  @Test
-  public void invite_invitedUserAlreadyInvitedByAnotherUser_shouldSucceed() throws Exception {
-    // Make user2 a member of the group.
-    user1Group.getUsersIds().add(user2.getId());
-    groupRepo.save(user1Group);
-
-    InviteToGroupResponse expectedResponse = new InviteToGroupResponse();
-    inviteUserToGroup(user1, user3, user1Group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-
-    expectedResponse = new InviteToGroupResponse();
-    inviteUserToGroup(user2, user3, user1Group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-
-    User user3InRepo = userRepo.findById(user3.getId()).get();
-    List<UserGroup> user3Groups = user3InRepo.getUserGroups();
-    assertThat(user3Groups.size(), is(2));
-
-    UserGroup user3GroupInvitation1 = user3Groups.get(0);
-    assertThat(user3GroupInvitation1.getGroupId(), is(user1Group.getId()));
-    assertThat(user3GroupInvitation1.getInvitingUserId(), is(user1.getId()));
-    assertThat(user3GroupInvitation1.isPending(), is(true));
-
-    UserGroup user3GroupInvitation2 = user3Groups.get(1);
-    assertThat(user3GroupInvitation2.getGroupId(), is(user1Group.getId()));
-    assertThat(user3GroupInvitation2.getInvitingUserId(), is(user2.getId()));
-    assertThat(user3GroupInvitation2.isPending(), is(true));
-
-  }
-
-  @Test
-  public void accept_normalScenario_shouldSucceed() throws Exception {
-    // user1 invites user2.
-    InviteToGroupResponse expectedInviteToGroupResponse = new InviteToGroupResponse();
-    inviteUserToGroup(user1, user2, user1Group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedInviteToGroupResponse)));
-
-    // user2 accepts invitation.
-    AcceptGroupInvitationResponse expectedAcceptGroupInvitationResponse =
-        new AcceptGroupInvitationResponse();
-    acceptInvitationToGroup(user2, user1Group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedAcceptGroupInvitationResponse)));
-
-    User user2InRepo = userRepo.findById(user2.getId()).get();
-    List<UserGroup> user2Groups = user2InRepo.getUserGroups();
-    assertThat(user2Groups.size(), is(1));
-
-    UserGroup user2Group = user2Groups.get(0);
-    assertThat(user2Group.getGroupId(), is(user1Group.getId()));
-    assertThat(user2Group.isPending(), is(false));
-
-    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
-    assertThat(user1GroupInRepo.getUsersIds().size(), is(2));
-  }
-
-  @Test
-  public void accept_invalidGroup_shouldNotSucceed() throws Exception {
-    Group unSavedGroup = GroupFactory.getNewGroup(user1.getId());
-
-    AcceptGroupInvitationResponse expectedResponse = new AcceptGroupInvitationResponse();
-    expectedResponse.setStatus(new Status(Status.GROUP_INVALID_ERROR));
-    inviteUserToGroup(user1, user2, unSavedGroup.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-
-    User user2InRepo = userRepo.findById(user2.getId()).get();
-    List<UserGroup> user2Groups = user2InRepo.getUserGroups();
-    assertThat(user2Groups.size(), is(0));
-
-    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
-    assertThat(user1GroupInRepo.getUsersIds().size(), is(1));
-  }
-
-  @Test
-  public void accept_notInvited_shouldNotSucceed() throws Exception {
-    AcceptGroupInvitationResponse expectedResponse =
-        new AcceptGroupInvitationResponse();
-    expectedResponse.setStatus(new Status(Status.USER_NOT_INVITED_ERROR));
-    acceptInvitationToGroup(user2, user1Group.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-
-    User user2InRepo = userRepo.findById(user2.getId()).get();
-    List<UserGroup> user2Groups = user2InRepo.getUserGroups();
-    assertThat(user2Groups.size(), is(0));
-
-    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
-    assertThat(user1GroupInRepo.getUsersIds().size(), is(1));
-  }
-
-  @Test
-  public void accept_AlreadyMember_shouldNotSucceed() throws Exception {
-    // user1 invites user2.
-    InviteToGroupResponse expectedInviteToGroupResponse = new InviteToGroupResponse();
-    inviteUserToGroup(user1, user2, user1Group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedInviteToGroupResponse)));
-
-    // user2 accepts group invitation.
-    AcceptGroupInvitationResponse expectedAcceptGroupInvitationResponse =
-        new AcceptGroupInvitationResponse();
-    acceptInvitationToGroup(user2, user1Group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedAcceptGroupInvitationResponse)));
-
-    expectedAcceptGroupInvitationResponse =
-        new AcceptGroupInvitationResponse();
-    // user2 accepts group invitation again.
-    expectedAcceptGroupInvitationResponse
-        .setStatus(new Status(Status.USER_ALREADY_MEMBER_ERROR));
-    acceptInvitationToGroup(user2, user1Group.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedAcceptGroupInvitationResponse)));
-
-    User user2InRepo = userRepo.findById(user2.getId()).get();
-    List<UserGroup> user2Groups = user2InRepo.getUserGroups();
-    assertThat(user2Groups.size(), is(1));
-
-    UserGroup user2Group = user2Groups.get(0);
-    assertThat(user2Group.getGroupId(), is(user1Group.getId()));
-    assertThat(user2Group.isPending(), is(false));
-
-    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
-    assertThat(user1GroupInRepo.getUsersIds().size(), is(2));
-  }
-
-  @Test
-  public void reject_normalScenario_shouldSucceed() throws Exception {
-    // user1 invites user2.
-    InviteToGroupResponse expectedInviteToGroupResponse = new InviteToGroupResponse();
-    inviteUserToGroup(user1, user2, user1Group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedInviteToGroupResponse)));
-
-    // user2 rejects invitation.
-    RejectGroupInvitationResponse expectedAcceptGroupInvitationResponse =
-        new RejectGroupInvitationResponse();
-    rejectInvitationToGroup(user2, user1Group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedAcceptGroupInvitationResponse)));
-
-    User user2InRepo = userRepo.findById(user2.getId()).get();
-    List<UserGroup> user2Groups = user2InRepo.getUserGroups();
-    assertThat(user2Groups.size(), is(0));
-
-    Group group = groupRepo.findById(user1Group.getId()).get();
-    assertThat(group.getUsersIds().size(), is(1));
-  }
-
-  @Test
-  public void reject_notInvited_shouldNotSucceed() throws Exception {
-    RejectGroupInvitationResponse expectedResponse =
-        new RejectGroupInvitationResponse();
-    expectedResponse.setStatus(new Status(Status.USER_NOT_INVITED_ERROR));
-    rejectInvitationToGroup(user2, user1Group.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-
-    User user2InRepo = userRepo.findById(user2.getId()).get();
-    List<UserGroup> user2Groups = user2InRepo.getUserGroups();
-    assertThat(user2Groups.size(), is(0));
-
-    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
-    assertThat(user1GroupInRepo.getUsersIds().size(), is(1));
-  }
-
-  @Test
-  public void reject_alreadyMember_shouldNotSucceed() throws Exception {
-    addUserToGroup(user2, /*invitingUser=*/user1, user1Group.getId());
-
-    RejectGroupInvitationResponse expectedRejectGroupInvitationResponse =
-        new RejectGroupInvitationResponse();
-    expectedRejectGroupInvitationResponse
-        .setStatus(new Status(Status.USER_ALREADY_MEMBER_ERROR));
-    rejectInvitationToGroup(user2, user1Group.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedRejectGroupInvitationResponse)));
-
-    User user2InRepo = userRepo.findById(user2.getId()).get();
-    List<UserGroup> user2Groups = user2InRepo.getUserGroups();
-    assertThat(user2Groups.size(), is(1));
-
-    UserGroup user2Group = user2Groups.get(0);
-    assertThat(user2Group.getGroupId(), is(user1Group.getId()));
-    assertThat(user2Group.isPending(), is(false));
-
-    Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
-    assertThat(user1GroupInRepo.getUsersIds().size(), is(2));
-  }
-
-  @Test
   public void leave_normalScenario_shouldSucceed() throws Exception {
-    addUserToGroup(user2, /*invitingUser=*/user1, user1Group.getId());
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, user1Group.getId());
 
     LeaveGroupResponse expectedResponse = new LeaveGroupResponse();
     leaveGroup(user2, user1Group.getId())
@@ -428,40 +199,38 @@ public class GroupControllerTest extends TestBase {
     Group group2 = azkarApi.addGroupAndReturn(user1, user1Group2Name);
     Group group3 = azkarApi.addGroupAndReturn(user2, user2Group1Name);
 
-    addUserToGroup(user3, /*invitingUser=*/user1, group1.getId());
+    // Add user2 to group1.
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, user3, group1.getId());
 
-    // Invite user3 to group2.
-    inviteUserToGroup(user1, user3, group2.getId());
+    // Add user3 to group2.
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, user3, group2.getId());
 
-    addUserToGroup(user3, /*invitingUser=*/user2, group3.getId());
+    // Add user3 to group3.
+    azkarApi.addUserToGroup(/*invitingUser=*/user2, user3, group3.getId());
 
     GetUserGroupsResponse expectedResponse = new GetUserGroupsResponse();
     List<UserGroup> expectedUserGroups = new ArrayList();
     expectedUserGroups.add(UserGroup.builder()
-        .groupId(group1.getId())
-        .groupName(user1Group1Name)
-        .isPending(false)
-        .build());
+                                    .groupId(group1.getId())
+                                    .groupName(user1Group1Name)
+                                    .build());
 
     expectedUserGroups.add(UserGroup.builder()
-        .groupId(group2.getId())
-        .invitingUserId(user1.getId())
-        .groupName(user1Group2Name)
-        .isPending(true)
-        .build());
+                                    .groupId(group2.getId())
+                                    .invitingUserId(user1.getId())
+                                    .groupName(user1Group2Name)
+                                    .build());
 
     expectedUserGroups.add(UserGroup.builder()
-        .groupId(group3.getId())
-        .groupName(user2Group1Name)
-        .isPending(false)
-        .build());
+                                    .groupId(group3.getId())
+                                    .groupName(user2Group1Name)
+                                    .build());
 
     expectedResponse.setData(expectedUserGroups);
     performGetRequest(user3, "/groups/")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -473,10 +242,10 @@ public class GroupControllerTest extends TestBase {
     GetGroupResponse expectedResponse = new GetGroupResponse();
     expectedResponse.setData(group2);
     azkarApi.getGroup(user1, group2.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+            .andReturn();
   }
 
   @Test
@@ -488,10 +257,10 @@ public class GroupControllerTest extends TestBase {
     GetGroupResponse expectedResponse = new GetGroupResponse();
     expectedResponse.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
     azkarApi.getGroup(user1, group3.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+            .andReturn();
   }
 
   @Test
@@ -503,10 +272,10 @@ public class GroupControllerTest extends TestBase {
     GetGroupResponse expectedResponse = new GetGroupResponse();
     expectedResponse.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
     azkarApi.getGroup(user1, "nonExistingGroupId")
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+            .andReturn();
   }
 
   @Test
@@ -519,31 +288,29 @@ public class GroupControllerTest extends TestBase {
     GetUserGroupsResponse expectedUser1Response = new GetUserGroupsResponse();
     List<UserGroup> expectedUser1Groups = new ArrayList();
     expectedUser1Groups.add(UserGroup.builder()
-        .groupId(group1.getId())
-        .groupName(groupName1)
-        .isPending(false)
-        .build());
+                                     .groupId(group1.getId())
+                                     .groupName(groupName1)
+                                     .build());
     expectedUser1Response.setData(expectedUser1Groups);
 
     GetUserGroupsResponse expectedUser2Response = new GetUserGroupsResponse();
     List<UserGroup> expectedUser2Groups = new ArrayList();
     expectedUser2Groups.add(UserGroup.builder()
-        .groupId(group2.getId())
-        .groupName(groupName2)
-        .isPending(false)
-        .build());
+                                     .groupId(group2.getId())
+                                     .groupName(groupName2)
+                                     .build());
     expectedUser2Response.setData(expectedUser2Groups);
 
     azkarApi.getGroups(user1)
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedUser1Response)))
-        .andReturn();
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedUser1Response)))
+            .andReturn();
     azkarApi.getGroups(user2)
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedUser2Response)))
-        .andReturn();
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedUser2Response)))
+            .andReturn();
   }
 
   @Test
@@ -554,7 +321,7 @@ public class GroupControllerTest extends TestBase {
     addNewUser(user2);
     Group group = azkarApi.addGroupAndReturn(user1, "group");
     azkarApi.addGroup(user1, "irrelevant group");
-    azkarApi.addUserToGroup(/*user=*/user2, /*invitingUser=*/user1, group.getId());
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, group.getId());
 
     User user1InDb = userRepo.findById(user1.getId()).get();
     User user2InDb = userRepo.findById(user2.getId()).get();
@@ -566,24 +333,24 @@ public class GroupControllerTest extends TestBase {
     List<UserScore> expectedUserScores = new ArrayList<>();
     expectedUserScores.add(
         UserScore.builder().firstName(user2.getFirstName()).lastName(user2.getLastName())
-            .username(user2.getUsername()).totalScore(10)
-            .build());
+                 .username(user2.getUsername()).totalScore(10)
+                 .build());
     expectedUserScores.add(
         UserScore.builder().firstName(user1.getFirstName()).lastName(user1.getLastName())
-            .username(user1.getUsername()).totalScore(5)
-            .build());
+                 .username(user1.getUsername()).totalScore(5)
+                 .build());
     expectedResponse.setData(expectedUserScores);
 
     azkarApi.getGroupLeaderboard(user1, group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+            .andReturn();
     azkarApi.getGroupLeaderboard(user2, group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+            .andReturn();
   }
 
   @Test
@@ -602,42 +369,14 @@ public class GroupControllerTest extends TestBase {
     expectedResponse.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
 
     azkarApi.getGroupLeaderboard(nonGroupUser, group.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
-  }
-
-  // Use methods in AzkarApi instead.
-  @Deprecated
-  private ResultActions inviteUserToGroup(User invitingUser, User invitedUser, String groupId)
-      throws Exception {
-    return performPutRequest(invitingUser, String.format("/groups/%s/invite/%s", groupId,
-        invitedUser.getId()),
-        /*body=*/ null);
-  }
-
-  // Use methods in AzkarApi instead.
-  @Deprecated
-  private ResultActions acceptInvitationToGroup(User user, String groupId)
-      throws Exception {
-    return performPutRequest(user, String.format("/groups/%s/accept/", groupId), /*body=*/ null);
-  }
-
-  private ResultActions rejectInvitationToGroup(User user, String groupId)
-      throws Exception {
-    return performPutRequest(user, String.format("/groups/%s/reject/", groupId), /*body=*/ null);
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+            .andReturn();
   }
 
   private ResultActions leaveGroup(User user, String groupId) throws Exception {
     return performPutRequest(user, String.format("/groups/%s/leave/", groupId), /*body=*/ null);
   }
 
-  // Use methods in AzkarApi instead.
-  @Deprecated
-  private void addUserToGroup(User user, User invitingUser, String groupId)
-      throws Exception {
-    inviteUserToGroup(invitingUser, user, groupId);
-    acceptInvitationToGroup(user, groupId);
-  }
 }

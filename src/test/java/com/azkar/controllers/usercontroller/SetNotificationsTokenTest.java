@@ -27,8 +27,8 @@ public class SetNotificationsTokenTest extends TestBase {
 
     SetNotificationTokenResponse response = new SetNotificationTokenResponse();
     azkarApi.sendNotificationsToken(user, body)
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(response)));
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(response)));
   }
 }

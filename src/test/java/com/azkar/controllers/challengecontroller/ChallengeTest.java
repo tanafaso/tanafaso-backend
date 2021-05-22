@@ -43,9 +43,9 @@ public class ChallengeTest extends TestBase {
     response.setData(queriedChallenge);
 
     azkarApi.getChallenge(user, queriedChallenge.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(response)));
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(response)));
   }
 
   private Challenge createGroupChallenge(User user, Group group)
@@ -59,9 +59,9 @@ public class ChallengeTest extends TestBase {
     GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
 
     azkarApi.getChallenge(user, "invalidChallengeId")
-        .andExpect(status().isNotFound())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
+            .andExpect(status().isNotFound())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
   }
 
   private GetChallengeResponse getGetChallengeNotFoundResponse() {
@@ -79,8 +79,8 @@ public class ChallengeTest extends TestBase {
     GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
 
     azkarApi.getChallenge(nonGroupMember, challenge.getId())
-        .andExpect(status().isNotFound())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
+            .andExpect(status().isNotFound())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
   }
 }

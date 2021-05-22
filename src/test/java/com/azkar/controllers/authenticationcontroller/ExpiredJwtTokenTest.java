@@ -1,16 +1,14 @@
 package com.azkar.controllers.authenticationcontroller;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.azkar.TestBase;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
-import com.azkar.payload.ResponseBase.Status;
-import com.azkar.payload.authenticationcontroller.responses.UnauthenticatedResponse;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ExpiredJwtTokenTest extends TestBase {
 

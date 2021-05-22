@@ -6,8 +6,8 @@ public class EmailLoginRequestBodyFactory {
 
   public static EmailLoginRequestBody getDefaultEmailLoginRequestBodyFactory() {
     return EmailLoginRequestBody.builder()
-        .email("test_email@test.com")
-        .password("test_password")
-        .build();
+                                .email("test_email@test.com")
+                                .password("test_password")
+                                .build();
   }
 }

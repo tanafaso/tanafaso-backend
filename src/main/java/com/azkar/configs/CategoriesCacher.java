@@ -54,7 +54,7 @@ public class CategoriesCacher {
 
         Category category =
             Category.builder().id(Integer.parseInt(values[0])).name(values[1])
-                .azkar(azkarInCategory).build();
+                    .azkar(azkarInCategory).build();
         categories.add(category);
       }
 

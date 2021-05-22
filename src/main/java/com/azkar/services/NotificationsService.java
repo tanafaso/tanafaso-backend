@@ -24,8 +24,8 @@ public class NotificationsService {
     FirebaseOptions options = null;
     try {
       options = FirebaseOptions.builder()
-          .setCredentials(GoogleCredentials.getApplicationDefault())
-          .build();
+                               .setCredentials(GoogleCredentials.getApplicationDefault())
+                               .build();
       FirebaseApp.initializeApp(options);
     } catch (IOException e) {
       logger.error("Could not initialize Firebase app correctly.", e);
@@ -38,9 +38,10 @@ public class NotificationsService {
       return;
     }
     Message message = Message.builder()
-        .setToken(user.getNotificationsToken())
-        .setNotification(Notification.builder().setTitle(title).setBody(body).build())
-        .build();
+                             .setToken(user.getNotificationsToken())
+                             .setNotification(
+                                 Notification.builder().setTitle(title).setBody(body).build())
+                             .build();
 
     try {
       FirebaseMessaging.getInstance().send(message);

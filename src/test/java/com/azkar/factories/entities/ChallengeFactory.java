@@ -15,16 +15,16 @@ public class ChallengeFactory {
 
   public static SubChallenge subChallenge1() {
     return SubChallenge.builder()
-        .zekr(Zekr.builder().id(1).zekr("zekr").build())
-        .repetitions(3)
-        .build();
+                       .zekr(Zekr.builder().id(1).zekr("zekr").build())
+                       .repetitions(3)
+                       .build();
   }
 
   public static SubChallenge subChallenge2() {
     return SubChallenge.builder()
-        .zekr(Zekr.builder().id(2).zekr("zekr2").build())
-        .repetitions(5)
-        .build();
+                       .zekr(Zekr.builder().id(2).zekr("zekr2").build())
+                       .repetitions(5)
+                       .build();
   }
 
   public static Challenge getNewChallenge(String groupId) {
@@ -35,12 +35,12 @@ public class ChallengeFactory {
     long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
     String challengeFullName = namePrefix + CHALLENGE_NAME_BASE + ++challengesRequested;
     return Challenge.builder()
-        .id(challengeFullName)
-        .name(challengeFullName)
-        .motivation(CHALLENGE_MOTIVATION)
-        .expiryDate(expiryDate)
-        .subChallenges(ImmutableList.of(subChallenge1(), subChallenge2()))
-        .groupId(groupId)
-        .build();
+                    .id(challengeFullName)
+                    .name(challengeFullName)
+                    .motivation(CHALLENGE_MOTIVATION)
+                    .expiryDate(expiryDate)
+                    .subChallenges(ImmutableList.of(subChallenge1(), subChallenge2()))
+                    .groupId(groupId)
+                    .build();
   }
 }

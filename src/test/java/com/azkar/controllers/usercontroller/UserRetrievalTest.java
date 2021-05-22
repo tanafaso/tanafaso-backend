@@ -35,7 +35,7 @@ public class UserRetrievalTest extends TestBase {
     String userId = "example id";
     User user = UserFactory.getNewUser().toBuilder().
         id(userId).
-        build();
+                               build();
     addNewUser(user);
     GetUserResponse expectedResponse = new GetUserResponse();
     expectedResponse.setData(user);
@@ -54,7 +54,7 @@ public class UserRetrievalTest extends TestBase {
     String fakeUserId = "fake user id";
     User user = UserFactory.getNewUser().toBuilder().
         id(realUserId).
-        build();
+                               build();
     addNewUser(user);
     GetUserResponse expectedResponse = new GetUserResponse();
     expectedResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
@@ -72,7 +72,7 @@ public class UserRetrievalTest extends TestBase {
     String username = "example_username";
     User user = UserFactory.getNewUser().toBuilder().
         username(username).
-        build();
+                               build();
     addNewUser(user);
     GetUserResponse expectedResponse = new GetUserResponse();
     expectedResponse.setData(user);
@@ -91,7 +91,7 @@ public class UserRetrievalTest extends TestBase {
     String fakeUsername = "fake-username";
     User user = UserFactory.getNewUser().toBuilder().
         username(realUsername).
-        build();
+                               build();
     addNewUser(user);
     GetUserResponse expectedResponse = new GetUserResponse();
     expectedResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
@@ -141,8 +141,8 @@ public class UserRetrievalTest extends TestBase {
   public void searchForUserByUsername_wrongQueryParameterName_shouldNotSucceed() throws Exception {
     String username = "example-username";
     User user = UserFactory.getNewUser().toBuilder()
-        .username(username)
-        .build();
+                           .username(username)
+                           .build();
     addNewUser(user);
     GetUserResponse expectedResponse = new GetUserResponse();
     expectedResponse.setStatus(new Status(Status.SEARCH_PARAMETERS_NOT_SPECIFIED));
@@ -161,8 +161,8 @@ public class UserRetrievalTest extends TestBase {
       throws Exception {
     String username = "example-username";
     User user = UserFactory.getNewUser().toBuilder()
-        .username(username)
-        .build();
+                           .username(username)
+                           .build();
     addNewUser(user);
 
     GetUserResponse expectedResponse = new GetUserResponse();
