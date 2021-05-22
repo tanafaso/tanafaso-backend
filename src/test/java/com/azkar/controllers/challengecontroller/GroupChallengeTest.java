@@ -57,6 +57,8 @@ public class GroupChallengeTest extends TestBase {
   public void addChallenge_multipleMembersInGroup_shouldSucceed() throws Exception {
     User anotherGroupMember = getNewRegisteredUser();
     User nonGroupMember = getNewRegisteredUser();
+
+    azkarApi.makeFriends(user1, anotherGroupMember);
     azkarApi.addUserToGroup(/* invitingUser= */ user1, anotherGroupMember, validGroup.getId());
     Challenge challenge = ChallengeFactory.getNewChallenge(validGroup.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
@@ -249,6 +251,7 @@ public class GroupChallengeTest extends TestBase {
     addNewUser(groupMember);
     addNewUser(nonGroupMember);
     addNewValidChallenge(user1, CHALLENGE_NAME_PREFIX_1, validGroup.getId());
+    azkarApi.makeFriends(user1, groupMember);
     azkarApi.addUserToGroup(/* invitingUser= */ user1, groupMember, validGroup.getId());
     addNewValidChallenge(groupMember, CHALLENGE_NAME_PREFIX_2, validGroup.getId());
 

@@ -148,4 +148,32 @@ public class AzkarApi {
   public ResultActions updatePassword(String token, String password) throws Exception {
     return httpClient.submitUpdatePasswordForm(token, password);
   }
+
+  public ResultActions sendFriendRequest(User requester, User responder) throws Exception {
+    return httpClient.performPutRequest(requester, String.format("/friends/%s",
+        responder.getId()),
+        /*body=*/ null);
+  }
+
+  public ResultActions acceptFriendRequest(User responder, User requester) throws Exception {
+    return httpClient
+        .performPutRequest(responder, String.format("/friends/%s/accept", requester.getId()),
+            /*body=*/null);
+  }
+
+  public ResultActions rejectFriendRequest(User responder, User requester) throws Exception {
+    return httpClient
+        .performPutRequest(responder, String.format("/friends/%s/reject", requester.getId()),
+            /*body=*/null);
+  }
+
+  public ResultActions deleteFriend(User requester, User otherUser) throws Exception {
+    return httpClient
+        .performDeleteRequest(requester, String.format("/friends/%s", otherUser.getId()));
+  }
+
+  public void makeFriends(User user1, User user2) throws Exception {
+    sendFriendRequest(user1, user2);
+    acceptFriendRequest(user2, user1);
+  }
 }

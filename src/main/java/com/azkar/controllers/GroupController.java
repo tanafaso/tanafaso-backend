@@ -13,6 +13,7 @@ import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
 import com.azkar.repos.ChallengeRepo;
+import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import java.util.ArrayList;
@@ -47,6 +48,9 @@ public class GroupController extends BaseController {
 
   @Autowired
   private UserRepo userRepo;
+
+  @Autowired
+  private FriendshipRepo friendshipRepo;
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
@@ -177,6 +181,13 @@ public class GroupController extends BaseController {
     Optional<Group> group = groupRepo.findById(groupId);
     if (!group.isPresent()) {
       response.setStatus(new Status(Status.GROUP_INVALID_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    // Check if the two users are friends
+    if (!friendshipRepo.findByUserId(getCurrentUser().getUserId()).getFriends().stream()
+        .anyMatch(friend -> friend.getUserId().equals(invitedUserId) && !friend.isPending())) {
+      response.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
