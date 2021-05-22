@@ -189,7 +189,7 @@ public class GroupChallengeTest extends TestBase {
             .challenge(challenge)
             .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
-    expectedResponse.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
+    expectedResponse.setStatus(new Status(Status.ONE_OR_MORE_USERS_NOT_FRIENDS_ERROR));
     azkarApi.addFriendsChallenge(user1, request)
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));

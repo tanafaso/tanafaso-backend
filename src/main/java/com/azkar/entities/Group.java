@@ -26,6 +26,7 @@ public class Group extends EntityBase {
   private String id;
   @Deprecated
   @JsonProperty("binary")
+  @Builder.Default
   private boolean isBinary = true;
   // Group name can be null in case of auto-generated groups. Groups are auto-generated in the
   // following two cases.

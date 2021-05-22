@@ -10,6 +10,7 @@ import com.azkar.payload.groupcontroller.responses.AddToGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse.UserScore;
 import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
+import com.azkar.payload.groupcontroller.responses.GetGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
 import com.azkar.repos.ChallengeRepo;
@@ -21,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,12 +101,23 @@ public class GroupController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping
-  public ResponseEntity<GetUserGroupsResponse> getGroups() {
+  @GetMapping("/userGroups")
+  public ResponseEntity<GetUserGroupsResponse> getUserGroups() {
     GetUserGroupsResponse response = new GetUserGroupsResponse();
 
     User user = userRepo.findById(getCurrentUser().getUserId()).get();
     response.setData(user.getUserGroups());
+
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping()
+  public ResponseEntity<GetGroupsResponse> getGroups() {
+    GetGroupsResponse response = new GetGroupsResponse();
+
+    response.setData(groupRepo.findAll().stream()
+        .filter(group -> group.getUsersIds().contains(getCurrentUser().getUserId()))
+        .collect(Collectors.toList()));
 
     return ResponseEntity.ok(response);
   }

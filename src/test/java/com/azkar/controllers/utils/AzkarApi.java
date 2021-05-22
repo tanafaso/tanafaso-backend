@@ -126,6 +126,10 @@ public class AzkarApi {
     return httpClient.performGetRequest(user, String.format("/groups/%s", groupId));
   }
 
+  public ResultActions getUserGroups(User user) throws Exception {
+    return httpClient.performGetRequest(user, "/groups/userGroups");
+  }
+
   public ResultActions getGroups(User user) throws Exception {
     return httpClient.performGetRequest(user, "/groups");
   }
