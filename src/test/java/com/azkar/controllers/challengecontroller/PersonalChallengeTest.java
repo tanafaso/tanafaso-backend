@@ -67,7 +67,7 @@ public class PersonalChallengeTest extends TestBase {
     long expiryDate = Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS;
     AddPersonalChallengeRequest requestBody = createPersonalChallengeRequest(expiryDate);
 
-    MvcResult result = azkarApi.createPersonalChallenge(USER, requestBody)
+    MvcResult result = azkarApi.addPersonalChallenge(USER, requestBody)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andReturn();
@@ -102,7 +102,7 @@ public class PersonalChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setStatus(new Status(Status.CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR));
 
-    azkarApi.createPersonalChallenge(USER, requestBody)
+    azkarApi.addPersonalChallenge(USER, requestBody)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andReturn();
@@ -119,7 +119,7 @@ public class PersonalChallengeTest extends TestBase {
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setStatus(new Status(Status.PAST_EXPIRY_DATE_ERROR));
 
-    azkarApi.createPersonalChallenge(USER, requestBody)
+    azkarApi.addPersonalChallenge(USER, requestBody)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -140,7 +140,7 @@ public class PersonalChallengeTest extends TestBase {
         .build();
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setData(expectedChallenge);
-    MvcResult result = azkarApi.createPersonalChallenge(USER, requestBody)
+    MvcResult result = azkarApi.addPersonalChallenge(USER, requestBody)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andReturn();

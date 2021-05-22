@@ -113,12 +113,12 @@ public abstract class TestBase {
   // TODO(issue#156): Think about a place for helper functions for tests
   protected Challenge createGroupChallenge(User user, String groupId) throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(groupId);
-    azkarApi.createChallenge(user, challenge).andExpect(status().isOk());
+    azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
     return challenge;
   }
 
   protected Challenge createGroupChallenge(User user, Challenge challenge) throws Exception {
-    azkarApi.createChallenge(user, challenge).andExpect(status().isOk());
+    azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
     return challenge;
   }
 
@@ -132,7 +132,7 @@ public abstract class TestBase {
 
   protected Challenge createPersonalChallenge(User user, AddPersonalChallengeRequest request)
       throws Exception {
-    ResultActions response = azkarApi.createPersonalChallenge(user, request)
+    ResultActions response = azkarApi.addPersonalChallenge(user, request)
         .andExpect(status().isOk());
     return getResponse(response, AddPersonalChallengeResponse.class).getData();
   }

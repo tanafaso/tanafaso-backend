@@ -51,7 +51,7 @@ public class ChallengeTest extends TestBase {
   private Challenge createGroupChallenge(User user, Group group)
       throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
-    return azkarApi.createChallengeAndReturn(user, challenge);
+    return azkarApi.addChallengeAndReturn(user, challenge);
   }
 
   @Test
@@ -73,7 +73,7 @@ public class ChallengeTest extends TestBase {
   @Test
   public void getChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
-    azkarApi.createChallenge(user, challenge).andExpect(status().isOk());
+    azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
     User nonGroupMember = UserFactory.getNewUser();
     addNewUser(nonGroupMember);
     GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();

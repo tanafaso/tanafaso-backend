@@ -64,7 +64,10 @@ public abstract class ResponseBase<T> {
     public static final int NAME_EMPTY_ERROR = 44;
     public static final int PASSWORD_CHARACTERS_LESS_THAN_8_ERROR = 45;
     public static final int CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR = 46;
-    public static final int INVALID_RESET_PASSWORD_TOKEN = 47;
+    public static final int INVALID_RESET_PASSWORD_TOKEN_ERROR = 47;
+    public static final int ONE_OR_MORE_USERS_NOT_FRIENDS_ERROR = 48;
+    public static final int LESS_THAN_TWO_FRIENDS_ARE_PROVIDED_ERROR = 49;
+    public static final int DUPLICATE_FRIEND_IDS_PROVIDED_ERROR = 50;
 
     public int code;
 
