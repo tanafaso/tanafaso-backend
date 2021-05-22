@@ -250,9 +250,9 @@ public class RegistrationWithEmailTest extends TestBase {
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(1L));
     assertThat(userRepo.count(), equalTo(0L));
     EmailVerificationRequestBody body = EmailVerificationRequestBody.builder()
-                                                                    .email(email)
-                                                                    .pin(pin)
-                                                                    .build();
+        .email(email)
+        .pin(pin)
+        .build();
     EmailVerificationResponse expectedResponse = new EmailVerificationResponse();
 
     verifyEmail(JsonHandler.toJson(body))
@@ -273,9 +273,9 @@ public class RegistrationWithEmailTest extends TestBase {
     insertEmailVerificationPinInDatabase(email, pin);
 
     EmailVerificationRequestBody body = EmailVerificationRequestBody.builder()
-                                                                    .email(email)
-                                                                    .pin(pin)
-                                                                    .build();
+        .email(email)
+        .pin(pin)
+        .build();
     // Verify for the first time.
     verifyEmail(JsonHandler.toJson(body)).andExpect(status().isOk());
     EmailVerificationResponse expectedResponse = new EmailVerificationResponse();
@@ -300,9 +300,9 @@ public class RegistrationWithEmailTest extends TestBase {
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(1L));
     assertThat(userRepo.count(), equalTo(0L));
     EmailVerificationRequestBody body = EmailVerificationRequestBody.builder()
-                                                                    .email(wrongEmail)
-                                                                    .pin(pin)
-                                                                    .build();
+        .email(wrongEmail)
+        .pin(pin)
+        .build();
     EmailVerificationResponse expectedResponse = new EmailVerificationResponse();
     expectedResponse.setStatus(new Status(Status.VERIFICATION_ERROR));
 
@@ -324,9 +324,9 @@ public class RegistrationWithEmailTest extends TestBase {
     assertThat(registrationEmailConfirmationStateRepo.count(), equalTo(1L));
     assertThat(userRepo.count(), equalTo(0L));
     EmailVerificationRequestBody body = EmailVerificationRequestBody.builder()
-                                                                    .email(email)
-                                                                    .pin(wrongPin)
-                                                                    .build();
+        .email(email)
+        .pin(wrongPin)
+        .build();
     EmailVerificationResponse expectedResponse = new EmailVerificationResponse();
     expectedResponse.setStatus(new Status(Status.VERIFICATION_ERROR));
 
@@ -341,12 +341,12 @@ public class RegistrationWithEmailTest extends TestBase {
   private void insertEmailVerificationPinInDatabase(String email, int pin) {
     registrationEmailConfirmationStateRepo.insert(
         RegistrationEmailConfirmationState.builder()
-                                          .firstName("example_first_name")
-                                          .lastName("example_last_name")
-                                          .email(email)
-                                          .password("example_password")
-                                          .pin(pin)
-                                          .build());
+            .firstName("example_first_name")
+            .lastName("example_last_name")
+            .email(email)
+            .password("example_password")
+            .pin(pin)
+            .build());
   }
 
   private ResultActions registerWithEmail(String body) throws Exception {

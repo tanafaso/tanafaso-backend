@@ -34,12 +34,12 @@ public class UserService {
   public User buildNewUser(String email, String firstName, String lastName,
       String encodedPassword) {
     return User.builder()
-               .email(email)
-               .username(generateUsername(firstName, lastName))
-               .firstName(firstName)
-               .lastName(lastName)
-               .encodedPassword(encodedPassword)
-               .build();
+        .email(email)
+        .username(generateUsername(firstName, lastName))
+        .firstName(firstName)
+        .lastName(lastName)
+        .encodedPassword(encodedPassword)
+        .build();
   }
 
   /*
@@ -84,8 +84,8 @@ public class UserService {
     Random random = new Random();
 
     return random.ints(minLimit, maxLimit + 1)
-                 .limit(length)
-                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-                 .toString();
+        .limit(length)
+        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+        .toString();
   }
 }

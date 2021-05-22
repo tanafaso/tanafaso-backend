@@ -120,7 +120,7 @@ public abstract class TestBase {
   protected Challenge createPersonalChallenge(User user, AddPersonalChallengeRequest request)
       throws Exception {
     ResultActions response = azkarApi.createPersonalChallenge(user, request)
-                                     .andExpect(status().isOk());
+        .andExpect(status().isOk());
     return getResponse(response, AddPersonalChallengeResponse.class).getData();
   }
 

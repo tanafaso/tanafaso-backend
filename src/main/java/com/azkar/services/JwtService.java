@@ -24,9 +24,9 @@ public class JwtService {
 
   public String generateToken(User user) throws UnsupportedEncodingException {
     return JWT.create()
-              .withSubject(user.getId())
-              .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
-              .sign(Algorithm.HMAC512(jwtSecret));
+        .withSubject(user.getId())
+        .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
+        .sign(Algorithm.HMAC512(jwtSecret));
   }
 
   public String extractJwtToken(HttpServletRequest httpServletRequest) {

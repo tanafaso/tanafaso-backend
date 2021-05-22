@@ -30,11 +30,11 @@ import org.springframework.test.web.servlet.ResultActions;
 public abstract class UpdateChallengeTestBase extends TestBase {
 
   public static final int OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS = ChallengeFactory.subChallenge1()
-                                                                                 .getRepetitions();
+      .getRepetitions();
   public static final int NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS =
       OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS - 1;
   public static final int OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS = ChallengeFactory.subChallenge2()
-                                                                                 .getRepetitions();
+      .getRepetitions();
   public static final int NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS =
       OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS - 2;
   protected User user;
@@ -59,7 +59,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   public void updateChallenge_updateOneSubChallenge_shouldSucceed() throws Exception {
     Challenge challenge = createNewChallenge(user);
     challenge.getSubChallenges().get(1)
-             .setRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
+        .setRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse expectedResponse = new UpdateChallengeResponse();
     expectedResponse.setStatus(new Status(Status.SUCCESS));
@@ -79,9 +79,9 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   public void updateChallenge_updateMultipleSubChallenges_shouldSucceed() throws Exception {
     Challenge challenge = createNewChallenge(user);
     challenge.getSubChallenges().get(0)
-             .setRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
+        .setRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
     challenge.getSubChallenges().get(1)
-             .setRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
+        .setRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
 
     updateChallenge(user, challenge.getId(), requestBody)
@@ -115,7 +115,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   public void updateChallenge_IncrementLeftRepetitions_shouldFail() throws Exception {
     Challenge challenge = createNewChallenge(user);
     challenge.getSubChallenges().get(0)
-             .setRepetitions(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS + 1);
+        .setRepetitions(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS + 1);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse expectedResponse = new UpdateChallengeResponse();
     expectedResponse

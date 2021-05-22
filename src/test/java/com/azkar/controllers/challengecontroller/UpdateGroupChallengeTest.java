@@ -77,10 +77,10 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
     List<UserGroup> user1Groups = updatedUser1.getUserGroups();
     UserGroup userGroup1ForUser1 =
         user1Groups.stream().filter(userGroup -> userGroup.getGroupId().equals(group1.getId()))
-                   .findAny().get();
+            .findAny().get();
     UserGroup userGroup2ForUser1 =
         user1Groups.stream().filter(userGroup -> userGroup.getGroupId().equals(group2.getId()))
-                   .findAny().get();
+            .findAny().get();
 
     assertThat(userGroup1ForUser1.getTotalScore(), is(1));
     assertThat(userGroup2ForUser1.getTotalScore(), is(0));
@@ -88,7 +88,7 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
     List<UserGroup> user2Groups = updatedUser2.getUserGroups();
     UserGroup userGroup1ForUser2 =
         user2Groups.stream().filter(userGroup -> userGroup.getGroupId().equals(group1.getId()))
-                   .findAny().get();
+            .findAny().get();
     assertThat(userGroup1ForUser2.getTotalScore(), is(0));
   }
 
@@ -151,7 +151,7 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
   protected Challenge getChallengeProgressFromApi(Challenge challenge)
       throws Exception {
     ResultActions resultActions = azkarApi.getChallenge(user, challenge.getId())
-                                          .andExpect(status().isOk());
+        .andExpect(status().isOk());
     return getResponse(resultActions, GetChallengeResponse.class).getData();
   }
 

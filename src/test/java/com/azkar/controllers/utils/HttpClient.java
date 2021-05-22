@@ -111,15 +111,15 @@ public class HttpClient {
   private String getAuthenticationToken(User user) throws UnsupportedEncodingException {
     final long TOKEN_TIMEOUT_IN_MILLIS = TimeUnit.MINUTES.toMillis(1);
     return JWT.create()
-              .withSubject(user.getId())
-              .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
-              .sign(Algorithm.HMAC512(jwtSecret));
+        .withSubject(user.getId())
+        .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_TIMEOUT_IN_MILLIS))
+        .sign(Algorithm.HMAC512(jwtSecret));
   }
 
   public String getExpiredAuthenticationToken(User user) throws UnsupportedEncodingException {
     return JWT.create()
-              .withSubject(user.getId())
-              .withExpiresAt(new Date(System.currentTimeMillis() - 1000))
-              .sign(Algorithm.HMAC512(jwtSecret));
+        .withSubject(user.getId())
+        .withExpiresAt(new Date(System.currentTimeMillis() - 1000))
+        .sign(Algorithm.HMAC512(jwtSecret));
   }
 }

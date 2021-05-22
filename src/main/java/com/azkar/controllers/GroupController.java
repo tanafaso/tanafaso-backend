@@ -56,16 +56,16 @@ public class GroupController extends BaseController {
     User currentUser = getCurrentUser(userRepo);
     Group newGroup =
         Group.builder()
-             .name(req.getName())
-             .creatorId(currentUser.getId())
-             .usersIds(new ArrayList<>(Arrays.asList(currentUser.getId())))
-             .build();
+            .name(req.getName())
+            .creatorId(currentUser.getId())
+            .usersIds(new ArrayList<>(Arrays.asList(currentUser.getId())))
+            .build();
     newGroup = groupRepo.save(newGroup);
 
     currentUser.getUserGroups()
-               .add(UserGroup.builder().groupId(newGroup.getId()).groupName(newGroup.getName())
-                             .invitingUserId(currentUser.getId())
-                             .build());
+        .add(UserGroup.builder().groupId(newGroup.getId()).groupName(newGroup.getName())
+            .invitingUserId(currentUser.getId())
+            .build());
     userRepo.save(currentUser);
 
     response.setData(newGroup);
@@ -156,8 +156,8 @@ public class GroupController extends BaseController {
 
     return Optional.of(
         UserScore.builder().firstName(user.get().getFirstName()).lastName(user.get().getLastName())
-                 .username(user.get().getUsername())
-                 .totalScore(userGroup.get().getTotalScore()).build());
+            .username(user.get().getUsername())
+            .totalScore(userGroup.get().getTotalScore()).build());
   }
 
   @PutMapping(value = "/{groupId}/add/{userId}")
@@ -196,10 +196,10 @@ public class GroupController extends BaseController {
     // Only add the user group but don't add old challenges.
     userToAdd.get().getUserGroups().add(
         UserGroup.builder()
-                 .groupId(groupId)
-                 .groupName(group.get().getName())
-                 .invitingUserId(invitingUser.getId())
-                 .build());
+            .groupId(groupId)
+            .groupName(group.get().getName())
+            .invitingUserId(invitingUser.getId())
+            .build());
     group.get().getUsersIds().add(userToAdd.get().getId());
     userRepo.save(userToAdd.get());
     groupRepo.save(group.get());

@@ -61,17 +61,17 @@ public class GroupChallengeTest extends TestBase {
     Challenge challenge = ChallengeFactory.getNewChallenge(validGroup.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setData(challenge.toBuilder()
-                                      .creatingUserId(user1.getId())
-                                      .usersFinished(new ArrayList<>())
-                                      .build()
+        .creatingUserId(user1.getId())
+        .usersFinished(new ArrayList<>())
+        .build()
     );
 
     azkarApi.createChallenge(user1, challenge)
-            .andExpect(status().isOk())
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isOk())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<Challenge> challengesProgress = userRepo.findById(user1.getId()).get()
-                                                 .getUserChallenges();
+        .getUserChallenges();
     assertThat(challengesProgress.size(), is(1));
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(groupChallenges.size(), is(1));
@@ -88,17 +88,17 @@ public class GroupChallengeTest extends TestBase {
     Challenge challenge = ChallengeFactory.getNewChallenge(validGroup.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setData(challenge.toBuilder()
-                                      .creatingUserId(user1.getId())
-                                      .usersFinished(new ArrayList<>())
-                                      .build()
+        .creatingUserId(user1.getId())
+        .usersFinished(new ArrayList<>())
+        .build()
     );
 
     azkarApi.createChallenge(user1, challenge)
-            .andExpect(status().isOk())
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isOk())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<Challenge> challengesProgress = userRepo.findById(user1.getId()).get()
-                                                 .getUserChallenges();
+        .getUserChallenges();
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(challengesProgress.size(), is(1));
     assertThat(groupChallenges.size(), is(1));
@@ -109,23 +109,23 @@ public class GroupChallengeTest extends TestBase {
     long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
     SubChallenge zeroRepetitionSubChallenge =
         SubChallenge.builder().zekr(Zekr.builder().id(1).zekr("zekr").build())
-                    .build();
+            .build();
     Challenge challenge = Challenge.builder()
-                                   .name(ChallengeFactory.CHALLENGE_NAME_BASE)
-                                   .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
-                                   .expiryDate(expiryDate)
-                                   .subChallenges(ImmutableList.of(zeroRepetitionSubChallenge))
-                                   .groupId(validGroup.getId())
-                                   .build();
+        .name(ChallengeFactory.CHALLENGE_NAME_BASE)
+        .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
+        .expiryDate(expiryDate)
+        .subChallenges(ImmutableList.of(zeroRepetitionSubChallenge))
+        .groupId(validGroup.getId())
+        .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setStatus(new Status(Status.MALFORMED_SUB_CHALLENGES_ERROR));
 
     azkarApi.createChallenge(user1, challenge)
-            .andExpect(status().isBadRequest())
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<Challenge> challengesProgress = userRepo.findById(user1.getId()).get()
-                                                 .getUserChallenges();
+        .getUserChallenges();
     assertTrue("Challenges progress list is not empty.", challengesProgress.isEmpty());
   }
 
@@ -134,26 +134,26 @@ public class GroupChallengeTest extends TestBase {
     long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
     SubChallenge subChallenge1 =
         SubChallenge.builder().repetitions(2).zekr(Zekr.builder().id(1).zekr("zekr").build())
-                    .build();
+            .build();
     SubChallenge subChallenge2 =
         SubChallenge.builder().repetitions(3).zekr(Zekr.builder().id(1).zekr("zekr").build())
-                    .build();
+            .build();
     Challenge challenge = Challenge.builder()
-                                   .name(ChallengeFactory.CHALLENGE_NAME_BASE)
-                                   .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
-                                   .expiryDate(expiryDate)
-                                   .subChallenges(ImmutableList.of(subChallenge1, subChallenge2))
-                                   .groupId(validGroup.getId())
-                                   .build();
+        .name(ChallengeFactory.CHALLENGE_NAME_BASE)
+        .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
+        .expiryDate(expiryDate)
+        .subChallenges(ImmutableList.of(subChallenge1, subChallenge2))
+        .groupId(validGroup.getId())
+        .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setStatus(new Status(Status.CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR));
 
     azkarApi.createChallenge(user1, challenge)
-            .andExpect(status().isBadRequest())
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<Challenge> challengesProgress = userRepo.findById(user1.getId()).get()
-                                                 .getUserChallenges();
+        .getUserChallenges();
     assertTrue("Challenges progress list is not empty.", challengesProgress.isEmpty());
   }
 
@@ -164,11 +164,11 @@ public class GroupChallengeTest extends TestBase {
     expectedResponse.setStatus(new Status(Status.GROUP_NOT_FOUND_ERROR));
 
     azkarApi.createChallenge(user1, challenge)
-            .andExpect(status().isBadRequest())
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<Challenge> challengesProgress = userRepo.findById(user1.getId()).get()
-                                                 .getUserChallenges();
+        .getUserChallenges();
     assertTrue("UserChallenges list is not empty.", challengesProgress.isEmpty());
   }
 
@@ -181,12 +181,12 @@ public class GroupChallengeTest extends TestBase {
     expectedResponse.setStatus(new Status(Status.NOT_GROUP_MEMBER_ERROR));
 
     azkarApi.createChallenge(nonGroupMember, challenge)
-            .andExpect(status().isForbidden())
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isForbidden())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<Challenge> userChallenges = userRepo.findById(nonGroupMember.getId())
-                                             .get()
-                                             .getUserChallenges();
+        .get()
+        .getUserChallenges();
     assertThat(userChallenges, empty());
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(groupChallenges, empty());
@@ -196,21 +196,21 @@ public class GroupChallengeTest extends TestBase {
   public void addChallenge_missingMotivationField_shouldSucceed() throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
     Challenge challenge = Challenge.builder()
-                                   .name(ChallengeFactory.CHALLENGE_NAME_BASE)
-                                   .expiryDate(expiryDate)
-                                   .subChallenges(
-                                       ImmutableList.of(ChallengeFactory.subChallenge1()))
-                                   .groupId(validGroup.getId())
-                                   .build();
+        .name(ChallengeFactory.CHALLENGE_NAME_BASE)
+        .expiryDate(expiryDate)
+        .subChallenges(
+            ImmutableList.of(ChallengeFactory.subChallenge1()))
+        .groupId(validGroup.getId())
+        .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setData(challenge);
 
     azkarApi.createChallenge(user1, challenge)
-            .andExpect(status().isOk())
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isOk())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<Challenge> challengesProgress = userRepo.findById(user1.getId()).get()
-                                                 .getUserChallenges();
+        .getUserChallenges();
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(challengesProgress.size(), is(1));
     assertThat(groupChallenges.size(), is(1));
@@ -220,22 +220,22 @@ public class GroupChallengeTest extends TestBase {
   public void addChallenge_pastExpiryDate_shouldNotSucceed() throws Exception {
     long pastExpiryDate = Instant.now().getEpochSecond() - ChallengeFactory.EXPIRY_DATE_OFFSET;
     Challenge challenge = Challenge.builder()
-                                   .name(ChallengeFactory.CHALLENGE_NAME_BASE)
-                                   .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
-                                   .expiryDate(pastExpiryDate)
-                                   .subChallenges(
-                                       ImmutableList.of(ChallengeFactory.subChallenge1()))
-                                   .groupId(validGroup.getId())
-                                   .build();
+        .name(ChallengeFactory.CHALLENGE_NAME_BASE)
+        .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
+        .expiryDate(pastExpiryDate)
+        .subChallenges(
+            ImmutableList.of(ChallengeFactory.subChallenge1()))
+        .groupId(validGroup.getId())
+        .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setStatus(new Status(Status.PAST_EXPIRY_DATE_ERROR));
 
     azkarApi.createChallenge(user1, challenge)
-            .andExpect(status().isBadRequest())
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     List<Challenge> challengesProgress = userRepo.findById(user1.getId()).get()
-                                                 .getUserChallenges();
+        .getUserChallenges();
     assertTrue("UserChallenges list is not empty.", challengesProgress.isEmpty());
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertTrue("GroupChallenges list is expected to be empty but it is not.",
@@ -273,8 +273,8 @@ public class GroupChallengeTest extends TestBase {
     expectedResponse.setStatus(new Status(Status.GROUP_NOT_FOUND_ERROR));
 
     azkarApi.getAllChallengesInGroup(user1, invalidGroup.getId())
-            .andExpect(status().isBadRequest())
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -284,8 +284,8 @@ public class GroupChallengeTest extends TestBase {
     expectedResponse.setStatus(new Status(Status.NON_GROUP_MEMBER_ERROR));
 
     azkarApi.getAllChallengesInGroup(nonGroupMember, validGroup.getId())
-            .andExpect(status().isForbidden())
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isForbidden())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -313,7 +313,7 @@ public class GroupChallengeTest extends TestBase {
   private GetChallengesResponse getAllChallengesInGroup(User user, String groupId)
       throws Exception {
     ResultActions resultActions = azkarApi.getAllChallengesInGroup(user, groupId)
-                                          .andExpect(status().isOk());
+        .andExpect(status().isOk());
     return getResponse(resultActions, GetChallengesResponse.class);
   }
 

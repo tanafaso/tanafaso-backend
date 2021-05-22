@@ -17,11 +17,11 @@ public class GroupFactory {
     groupUsersIds.add(adminId);
 
     Group group = Group.builder()
-                       .id("group_id" + groupsRequested)
-                       .creatorId(adminId)
-                       .name("group_name" + groupsRequested)
-                       .usersIds(groupUsersIds)
-                       .build();
+        .id("group_id" + groupsRequested)
+        .creatorId(adminId)
+        .name("group_name" + groupsRequested)
+        .usersIds(groupUsersIds)
+        .build();
 
     return group;
   }

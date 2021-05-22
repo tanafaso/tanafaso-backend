@@ -77,9 +77,9 @@ public class GroupControllerTest extends TestBase {
   public void addUser_normalScenario_shouldSucceed() throws Exception {
     AddToGroupResponse expectedResponse = new AddToGroupResponse();
     azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, user1Group.getId())
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
@@ -100,9 +100,9 @@ public class GroupControllerTest extends TestBase {
     AddToGroupResponse expectedResponse = new AddToGroupResponse();
     expectedResponse.setStatus(new Status(Status.INVITED_USER_INVALID_ERROR));
     azkarApi.addUserToGroup(/*invitingUser=*/user1, invalidUser, user1Group.getId())
-            .andExpect(status().isBadRequest())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -112,9 +112,9 @@ public class GroupControllerTest extends TestBase {
     AddToGroupResponse expectedResponse = new AddToGroupResponse();
     expectedResponse.setStatus(new Status(Status.GROUP_INVALID_ERROR));
     azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, unSavedGroup.getId())
-            .andExpect(status().isBadRequest())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
@@ -130,9 +130,9 @@ public class GroupControllerTest extends TestBase {
     AddToGroupResponse expectedResponse = new AddToGroupResponse();
     expectedResponse.setStatus(new Status(Status.INVITED_USER_ALREADY_MEMBER_ERROR));
     azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, user1Group.getId())
-            .andExpect(status().isBadRequest())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
   }
 
@@ -141,9 +141,9 @@ public class GroupControllerTest extends TestBase {
     AddToGroupResponse expectedResponse = new AddToGroupResponse();
     expectedResponse.setStatus(new Status(Status.INVITING_USER_IS_NOT_MEMBER_ERROR));
     azkarApi.addUserToGroup(/*invitingUser=*/user2, user3, user1Group.getId())
-            .andExpect(status().isBadRequest())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
     User user3InRepo = userRepo.findById(user3.getId()).get();
     List<UserGroup> user3Groups = user3InRepo.getUserGroups();
@@ -211,20 +211,20 @@ public class GroupControllerTest extends TestBase {
     GetUserGroupsResponse expectedResponse = new GetUserGroupsResponse();
     List<UserGroup> expectedUserGroups = new ArrayList();
     expectedUserGroups.add(UserGroup.builder()
-                                    .groupId(group1.getId())
-                                    .groupName(user1Group1Name)
-                                    .build());
+        .groupId(group1.getId())
+        .groupName(user1Group1Name)
+        .build());
 
     expectedUserGroups.add(UserGroup.builder()
-                                    .groupId(group2.getId())
-                                    .invitingUserId(user1.getId())
-                                    .groupName(user1Group2Name)
-                                    .build());
+        .groupId(group2.getId())
+        .invitingUserId(user1.getId())
+        .groupName(user1Group2Name)
+        .build());
 
     expectedUserGroups.add(UserGroup.builder()
-                                    .groupId(group3.getId())
-                                    .groupName(user2Group1Name)
-                                    .build());
+        .groupId(group3.getId())
+        .groupName(user2Group1Name)
+        .build());
 
     expectedResponse.setData(expectedUserGroups);
     performGetRequest(user3, "/groups/")
@@ -242,10 +242,10 @@ public class GroupControllerTest extends TestBase {
     GetGroupResponse expectedResponse = new GetGroupResponse();
     expectedResponse.setData(group2);
     azkarApi.getGroup(user1, group2.getId())
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-            .andReturn();
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
   }
 
   @Test
@@ -257,10 +257,10 @@ public class GroupControllerTest extends TestBase {
     GetGroupResponse expectedResponse = new GetGroupResponse();
     expectedResponse.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
     azkarApi.getGroup(user1, group3.getId())
-            .andExpect(status().isBadRequest())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-            .andReturn();
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
   }
 
   @Test
@@ -272,10 +272,10 @@ public class GroupControllerTest extends TestBase {
     GetGroupResponse expectedResponse = new GetGroupResponse();
     expectedResponse.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
     azkarApi.getGroup(user1, "nonExistingGroupId")
-            .andExpect(status().isBadRequest())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-            .andReturn();
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
   }
 
   @Test
@@ -288,29 +288,29 @@ public class GroupControllerTest extends TestBase {
     GetUserGroupsResponse expectedUser1Response = new GetUserGroupsResponse();
     List<UserGroup> expectedUser1Groups = new ArrayList();
     expectedUser1Groups.add(UserGroup.builder()
-                                     .groupId(group1.getId())
-                                     .groupName(groupName1)
-                                     .build());
+        .groupId(group1.getId())
+        .groupName(groupName1)
+        .build());
     expectedUser1Response.setData(expectedUser1Groups);
 
     GetUserGroupsResponse expectedUser2Response = new GetUserGroupsResponse();
     List<UserGroup> expectedUser2Groups = new ArrayList();
     expectedUser2Groups.add(UserGroup.builder()
-                                     .groupId(group2.getId())
-                                     .groupName(groupName2)
-                                     .build());
+        .groupId(group2.getId())
+        .groupName(groupName2)
+        .build());
     expectedUser2Response.setData(expectedUser2Groups);
 
     azkarApi.getGroups(user1)
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedUser1Response)))
-            .andReturn();
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedUser1Response)))
+        .andReturn();
     azkarApi.getGroups(user2)
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedUser2Response)))
-            .andReturn();
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedUser2Response)))
+        .andReturn();
   }
 
   @Test
@@ -333,24 +333,24 @@ public class GroupControllerTest extends TestBase {
     List<UserScore> expectedUserScores = new ArrayList<>();
     expectedUserScores.add(
         UserScore.builder().firstName(user2.getFirstName()).lastName(user2.getLastName())
-                 .username(user2.getUsername()).totalScore(10)
-                 .build());
+            .username(user2.getUsername()).totalScore(10)
+            .build());
     expectedUserScores.add(
         UserScore.builder().firstName(user1.getFirstName()).lastName(user1.getLastName())
-                 .username(user1.getUsername()).totalScore(5)
-                 .build());
+            .username(user1.getUsername()).totalScore(5)
+            .build());
     expectedResponse.setData(expectedUserScores);
 
     azkarApi.getGroupLeaderboard(user1, group.getId())
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-            .andReturn();
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
     azkarApi.getGroupLeaderboard(user2, group.getId())
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-            .andReturn();
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
   }
 
   @Test
@@ -369,10 +369,10 @@ public class GroupControllerTest extends TestBase {
     expectedResponse.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
 
     azkarApi.getGroupLeaderboard(nonGroupUser, group.getId())
-            .andExpect(status().isBadRequest())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-            .andReturn();
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
   }
 
   private ResultActions leaveGroup(User user, String groupId) throws Exception {

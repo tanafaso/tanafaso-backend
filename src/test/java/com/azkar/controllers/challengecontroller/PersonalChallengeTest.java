@@ -52,9 +52,9 @@ public class PersonalChallengeTest extends TestBase {
       long expiryDate) {
     Challenge challenge =
         Challenge.builder().name(name).subChallenges(SUB_CHALLENGES).expiryDate(expiryDate)
-                 .motivation(CHALLENGE_MOTIVATION).build();
+            .motivation(CHALLENGE_MOTIVATION).build();
     return AddPersonalChallengeRequest.addPersonalChallengeRequestBuilder()
-                                      .challenge(challenge).build();
+        .challenge(challenge).build();
   }
 
   @Before
@@ -68,18 +68,18 @@ public class PersonalChallengeTest extends TestBase {
     AddPersonalChallengeRequest requestBody = createPersonalChallengeRequest(expiryDate);
 
     MvcResult result = azkarApi.createPersonalChallenge(USER, requestBody)
-                               .andExpect(status().isOk())
-                               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                               .andReturn();
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
 
     assertThat(userRepo.findById(USER.getId()).get().getPersonalChallenges().size(), is(1));
     Challenge expectedChallenge = Challenge.builder()
-                                           .name(CHALLENGE_NAME)
-                                           .subChallenges(SUB_CHALLENGES)
-                                           .expiryDate(expiryDate)
-                                           .motivation(CHALLENGE_MOTIVATION)
-                                           .creatingUserId(USER.getId())
-                                           .build();
+        .name(CHALLENGE_NAME)
+        .subChallenges(SUB_CHALLENGES)
+        .expiryDate(expiryDate)
+        .motivation(CHALLENGE_MOTIVATION)
+        .creatingUserId(USER.getId())
+        .build();
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setData(expectedChallenge);
     String actualResponseJson = result.getResponse().getContentAsString();
@@ -94,21 +94,21 @@ public class PersonalChallengeTest extends TestBase {
 
     SubChallenge subChallenge1 =
         SubChallenge.builder().repetitions(2).zekr(Zekr.builder().id(1).zekr("zekr").build())
-                    .build();
+            .build();
     SubChallenge subChallenge2 =
         SubChallenge.builder().repetitions(3).zekr(Zekr.builder().id(1).zekr("zekr").build())
-                    .build();
+            .build();
     requestBody.getChallenge().setSubChallenges(ImmutableList.of(subChallenge1, subChallenge2));
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setStatus(new Status(Status.CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR));
 
     azkarApi.createPersonalChallenge(USER, requestBody)
-            .andExpect(status().isBadRequest())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
 
     List<Challenge> challengesProgress = userRepo.findById(USER.getId()).get()
-                                                 .getPersonalChallenges();
+        .getPersonalChallenges();
     assertTrue("Challenges progress list is not empty.", challengesProgress.isEmpty());
   }
 
@@ -120,9 +120,9 @@ public class PersonalChallengeTest extends TestBase {
     expectedResponse.setStatus(new Status(Status.PAST_EXPIRY_DATE_ERROR));
 
     azkarApi.createPersonalChallenge(USER, requestBody)
-            .andExpect(status().isBadRequest())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -130,20 +130,20 @@ public class PersonalChallengeTest extends TestBase {
       throws Exception {
     Challenge challenge =
         Challenge.builder().name(CHALLENGE_NAME).subChallenges(SUB_CHALLENGES)
-                 .expiryDate(Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS).build();
+            .expiryDate(Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS).build();
     AddPersonalChallengeRequest requestBody =
         AddPersonalChallengeRequest.addPersonalChallengeRequestBuilder()
-                                   .challenge(challenge).build();
+            .challenge(challenge).build();
 
     Challenge expectedChallenge = challenge.toBuilder()
-                                           .creatingUserId(USER.getId())
-                                           .build();
+        .creatingUserId(USER.getId())
+        .build();
     AddPersonalChallengeResponse expectedResponse = new AddPersonalChallengeResponse();
     expectedResponse.setData(expectedChallenge);
     MvcResult result = azkarApi.createPersonalChallenge(USER, requestBody)
-                               .andExpect(status().isOk())
-                               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                               .andReturn();
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
 
     assertThat(userRepo.findById(USER.getId()).get().getPersonalChallenges().size(), is(1));
     String actualResponseJson = result.getResponse().getContentAsString();
@@ -157,9 +157,9 @@ public class PersonalChallengeTest extends TestBase {
     expectedResponse.setData(new ArrayList<>());
 
     azkarApi.getPersonalChallenges(USER)
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
   @Test
@@ -174,12 +174,12 @@ public class PersonalChallengeTest extends TestBase {
     createPersonalChallenge(USER, request2);
 
     String response = azkarApi.getPersonalChallenges(USER)
-                              .andExpect(status().isOk())
-                              .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                              .andReturn().getResponse().getContentAsString();
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andReturn().getResponse().getContentAsString();
 
     List<Challenge> data = JsonHandler.fromJson(response, GetChallengesResponse.class)
-                                      .getData();
+        .getData();
     assertThat(data, hasSize(2));
     assertUserChallengeConsistentWithRequest(data.get(0), request2);
     assertUserChallengeConsistentWithRequest(data.get(1), request1);
