@@ -18,7 +18,7 @@ public class GroupFactory {
 
     Group group = Group.builder()
         .id("group_id" + groupsRequested)
-        .adminId(adminId)
+        .creatorId(adminId)
         .name("group_name" + groupsRequested)
         .usersIds(groupUsersIds)
         .build();

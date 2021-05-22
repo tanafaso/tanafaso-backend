@@ -40,7 +40,7 @@ public class JwtService {
   public JWTVerifier getVerifier() throws UnsupportedEncodingException {
     return JWT.require(Algorithm.HMAC512(jwtSecret)).build();
   }
-  
+
   public DecodedJWT decode(String token) throws UnsupportedEncodingException {
     return JWT.decode(token);
   }

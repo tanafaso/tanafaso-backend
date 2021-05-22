@@ -42,7 +42,7 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
     Group group2 = azkarApi.addGroupAndReturn(user1, "group2");
     User user2InGroup1 = UserFactory.getNewUser();
     addNewUser(user2InGroup1);
-    azkarApi.addUserToGroup(/*user=*/user2InGroup1, /*invitingUser*/user1, group1.getId());
+    azkarApi.addUserToGroup(/*invitingUser*/user1, /*user=*/user2InGroup1, group1.getId());
 
     Challenge challenge = createGroupChallenge(user1, group1.getId());
     for (SubChallenge subChallenge : challenge.getSubChallenges()) {

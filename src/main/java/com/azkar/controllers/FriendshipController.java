@@ -83,7 +83,8 @@ public class FriendshipController extends BaseController {
     // case then the friendship should not be pending anymore.
     Friendship currentUserFriendship = friendshipRepo.findByUserId(currentUser.getId());
     Optional<Friend> friend = currentUserFriendship.getFriends().stream()
-        .filter(f -> f.getUserId().equals(otherUserId)).findAny();
+        .filter(f -> f.getUserId().equals(otherUserId))
+        .findAny();
     if (friend.isPresent()) {
       // Set isPending for the current user.
       friend.get().setPending(false);
@@ -130,7 +131,8 @@ public class FriendshipController extends BaseController {
     // Assert that the current user has a pending friend request from the other user.
     Friendship currentUserFriendship = friendshipRepo.findByUserId(currentUser.getId());
     Optional<Friend> friend = currentUserFriendship.getFriends().stream()
-        .filter(f -> f.getUserId().equals(otherUserId)).findAny();
+        .filter(f -> f.getUserId().equals(otherUserId))
+        .findAny();
     if (!friend.isPresent()) {
       response.setStatus(new Status(Status.NO_FRIEND_REQUEST_EXIST_ERROR));
       return ResponseEntity.badRequest().body(response);
@@ -162,8 +164,12 @@ public class FriendshipController extends BaseController {
     );
 
     UserGroup userGroup =
-        UserGroup.builder().groupId(binaryGroup.getId()).groupName(binaryGroup.getName())
-            .invitingUserId(binaryGroup.getAdminId()).isPending(false).monthScore(0).totalScore(0)
+        UserGroup.builder()
+            .groupId(binaryGroup.getId())
+            .groupName(binaryGroup.getName())
+            .invitingUserId(binaryGroup.getCreatorId())
+            .monthScore(0)
+            .totalScore(0)
             .build();
     currentUser.getUserGroups().add(userGroup);
     User otherUser = userRepo.findById(otherUserId).get();
@@ -178,12 +184,11 @@ public class FriendshipController extends BaseController {
   }
 
   private Group generateBinaryGroup(User currentUser, Friend friend) {
-    String groupName = "binary-generated-" + currentUser.getId() + "-" + friend.getUserId();
-    // The adminId should not be used in case of binary groups because both users should have the
-    // same capabilities.
     // TODO(issue#148): Make Group.adminId a list
-    Group group = Group.builder().name(groupName).usersIds(Arrays.asList(currentUser.getId(),
-        friend.getUserId())).adminId(friend.getUserId()).isBinary(true).build();
+    Group group = Group.builder()
+        .usersIds(Arrays.asList(currentUser.getId(), friend.getUserId()))
+        .creatorId(friend.getUserId())
+        .build();
     return group;
   }
 

@@ -33,10 +33,13 @@ public class UserFactory {
   public static User getUserRegisteredWithFacebook() {
     usersRequested++;
     UserFacebookData userFacebookData = UserFacebookData.builder()
-        .email("testFacebookEmail" + usersRequested + "@example_domain.com")
+        .email("testFacebookEmail" + usersRequested
+            + "@example_domain.com")
         .userId("testFacebookId" + usersRequested)
-        .firstName("testFacebookFirstName" + usersRequested)
-        .lastName("testFacebookLastName" + usersRequested)
+        .firstName("testFacebookFirstName"
+            + usersRequested)
+        .lastName(
+            "testFacebookLastName" + usersRequested)
         .build();
 
     return User.builder()
@@ -50,10 +53,12 @@ public class UserFactory {
   public static User getUserRegisteredWithFacebookWithFacebookUserId(String facebookUserId) {
     usersRequested++;
     UserFacebookData userFacebookData = UserFacebookData.builder()
-        .email("testFacebookEmail" + usersRequested + "@example_domain.com")
+        .email("testFacebookEmail" + usersRequested
+            + "@example_domain.com")
         .userId(facebookUserId)
         .firstName("testFirstName" + usersRequested)
-        .lastName("testLastName" + usersRequested).build();
+        .lastName("testLastName" + usersRequested)
+        .build();
 
     return User.builder()
         .id("testId" + usersRequested)

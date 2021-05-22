@@ -179,7 +179,9 @@ public class ChallengeController extends BaseController {
       @RequestBody UpdateChallengeRequest request) {
     User currentUser = getCurrentUser(userRepo);
     Optional<Challenge> personalChallenge = currentUser.getPersonalChallenges().stream()
-        .filter(personalChallengeItem -> personalChallengeItem.getId().equals(challengeId))
+        .filter(
+            personalChallengeItem -> personalChallengeItem
+                .getId().equals(challengeId))
         .findAny();
     if (!personalChallenge.isPresent()) {
       UpdateChallengeResponse response = new UpdateChallengeResponse();
@@ -211,7 +213,10 @@ public class ChallengeController extends BaseController {
     GetChallengeResponse response = new GetChallengeResponse();
     Optional<Challenge> userChallenge = getCurrentUser(userRepo).getUserChallenges()
         .stream()
-        .filter(challenge -> challenge.getId().equals(challengeId))
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
         .findFirst();
     if (!userChallenge.isPresent()) {
       response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
@@ -289,8 +294,9 @@ public class ChallengeController extends BaseController {
 
     List<Challenge> challengesInGroup =
         getCurrentUser(userRepo).getUserChallenges().stream()
-            .filter((challenge -> challenge.getGroupId().equals(groupId))).collect(
-            Collectors.toList());
+            .filter((challenge -> challenge.getGroupId().equals(groupId)))
+            .collect(
+                Collectors.toList());
 
     Collections.reverse(challengesInGroup);
     GetChallengesResponse response = new GetChallengesResponse();
@@ -323,7 +329,9 @@ public class ChallengeController extends BaseController {
     User currentUser = getCurrentUser(userRepo);
     Optional<Challenge> currentUserChallenge = currentUser.getUserChallenges()
         .stream()
-        .filter(challenge -> challenge.getId().equals(challengeId))
+        .filter(challenge -> challenge.getId()
+            .equals(
+                challengeId))
         .findFirst();
     if (!currentUserChallenge.isPresent()) {
       UpdateChallengeResponse response = new UpdateChallengeResponse();

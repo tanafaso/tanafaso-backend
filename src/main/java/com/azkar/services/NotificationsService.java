@@ -39,7 +39,8 @@ public class NotificationsService {
     }
     Message message = Message.builder()
         .setToken(user.getNotificationsToken())
-        .setNotification(Notification.builder().setTitle(title).setBody(body).build())
+        .setNotification(
+            Notification.builder().setTitle(title).setBody(body).build())
         .build();
 
     try {

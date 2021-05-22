@@ -57,7 +57,7 @@ public class GroupChallengeTest extends TestBase {
   public void addChallenge_multipleMembersInGroup_shouldSucceed() throws Exception {
     User anotherGroupMember = getNewRegisteredUser();
     User nonGroupMember = getNewRegisteredUser();
-    addUserToGroup(anotherGroupMember, /* invitingUser= */ user1, validGroup.getId());
+    azkarApi.addUserToGroup(/* invitingUser= */ user1, anotherGroupMember, validGroup.getId());
     Challenge challenge = ChallengeFactory.getNewChallenge(validGroup.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setData(challenge.toBuilder()
@@ -198,7 +198,8 @@ public class GroupChallengeTest extends TestBase {
     Challenge challenge = Challenge.builder()
         .name(ChallengeFactory.CHALLENGE_NAME_BASE)
         .expiryDate(expiryDate)
-        .subChallenges(ImmutableList.of(ChallengeFactory.subChallenge1()))
+        .subChallenges(
+            ImmutableList.of(ChallengeFactory.subChallenge1()))
         .groupId(validGroup.getId())
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
@@ -222,7 +223,8 @@ public class GroupChallengeTest extends TestBase {
         .name(ChallengeFactory.CHALLENGE_NAME_BASE)
         .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
         .expiryDate(pastExpiryDate)
-        .subChallenges(ImmutableList.of(ChallengeFactory.subChallenge1()))
+        .subChallenges(
+            ImmutableList.of(ChallengeFactory.subChallenge1()))
         .groupId(validGroup.getId())
         .build();
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
@@ -247,7 +249,7 @@ public class GroupChallengeTest extends TestBase {
     addNewUser(groupMember);
     addNewUser(nonGroupMember);
     addNewValidChallenge(user1, CHALLENGE_NAME_PREFIX_1, validGroup.getId());
-    addUserToGroup(groupMember, /* invitingUser= */ user1, validGroup.getId());
+    azkarApi.addUserToGroup(/* invitingUser= */ user1, groupMember, validGroup.getId());
     addNewValidChallenge(groupMember, CHALLENGE_NAME_PREFIX_2, validGroup.getId());
 
     GetChallengesResponse user1AllChallenges = getUserAllChallenges(user1);
@@ -259,7 +261,8 @@ public class GroupChallengeTest extends TestBase {
         startsWith(CHALLENGE_NAME_PREFIX_2));
     assertThat(user1AllChallenges.getData().get(1).getName(),
         startsWith(CHALLENGE_NAME_PREFIX_1));
-    assertThat(groupMemberAllChallenges.getData().size(), is(2));
+    // Currently new group members will only see new challenges.
+    assertThat(groupMemberAllChallenges.getData().size(), is(1));
     assertThat(nonGroupMemberAllChallenges.getData().size(), is(0));
   }
 
@@ -300,13 +303,6 @@ public class GroupChallengeTest extends TestBase {
     assertThat(anotherGroupAllChallenges.getData(), empty());
   }
 
-  private User createNewGroupMember(Group group) throws Exception {
-    User newGroupMember = getNewRegisteredUser();
-    User groupAdmin = userRepo.findById(group.getAdminId()).get();
-    addUserToGroup(newGroupMember, groupAdmin, group.getId());
-    return newGroupMember;
-  }
-
   private GetChallengesResponse getAllChallengesInGroup(User user, String groupId)
       throws Exception {
     ResultActions resultActions = azkarApi.getAllChallengesInGroup(user, groupId)
@@ -317,25 +313,6 @@ public class GroupChallengeTest extends TestBase {
   private GetChallengesResponse getUserAllChallenges(User user) throws Exception {
     ResultActions resultActions = azkarApi.getAllChallenges(user).andExpect(status().isOk());
     return getResponse(resultActions, GetChallengesResponse.class);
-  }
-
-  // TODO: Reuse existing functions in GroupMembershipTest.
-  private void addUserToGroup(User user, User invitingUser, String groupId)
-      throws Exception {
-    inviteUserToGroup(invitingUser, user, groupId);
-    acceptInvitationToGroup(user, groupId);
-  }
-
-  private ResultActions inviteUserToGroup(User invitingUser, User invitedUser, String groupId)
-      throws Exception {
-    return performPutRequest(invitingUser, String.format("/groups/%s/invite/%s", groupId,
-        invitedUser.getId()),
-        /*body=*/ null);
-  }
-
-  private ResultActions acceptInvitationToGroup(User user, String groupId)
-      throws Exception {
-    return performPutRequest(user, String.format("/groups/%s/accept/", groupId), /*body=*/ null);
   }
 
   private ResultActions addNewValidChallenge(User creatingUser, String challengeNamePrefix,
