@@ -42,6 +42,7 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
     Group group2 = azkarApi.addGroupAndReturn(user1, "group2");
     User user2InGroup1 = UserFactory.getNewUser();
     addNewUser(user2InGroup1);
+    azkarApi.makeFriends(user1, user2InGroup1);
     azkarApi.addUserToGroup(/*invitingUser*/user1, /*user=*/user2InGroup1, group1.getId());
 
     Challenge challenge = createGroupChallenge(user1, group1.getId());
@@ -62,9 +63,7 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
         0));
 
     User updatedUser1 = userRepo.findById(user1.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), is(2));
     User updatedUser2 = userRepo.findById(user2InGroup1.getId()).get();
-    assertThat(updatedUser2.getUserGroups().size(), is(1));
 
     assertThat(Iterators.getOnlyElement(updatedUser1Challenge.getUsersFinished().iterator()),
         equalTo(user1.getId()));

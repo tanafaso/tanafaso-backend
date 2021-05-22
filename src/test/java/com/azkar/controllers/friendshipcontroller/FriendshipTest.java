@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
+import com.azkar.controllers.utils.AzkarApi;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
@@ -32,7 +33,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 
 public class FriendshipTest extends TestBase {
 
@@ -52,6 +52,9 @@ public class FriendshipTest extends TestBase {
   @Autowired
   UserRepo userRepo;
 
+  @Autowired
+  AzkarApi azkarApi;
+
   @Before
   public void before() {
     addNewUser(user1);
@@ -66,7 +69,7 @@ public class FriendshipTest extends TestBase {
     AddFriendResponse expectedResponse = new AddFriendResponse();
     assertThat(groupRepo.count(), equalTo(0L));
 
-    sendFriendRequest(user1, user2)
+    azkarApi.sendFriendRequest(user1, user2)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -87,12 +90,12 @@ public class FriendshipTest extends TestBase {
   public void addFriend_requesterRequestedBefore_shouldNotSucceed() throws Exception {
     assertThat(groupRepo.count(), equalTo(0L));
 
-    sendFriendRequest(user1, user2);
+    azkarApi.sendFriendRequest(user1, user2);
 
     AddFriendResponse expectedResponse = new AddFriendResponse();
     expectedResponse.setStatus(new Status(Status.FRIENDSHIP_ALREADY_REQUESTED_ERROR));
 
-    sendFriendRequest(user1, user2)
+    azkarApi.sendFriendRequest(user1, user2)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -103,10 +106,10 @@ public class FriendshipTest extends TestBase {
 
   @Test
   public void addFriend_responderRequestedBefore_shouldAddNonPendingFriendship() throws Exception {
-    sendFriendRequest(user1, user2);
+    azkarApi.sendFriendRequest(user1, user2);
 
     AddFriendResponse expectedResponse = new AddFriendResponse();
-    sendFriendRequest(user2, user1)
+    azkarApi.sendFriendRequest(user2, user1)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -130,7 +133,7 @@ public class FriendshipTest extends TestBase {
     AddFriendResponse expectedResponse = new AddFriendResponse();
     expectedResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
 
-    sendFriendRequest(user1, unAuthenticatedUser)
+    azkarApi.sendFriendRequest(user1, unAuthenticatedUser)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -141,7 +144,7 @@ public class FriendshipTest extends TestBase {
     AddFriendResponse expectedResponse = new AddFriendResponse();
     expectedResponse.setStatus(new Status(Status.ADD_SELF_ERROR));
 
-    sendFriendRequest(user1, user1)
+    azkarApi.sendFriendRequest(user1, user1)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -153,10 +156,10 @@ public class FriendshipTest extends TestBase {
     assertThat(user1.getUserGroups().size(), equalTo(0));
     assertThat(user2.getUserGroups().size(), equalTo(0));
 
-    sendFriendRequest(user1, user2);
+    azkarApi.sendFriendRequest(user1, user2);
 
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
-    acceptFriendRequest(user2, user1)
+    azkarApi.acceptFriendRequest(user2, user1)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -194,10 +197,10 @@ public class FriendshipTest extends TestBase {
   public void rejectFriendRequest_normalScenario_shouldSucceed() throws Exception {
     assertThat(groupRepo.count(), equalTo(0L));
 
-    sendFriendRequest(user1, user2);
+    azkarApi.sendFriendRequest(user1, user2);
 
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
-    rejectFriendRequest(user2, user1)
+    azkarApi.rejectFriendRequest(user2, user1)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -215,7 +218,7 @@ public class FriendshipTest extends TestBase {
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
     expectedResponse
         .setStatus(new Status(Status.NO_FRIEND_REQUEST_EXIST_ERROR));
-    acceptFriendRequest(user1, user2)
+    azkarApi.acceptFriendRequest(user1, user2)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -233,12 +236,12 @@ public class FriendshipTest extends TestBase {
     expectedResponse
         .setStatus(new Status(Status.NO_FRIEND_REQUEST_EXIST_ERROR));
 
-    acceptFriendRequest(user1, user2)
+    azkarApi.acceptFriendRequest(user1, user2)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    rejectFriendRequest(user2, user1)
+    azkarApi.rejectFriendRequest(user2, user1)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -246,28 +249,28 @@ public class FriendshipTest extends TestBase {
 
   @Test
   public void resolveFriendship_friendshipAlreadyExists_shouldNotSucceed() throws Exception {
-    sendFriendRequest(user1, user2);
-    acceptFriendRequest(user2, user1);
+    azkarApi.sendFriendRequest(user1, user2);
+    azkarApi.acceptFriendRequest(user2, user1);
 
     ResolveFriendRequestResponse expectedResponse = new ResolveFriendRequestResponse();
     expectedResponse
         .setStatus(new Status(Status.FRIEND_REQUEST_ALREADY_ACCEPTED_ERROR));
-    acceptFriendRequest(user1, user2)
+    azkarApi.acceptFriendRequest(user1, user2)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    rejectFriendRequest(user1, user2)
+    azkarApi.rejectFriendRequest(user1, user2)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    acceptFriendRequest(user2, user1)
+    azkarApi.acceptFriendRequest(user2, user1)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    rejectFriendRequest(user2, user1)
+    azkarApi.rejectFriendRequest(user2, user1)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -276,11 +279,11 @@ public class FriendshipTest extends TestBase {
 
   @Test
   public void getFriends_normalScenario_shouldSucceed() throws Exception {
-    sendFriendRequest(user1, user5);
+    azkarApi.sendFriendRequest(user1, user5);
 
-    makeFriends(user1, user2);
-    makeFriends(user3, user4);
-    makeFriends(user3, user1);
+    azkarApi.makeFriends(user1, user2);
+    azkarApi.makeFriends(user3, user4);
+    azkarApi.makeFriends(user3, user1);
 
     // user1 expected friends.
     List<Friend> expectedUser1Friends = new ArrayList();
@@ -335,7 +338,7 @@ public class FriendshipTest extends TestBase {
 
   @Test
   public void deleteFriend_normalScenario_shouldSucceed() throws Exception {
-    makeFriends(user1, user2);
+    azkarApi.makeFriends(user1, user2);
     assertThat(groupRepo.count(), equalTo(1L));
     User updatedUser1 = userRepo.findById(user1.getId()).get();
     User updatedUser2 = userRepo.findById(user2.getId()).get();
@@ -343,7 +346,7 @@ public class FriendshipTest extends TestBase {
     assertThat(updatedUser2.getUserGroups().size(), equalTo(1));
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
-    deleteFriend(user1, user2)
+    azkarApi.deleteFriend(user1, user2)
         .andExpect(status().isNoContent())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -366,7 +369,7 @@ public class FriendshipTest extends TestBase {
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     expectedResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
 
-    deleteFriend(user1, unAuthenticatedUser)
+    azkarApi.deleteFriend(user1, unAuthenticatedUser)
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -374,11 +377,11 @@ public class FriendshipTest extends TestBase {
 
   @Test
   public void deleteFriend_friendRequestIsPending_shouldNotSucceed() throws Exception {
-    sendFriendRequest(user1, user2);
+    azkarApi.sendFriendRequest(user1, user2);
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     expectedResponse.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
-    deleteFriend(user1, user2)
+    azkarApi.deleteFriend(user1, user2)
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -389,7 +392,7 @@ public class FriendshipTest extends TestBase {
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     expectedResponse.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
 
-    deleteFriend(user1, user2)
+    azkarApi.deleteFriend(user1, user2)
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -408,30 +411,6 @@ public class FriendshipTest extends TestBase {
       assertThat(actualFriend.getUsername(), equalTo(expectedFriend.getUsername()));
       assertThat(actualFriend.isPending(), equalTo(expectedFriend.isPending()));
     }
-  }
-
-  private ResultActions sendFriendRequest(User requester, User responder) throws Exception {
-    return performPutRequest(requester, String.format("/friends/%s", responder.getId()),
-        /*body=*/ null);
-  }
-
-  private ResultActions acceptFriendRequest(User responder, User requester) throws Exception {
-    return performPutRequest(responder, String.format("/friends/%s/accept", requester.getId()),
-        /*body=*/null);
-  }
-
-  private ResultActions rejectFriendRequest(User responder, User requester) throws Exception {
-    return performPutRequest(responder, String.format("/friends/%s/reject", requester.getId()),
-        /*body=*/null);
-  }
-
-  private ResultActions deleteFriend(User requester, User otherUser) throws Exception {
-    return performDeleteRequest(requester, String.format("/friends/%s", otherUser.getId()));
-  }
-
-  private void makeFriends(User user1, User user2) throws Exception {
-    sendFriendRequest(user1, user2);
-    acceptFriendRequest(user2, user1);
   }
 
   private void assertFriendship(Friend friend, User user, boolean isPending) {

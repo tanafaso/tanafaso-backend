@@ -1,6 +1,7 @@
 package com.azkar;
 
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.controllers.challengecontroller.PersonalChallengeTest;
@@ -13,15 +14,19 @@ import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
+import com.azkar.services.NotificationsService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -41,6 +46,14 @@ public abstract class TestBase {
   UserService userService;
   @Autowired
   MongoTemplate mongoTemplate;
+  @MockBean
+  NotificationsService notificationsService;
+
+  @Before
+  public final void beforeBase() {
+    Mockito.doNothing().when(notificationsService).
+        sendNotificationToUser(any(), any(), any());
+  }
 
   @After
   public final void afterBase() {
