@@ -56,7 +56,6 @@ public class GroupController extends BaseController {
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
     req.validate();
 
-    AddGroupResponse response = new AddGroupResponse();
     User currentUser = getCurrentUser(userRepo);
     Group newGroup =
         Group.builder()
@@ -72,6 +71,7 @@ public class GroupController extends BaseController {
             .build());
     userRepo.save(currentUser);
 
+    AddGroupResponse response = new AddGroupResponse();
     response.setData(newGroup);
     return ResponseEntity.ok(response);
   }

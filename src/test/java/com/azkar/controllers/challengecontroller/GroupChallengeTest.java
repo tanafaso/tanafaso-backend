@@ -1,9 +1,13 @@
 package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -15,11 +19,13 @@ import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.entities.User.UserGroup;
 import com.azkar.entities.Zekr;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
+import com.azkar.payload.challengecontroller.requests.AddFriendsChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.repos.GroupRepo;
@@ -31,6 +37,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 public class GroupChallengeTest extends TestBase {
@@ -68,7 +75,7 @@ public class GroupChallengeTest extends TestBase {
         .build()
     );
 
-    azkarApi.createChallenge(user1, challenge)
+    azkarApi.addChallenge(user1, challenge)
         .andExpect(status().isOk())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -86,6 +93,196 @@ public class GroupChallengeTest extends TestBase {
   }
 
   @Test
+  public void addFriendsChallenge_normalScenario_shouldSucceed() throws Exception {
+    User user2 = getNewRegisteredUser();
+    User user3 = getNewRegisteredUser();
+
+    azkarApi.makeFriends(user1, user2);
+    azkarApi.makeFriends(user1, user3);
+
+    int user1GroupsNumBefore = userRepo.findById(user1.getId()).get().getUserGroups().size();
+    int user2GroupsNumBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
+    int user3GroupsNumBefore = userRepo.findById(user3.getId()).get().getUserGroups().size();
+    long groupsNumBefore = groupRepo.count();
+
+    List<String> friendsIds = ImmutableList.of(user2.getId(), user3.getId());
+    Challenge challenge = ChallengeFactory.getNewChallenge("toBeRemovedGroupId").toBuilder()
+        .groupId(null)
+        .build();
+
+    AddFriendsChallengeRequest request =
+        AddFriendsChallengeRequest.AddFriendsChallengeRequestBuilder().
+            friendsIds(friendsIds)
+            .challenge(challenge)
+            .build();
+    MvcResult result = azkarApi.addFriendsChallenge(user1, request)
+        .andExpect(status().isOk())
+        .andReturn();
+    AddChallengeResponse response = JsonHandler.fromJson(result.getResponse().getContentAsString(),
+        AddChallengeResponse.class);
+    Challenge resultChallenge = response.getData();
+
+    assertThat(groupRepo.count(), is(groupsNumBefore + 1));
+
+    assertThat(resultChallenge.getName(), equalTo(challenge.getName()));
+    assertThat(resultChallenge.getGroupId(), notNullValue());
+
+    User updatedUser1 = userRepo.findById(user1.getId()).get();
+    User updatedUser2 = userRepo.findById(user2.getId()).get();
+    User updatedUser3 = userRepo.findById(user3.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore + 1));
+    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore + 1));
+    assertThat(updatedUser3.getUserGroups().size(), is(user3GroupsNumBefore + 1));
+
+    UserGroup user1AddedGroup = updatedUser1.getUserGroups().get(user1GroupsNumBefore + 0);
+    UserGroup user2AddedGroup = updatedUser2.getUserGroups().get(user2GroupsNumBefore + 0);
+    UserGroup user3AddedGroup = updatedUser3.getUserGroups().get(user3GroupsNumBefore + 0);
+    assertThat(user1AddedGroup.getGroupId(), equalTo(user2AddedGroup.getGroupId()));
+    assertThat(user2AddedGroup.getGroupId(), equalTo(user3AddedGroup.getGroupId()));
+
+    assertThat(user1AddedGroup.getInvitingUserId(), equalTo(user1.getId()));
+    assertThat(user2AddedGroup.getInvitingUserId(), equalTo(user1.getId()));
+    assertThat(user3AddedGroup.getInvitingUserId(), equalTo(user1.getId()));
+
+    assertThat(user1AddedGroup.getGroupName(), nullValue());
+
+    assertThat(updatedUser1.getUserChallenges().size(), is(1));
+    assertThat(updatedUser2.getUserChallenges().size(), is(1));
+    assertThat(updatedUser3.getUserChallenges().size(), is(1));
+
+    assertThat(updatedUser1.getUserChallenges().get(0).getGroupId(),
+        equalTo(user1AddedGroup.getGroupId()));
+    assertThat(updatedUser2.getUserChallenges().get(0).getGroupId(),
+        equalTo(user1AddedGroup.getGroupId()));
+    assertThat(updatedUser3.getUserChallenges().get(0).getGroupId(),
+        equalTo(user1AddedGroup.getGroupId()));
+
+    assertThat(updatedUser1.getUserChallenges().get(0).getName(),
+        equalTo(challenge.getName()));
+
+    Group updatedGroup = groupRepo.findById(user1AddedGroup.getGroupId()).get();
+    assertThat(updatedGroup.getUsersIds().size(), is(3));
+    assertThat(updatedGroup.getUsersIds(),
+        containsInAnyOrder(user1.getId(), user2.getId(), user3.getId()));
+  }
+
+  @Test
+  public void addFriendsChallenge_notFriend_shouldFail() throws Exception {
+    User user2 = getNewRegisteredUser();
+    User user3 = getNewRegisteredUser();
+
+    azkarApi.makeFriends(user1, user2);
+
+    int user1GroupsNumBefore = userRepo.findById(user1.getId()).get().getUserGroups().size();
+    int user2GroupsNumBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
+    int user3GroupsNumBefore = userRepo.findById(user3.getId()).get().getUserGroups().size();
+    long groupsNumBefore = groupRepo.count();
+
+    List<String> friendsIds = ImmutableList.of(user2.getId(), user3.getId());
+    Challenge challenge = ChallengeFactory.getNewChallenge("toBeRemovedGroupId").toBuilder()
+        .groupId(null)
+        .build();
+
+    AddFriendsChallengeRequest request =
+        AddFriendsChallengeRequest.AddFriendsChallengeRequestBuilder().
+            friendsIds(friendsIds)
+            .challenge(challenge)
+            .build();
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
+    azkarApi.addFriendsChallenge(user1, request)
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+
+    assertThat(groupRepo.count(), is(groupsNumBefore));
+
+    User updatedUser1 = userRepo.findById(user1.getId()).get();
+    User updatedUser2 = userRepo.findById(user2.getId()).get();
+    User updatedUser3 = userRepo.findById(user3.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore));
+    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
+    assertThat(updatedUser3.getUserGroups().size(), is(user3GroupsNumBefore));
+
+    assertThat(updatedUser1.getUserChallenges().size(), is(0));
+    assertThat(updatedUser2.getUserChallenges().size(), is(0));
+    assertThat(updatedUser3.getUserChallenges().size(), is(0));
+  }
+
+  @Test
+  public void addFriendsChallenge_oneFriendProvided_shouldFail() throws Exception {
+    User user2 = getNewRegisteredUser();
+
+    azkarApi.makeFriends(user1, user2);
+
+    int user1GroupsNumBefore = userRepo.findById(user1.getId()).get().getUserGroups().size();
+    int user2GroupsNumBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
+    long groupsNumBefore = groupRepo.count();
+
+    List<String> friendsIds = ImmutableList.of(user2.getId());
+    Challenge challenge = ChallengeFactory.getNewChallenge("toBeRemovedGroupId").toBuilder()
+        .groupId(null)
+        .build();
+
+    AddFriendsChallengeRequest request =
+        AddFriendsChallengeRequest.AddFriendsChallengeRequestBuilder().
+            friendsIds(friendsIds)
+            .challenge(challenge)
+            .build();
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setStatus(new Status(Status.LESS_THAN_TWO_FRIENDS_ARE_PROVIDED_ERROR));
+    azkarApi.addFriendsChallenge(user1, request)
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+
+    assertThat(groupRepo.count(), is(groupsNumBefore));
+
+    User updatedUser1 = userRepo.findById(user1.getId()).get();
+    User updatedUser2 = userRepo.findById(user2.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore));
+    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
+
+    assertThat(updatedUser1.getUserChallenges().size(), is(0));
+    assertThat(updatedUser2.getUserChallenges().size(), is(0));
+  }
+
+  @Test
+  public void addFriendsChallenge_duplicateFriendIds_shouldFail() throws Exception {
+    User user2 = getNewRegisteredUser();
+
+    azkarApi.makeFriends(user1, user2);
+
+    int user1GroupsNumBefore = userRepo.findById(user1.getId()).get().getUserGroups().size();
+    int user2GroupsNumBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
+    long groupsNumBefore = groupRepo.count();
+
+    List<String> friendsIds = ImmutableList.of(user2.getId(), user2.getId());
+    Challenge challenge = ChallengeFactory.getNewChallenge("toBeRemovedGroupId").toBuilder()
+        .groupId(null)
+        .build();
+
+    AddFriendsChallengeRequest request =
+        AddFriendsChallengeRequest.AddFriendsChallengeRequestBuilder().
+            friendsIds(friendsIds)
+            .challenge(challenge)
+            .build();
+    AddChallengeResponse expectedResponse = new AddChallengeResponse();
+    expectedResponse.setStatus(new Status(Status.DUPLICATE_FRIEND_IDS_PROVIDED_ERROR));
+    azkarApi.addFriendsChallenge(user1, request)
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+
+    assertThat(groupRepo.count(), is(groupsNumBefore));
+
+    User updatedUser1 = userRepo.findById(user1.getId()).get();
+    User updatedUser2 = userRepo.findById(user2.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore));
+    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
+
+    assertThat(updatedUser1.getUserChallenges().size(), is(0));
+    assertThat(updatedUser2.getUserChallenges().size(), is(0));
+  }
+
+  @Test
   public void addChallenge_oneMemberInGroup_shouldSucceed() throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(validGroup.getId());
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
@@ -95,7 +292,7 @@ public class GroupChallengeTest extends TestBase {
         .build()
     );
 
-    azkarApi.createChallenge(user1, challenge)
+    azkarApi.addChallenge(user1, challenge)
         .andExpect(status().isOk())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -122,7 +319,7 @@ public class GroupChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setStatus(new Status(Status.MALFORMED_SUB_CHALLENGES_ERROR));
 
-    azkarApi.createChallenge(user1, challenge)
+    azkarApi.addChallenge(user1, challenge)
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -150,7 +347,7 @@ public class GroupChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setStatus(new Status(Status.CHALLENGE_CREATION_DUPLICATE_ZEKR_ERROR));
 
-    azkarApi.createChallenge(user1, challenge)
+    azkarApi.addChallenge(user1, challenge)
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -165,7 +362,7 @@ public class GroupChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setStatus(new Status(Status.GROUP_NOT_FOUND_ERROR));
 
-    azkarApi.createChallenge(user1, challenge)
+    azkarApi.addChallenge(user1, challenge)
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -182,7 +379,7 @@ public class GroupChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setStatus(new Status(Status.NOT_GROUP_MEMBER_ERROR));
 
-    azkarApi.createChallenge(nonGroupMember, challenge)
+    azkarApi.addChallenge(nonGroupMember, challenge)
         .andExpect(status().isForbidden())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -207,7 +404,7 @@ public class GroupChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setData(challenge);
 
-    azkarApi.createChallenge(user1, challenge)
+    azkarApi.addChallenge(user1, challenge)
         .andExpect(status().isOk())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -232,7 +429,7 @@ public class GroupChallengeTest extends TestBase {
     AddChallengeResponse expectedResponse = new AddChallengeResponse();
     expectedResponse.setStatus(new Status(Status.PAST_EXPIRY_DATE_ERROR));
 
-    azkarApi.createChallenge(user1, challenge)
+    azkarApi.addChallenge(user1, challenge)
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -322,6 +519,6 @@ public class GroupChallengeTest extends TestBase {
       String groupId)
       throws Exception {
     Challenge challenge = ChallengeFactory.getNewChallenge(challengeNamePrefix, groupId);
-    return azkarApi.createChallenge(creatingUser, challenge);
+    return azkarApi.addChallenge(creatingUser, challenge);
   }
 }

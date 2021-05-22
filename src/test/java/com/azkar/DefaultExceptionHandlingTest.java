@@ -20,7 +20,7 @@ public class DefaultExceptionHandlingTest extends TestBase {
 
     DefaultExceptionResponse expectedResponse = new DefaultExceptionResponse();
     expectedResponse.setStatus(new Status(Status.DEFAULT_ERROR));
-    azkarApi.createPersonalChallenge(user, /*request=*/null)
+    azkarApi.addPersonalChallenge(user, /*request=*/null)
         .andExpect(status().isInternalServerError())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));

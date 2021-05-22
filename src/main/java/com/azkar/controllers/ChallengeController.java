@@ -2,11 +2,13 @@ package com.azkar.controllers;
 
 import com.azkar.entities.Challenge;
 import com.azkar.entities.Challenge.SubChallenge;
+import com.azkar.entities.Friendship;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.AddFriendsChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
@@ -16,10 +18,12 @@ import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.ChallengeRepo;
+import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +32,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +61,8 @@ public class ChallengeController extends BaseController {
   ChallengeRepo challengeRepo;
   @Autowired
   GroupRepo groupRepo;
+  @Autowired
+  FriendshipRepo friendshipRepo;
 
   private static Predicate<Challenge> all() {
     return (userChallengeStatus -> true);
@@ -267,6 +274,87 @@ public class ChallengeController extends BaseController {
 
     response.setData(challenge);
     return ResponseEntity.ok(response);
+  }
+
+  // This endpoint can be used to challenge a set of friends without creating a group.
+  // This endpoint is not allowed to be used with only one friend.
+  @PostMapping("/friends")
+  public ResponseEntity<AddChallengeResponse> addFriendsChallenge(
+      @RequestBody AddFriendsChallengeRequest request) {
+    AddChallengeResponse response = new AddChallengeResponse();
+
+    try {
+      request.validate();
+    } catch (BadRequestException e) {
+      response.setStatus(e.error);
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    User currentUser = getCurrentUser(userRepo);
+
+    if (request.getFriendsIds().size() < 2) {
+      response.setStatus(new Status(Status.LESS_THAN_TWO_FRIENDS_ARE_PROVIDED_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    HashSet<String> friendsIds = getUserFriends(currentUser);
+    boolean allValidFriends =
+        request.getFriendsIds().stream().allMatch(id -> friendsIds.contains(id));
+    if (!allValidFriends) {
+      response.setStatus(new Status(Status.ONE_OR_MORE_USERS_NOT_FRIENDS_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    List<String> groupMembers = new ArrayList<>(request.getFriendsIds());
+    groupMembers.add(currentUser.getId());
+
+    Group newGroup = Group.builder()
+        .id(new ObjectId().toString())
+        .creatorId(currentUser.getId())
+        .usersIds(groupMembers)
+        .build();
+
+    UserGroup userGroup = UserGroup.builder()
+        .groupId(newGroup.getId())
+        .invitingUserId(currentUser.getId())
+        .monthScore(0)
+        .totalScore(0)
+        .build();
+
+    Challenge challenge = request.getChallenge().toBuilder()
+        .id(new ObjectId().toString())
+        .creatingUserId(currentUser.getId())
+        .groupId(newGroup.getId())
+        .build();
+
+    newGroup.getChallengesIds().add(challenge.getId());
+
+    Iterable<User> affectedUsers = userRepo.findAllById(groupMembers);
+    affectedUsers.forEach(user -> {
+      user.getUserChallenges().add(challenge);
+      user.getUserGroups().add(userGroup);
+    });
+
+    userRepo.saveAll(affectedUsers);
+    groupRepo.save(newGroup);
+    challengeRepo.save(challenge);
+
+    affectedUsers.forEach(affectedUser -> {
+      if (!affectedUser.getId().equals(currentUser.getId())) {
+        notificationsService.sendNotificationToUser(affectedUser, "لديك تحدٍ جديد",
+            "تحداك" + " " + currentUser.getFirstName() + " " + currentUser.getLastName());
+      }
+    });
+
+    response.setData(challenge);
+    return ResponseEntity.ok(response);
+  }
+
+  private HashSet<String> getUserFriends(User user) {
+    Friendship friendship = friendshipRepo.findByUserId(user.getId());
+    HashSet<String> friends = new HashSet<>();
+    friendship.getFriends().forEach(friend -> friends.add(friend.getUserId()));
+    return friends;
   }
 
   private boolean groupContainsCurrentUser(Group group) {
