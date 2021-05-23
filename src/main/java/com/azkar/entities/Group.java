@@ -36,7 +36,7 @@ public class Group extends EntityBase {
   // without creating a new group. If the user repeated that for the same set of friends, a new
   // group will be generated every time.
   private String name;
-  @NotNull
+  // TODO(issue#258): Populate Group.creatorId for existing users
   private String creatorId;
   @NotNull
   private List<String> usersIds;
