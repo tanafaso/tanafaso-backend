@@ -2,8 +2,11 @@ debug: true
 app:
   jwtSecret: ${JWT_SECRET}
 
-logging.level.org.springframework:
-  web: TRACE
+org:
+  springframework:
+    web:
+      filter:
+        CommonsRequestLoggingFilter: DEBUG
 
 server:
   port: ${SERVER_PORT}
