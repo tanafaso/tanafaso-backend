@@ -56,6 +56,7 @@ import org.springframework.web.client.RestTemplate;
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class AuthenticationController extends BaseController {
+  private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
   public static final String LOGIN_WITH_FACEBOOK_PATH = "/login/facebook";
   public static final String REGISTER_WITH_EMAIL_PATH = "/register/email";
@@ -65,7 +66,6 @@ public class AuthenticationController extends BaseController {
 
   private static final long RESET_PASSWORD_EXPIRY_TIME_SECONDS = 30 * 60;
 
-  private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
   private static final String RESET_PASSWORD_EMAIL_TEMPLATE_PATH =
       "emailTemplates/reset_password_email.html";
   private static final String VERIFY_EMAIL_TEMPLATE_PATH = "emailTemplates/verify_email.html";
