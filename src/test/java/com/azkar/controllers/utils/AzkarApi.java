@@ -52,6 +52,10 @@ public class AzkarApi {
     return httpClient.performGetRequest(user, String.format("/challenges/%s", challengeId));
   }
 
+  public ResultActions deleteChallenge(User user, String challengeId) throws Exception {
+    return httpClient.performDeleteRequest(user, String.format("/challenges/%s", challengeId));
+  }
+
   public ResultActions getOriginalChallenge(User user, String challengeId) throws Exception {
     return httpClient.performGetRequest(user, String.format("/challenges/original/%s",
         challengeId));

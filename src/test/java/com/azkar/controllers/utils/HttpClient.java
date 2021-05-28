@@ -38,12 +38,17 @@ public class HttpClient {
   public ResultActions performGetRequest(User user, String path) throws Exception {
     MockHttpServletRequestBuilder requestBuilder = get(path);
     addAuthenticationToken(requestBuilder, user);
-
     return mockMvc.perform(requestBuilder);
   }
 
   public ResultActions performPostRequest(String path, String body) throws Exception {
     MockHttpServletRequestBuilder requestBuilder = post(path);
+    addRequestBody(requestBuilder, body);
+    return mockMvc.perform(requestBuilder);
+  }
+
+  public ResultActions performDeleteRequest(String path, String body) throws Exception {
+    MockHttpServletRequestBuilder requestBuilder = delete(path);
     addRequestBody(requestBuilder, body);
     return mockMvc.perform(requestBuilder);
   }
