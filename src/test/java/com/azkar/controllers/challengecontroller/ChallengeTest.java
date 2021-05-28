@@ -1,5 +1,8 @@
 package com.azkar.controllers.challengecontroller;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -12,9 +15,11 @@ import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
+import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,18 +43,50 @@ public class ChallengeTest extends TestBase {
   }
 
   @Test
-  public void getChallenge_normalScenario_shouldSucceed() throws Exception {
+  public void deleteChallenge_normalScenario_shouldSucceed() throws Exception {
     Challenge queriedChallenge = createGroupChallenge(user, group);
     Challenge anotherChallenge = createGroupChallenge(user, group);
-    GetChallengeResponse response = new GetChallengeResponse();
+    DeleteChallengeResponse response = new DeleteChallengeResponse();
     response.setData(queriedChallenge);
+    List<Challenge> userChallenges = userRepo.findById(user.getId()).get().getUserChallenges();
+    assertThat(userChallenges.size(), is(2));
 
-    azkarApi.getChallenge(user, queriedChallenge.getId())
+    azkarApi.deleteChallenge(user, queriedChallenge.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(response)));
+
+    userChallenges = userRepo.findById(user.getId()).get().getUserChallenges();
+    assertThat(userChallenges.size(), is(1));
+    assertThat(userChallenges.get(0).getId(), equalTo(anotherChallenge.getId()));
   }
 
+
+  @Test
+  public void deleteChallenge_invalidChallengeId_shouldFail() throws Exception {
+    DeleteChallengeResponse notFoundResponse = new DeleteChallengeResponse();
+    notFoundResponse.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+
+    azkarApi.deleteChallenge(user, "invalidChallengeId")
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
+  }
+
+  @Test
+  public void deleteChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
+    Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
+    azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
+    User nonGroupMember = UserFactory.getNewUser();
+    addNewUser(nonGroupMember);
+    DeleteChallengeResponse notFoundResponse = new DeleteChallengeResponse();
+    notFoundResponse.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+
+    azkarApi.deleteChallenge(nonGroupMember, challenge.getId())
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
+  }
 
   @Test
   public void getOriginalChallenge_normalScenario_shouldSucceed() throws Exception {
@@ -75,47 +112,11 @@ public class ChallengeTest extends TestBase {
         .andExpect(content().json(JsonHandler.toJson(response)));
   }
 
-  private Challenge createGroupChallenge(User user, Group group)
-      throws Exception {
-    Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
-    return azkarApi.addChallengeAndReturn(user, challenge);
-  }
-
-  @Test
-  public void getChallenge_invalidChallengeId_shouldFail() throws Exception {
-    GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
-
-    azkarApi.getChallenge(user, "invalidChallengeId")
-        .andExpect(status().isNotFound())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
-  }
-
   @Test
   public void getOriginalChallenge_invalidChallengeId_shouldFail() throws Exception {
     GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
 
     azkarApi.getOriginalChallenge(user, "invalidChallengeId")
-        .andExpect(status().isNotFound())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
-  }
-
-  private GetChallengeResponse getGetChallengeNotFoundResponse() {
-    GetChallengeResponse expectedResponse = new GetChallengeResponse();
-    expectedResponse.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
-    return expectedResponse;
-  }
-
-  @Test
-  public void getChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
-    Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
-    azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
-    User nonGroupMember = UserFactory.getNewUser();
-    addNewUser(nonGroupMember);
-    GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
-
-    azkarApi.getChallenge(nonGroupMember, challenge.getId())
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
@@ -133,5 +134,54 @@ public class ChallengeTest extends TestBase {
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
+  }
+
+  @Test
+  public void getChallenge_invalidChallengeId_shouldFail() throws Exception {
+    GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
+
+    azkarApi.getChallenge(user, "invalidChallengeId")
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
+  }
+
+  @Test
+  public void getChallenge_normalScenario_shouldSucceed() throws Exception {
+    Challenge queriedChallenge = createGroupChallenge(user, group);
+    Challenge anotherChallenge = createGroupChallenge(user, group);
+    GetChallengeResponse response = new GetChallengeResponse();
+    response.setData(queriedChallenge);
+
+    azkarApi.getChallenge(user, queriedChallenge.getId())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(response)));
+  }
+
+  @Test
+  public void getChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
+    Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
+    azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
+    User nonGroupMember = UserFactory.getNewUser();
+    addNewUser(nonGroupMember);
+    GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
+
+    azkarApi.getChallenge(nonGroupMember, challenge.getId())
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
+  }
+
+  private Challenge createGroupChallenge(User user, Group group)
+      throws Exception {
+    Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
+    return azkarApi.addChallengeAndReturn(user, challenge);
+  }
+
+  private GetChallengeResponse getGetChallengeNotFoundResponse() {
+    GetChallengeResponse expectedResponse = new GetChallengeResponse();
+    expectedResponse.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+    return expectedResponse;
   }
 }

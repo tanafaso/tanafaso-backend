@@ -13,6 +13,7 @@ import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeReques
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -39,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,10 +65,6 @@ public class ChallengeController extends BaseController {
   GroupRepo groupRepo;
   @Autowired
   FriendshipRepo friendshipRepo;
-
-  private static Predicate<Challenge> all() {
-    return (userChallengeStatus -> true);
-  }
 
   // Note: This function may modify oldSubChallenges.
   private static Optional<ResponseEntity<UpdateChallengeResponse>> updateOldSubChallenges(
@@ -230,6 +227,28 @@ public class ChallengeController extends BaseController {
       response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+    response.setData(userChallenge.get());
+    return ResponseEntity.ok(response);
+  }
+
+  @DeleteMapping("{challengeId}")
+  public ResponseEntity<DeleteChallengeResponse> deleteChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    DeleteChallengeResponse response = new DeleteChallengeResponse();
+    User user = getCurrentUser(userRepo);
+    Optional<Challenge> userChallenge = user.getUserChallenges()
+        .stream()
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
+    if (!userChallenge.isPresent()) {
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+    user.getUserChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+    userRepo.save(user);
     response.setData(userChallenge.get());
     return ResponseEntity.ok(response);
   }
