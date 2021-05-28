@@ -17,11 +17,13 @@ import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,12 +143,64 @@ public class GroupController extends BaseController {
           + "non-existing group", currentUser.getId()));
     }
 
+    boolean isBinaryGroup =
+        friendshipRepo.findByUserId(currentUser.getId()).getFriends().stream().anyMatch(
+            friend -> friend.getGroupId().equals(groupId)
+        );
+    if (group.get().getUsersIds().size() != 2) {
+      logger.error("Found conflicting information regarding a binary group with ID %s that has "
+          + "more than two members", group.get().getId());
+      // Fallback to calculating the leaderboard for non-binary groups.
+      isBinaryGroup = false;
+    }
+
+    List<UserScore> userScores;
+    if (isBinaryGroup) {
+      userScores = getBinaryGroupLeaderboard(group.get());
+    } else {
+      userScores = getNonBinaryGroupLeaderboard(group.get());
+    }
+    response.setData(userScores);
+    return ResponseEntity.ok(response);
+  }
+
+  // Accumulates the scores of the two users in all of the groups they are both members in.
+  private List<UserScore> getBinaryGroupLeaderboard(Group group) {
+    AtomicInteger user1Score = new AtomicInteger(0);
+    AtomicInteger user2Score = new AtomicInteger(0);
+    User user1 = userRepo.findById(group.getUsersIds().get(0)).get();
+    User user2 = userRepo.findById(group.getUsersIds().get(1)).get();
+    groupRepo.findAll().stream().filter(
+        grp -> (grp.getUsersIds().contains(user1.getId()) && grp.getUsersIds()
+            .contains(user2.getId())))
+        .forEach(grp -> {
+          Optional<UserScore> user1ScoreInGrp = getUserScoreInGroup(user1.getId(), grp);
+          Optional<UserScore> user2ScoreInGrp = getUserScoreInGroup(user2.getId(), grp);
+          user1ScoreInGrp.ifPresent(userScore -> user1Score.addAndGet(userScore.getTotalScore()));
+          user2ScoreInGrp.ifPresent(userScore -> user2Score.addAndGet(userScore.getTotalScore()));
+        });
+    UserScore userScore1 = UserScore.builder()
+        .username(user1.getUsername())
+        .firstName(user1.getFirstName())
+        .lastName(user1.getLastName())
+        .totalScore(user1Score.get())
+        .build();
+    UserScore userScore2 = UserScore.builder()
+        .username(user2.getUsername())
+        .firstName(user2.getFirstName())
+        .lastName(user2.getLastName())
+        .totalScore(user2Score.get())
+        .build();
+    return ImmutableList.of(userScore1, userScore2);
+  }
+
+  private List<UserScore> getNonBinaryGroupLeaderboard(Group group) {
     List<UserScore> userScores = new ArrayList<>();
-    for (String groupMemberId : group.get().getUsersIds()) {
-      Optional<UserScore> userScore = getUserScoreInGroup(groupMemberId, group.get());
+    for (String groupMemberId : group.getUsersIds()) {
+      Optional<UserScore> userScore = getUserScoreInGroup(groupMemberId, group);
       if (!userScore.isPresent()) {
         logger.warn(String.format("Dangling group member: %s in group: %s", groupMemberId,
-            group.get().getId()));
+            group.getId()));
         continue;
       }
       userScores.add(userScore.get());
@@ -154,8 +208,8 @@ public class GroupController extends BaseController {
 
     Collections.sort(userScores,
         (u1, u2) -> Integer.compare(u2.getTotalScore(), u1.getTotalScore()));
-    response.setData(userScores);
-    return ResponseEntity.ok(response);
+
+    return userScores;
   }
 
   private Optional<UserScore> getUserScoreInGroup(String userId, Group group) {

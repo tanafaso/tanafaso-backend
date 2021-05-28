@@ -6,6 +6,7 @@ import com.azkar.repos.UserRepo;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public class BaseController {
+
   public static final String API_VERSION_HEADER = "api-version";
 
   protected UserPrincipal getCurrentUser() {
