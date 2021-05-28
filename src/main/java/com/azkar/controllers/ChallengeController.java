@@ -234,6 +234,26 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  @GetMapping("/original/{challengeId}")
+  public ResponseEntity<GetChallengeResponse> getOriginalChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    GetChallengeResponse response = new GetChallengeResponse();
+    Optional<Challenge> userChallenge = getCurrentUser(userRepo).getUserChallenges()
+        .stream()
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
+    Optional<Challenge> originalChallenge = challengeRepo.findById(challengeId);
+    if (!userChallenge.isPresent() || !originalChallenge.isPresent()) {
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+    response.setData(originalChallenge.get());
+    return ResponseEntity.ok(response);
+  }
+
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddChallengeResponse> addGroupChallenge(
       @RequestBody AddChallengeRequest req) {
