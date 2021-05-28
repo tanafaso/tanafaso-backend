@@ -52,6 +52,11 @@ public class AzkarApi {
     return httpClient.performGetRequest(user, String.format("/challenges/%s", challengeId));
   }
 
+  public ResultActions getOriginalChallenge(User user, String challengeId) throws Exception {
+    return httpClient.performGetRequest(user, String.format("/challenges/original/%s",
+        challengeId));
+  }
+
   public Challenge getChallengeAndReturn(User user, String challengeId) throws Exception {
     MvcResult result = httpClient.performGetRequest(user, String.format("/challenges/%s",
         challengeId)).andReturn();
