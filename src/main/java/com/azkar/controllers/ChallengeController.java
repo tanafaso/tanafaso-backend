@@ -365,8 +365,10 @@ public class ChallengeController extends BaseController {
   // Returns all non-personal challenges.
   @GetMapping(path = "/")
   public ResponseEntity<GetChallengesResponse> getAllChallenges(
-      @RequestHeader(API_VERSION_HEADER) String apiVersion) {
-    logger.info("API version requested is " + apiVersion);
+      @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
+    if (apiVersion != null) {
+      logger.info("API version requested is " + apiVersion);
+    }
     GetChallengesResponse response = new GetChallengesResponse();
     response.setData(getCurrentUser(userRepo).getUserChallenges());
     Collections.reverse(response.getData());
