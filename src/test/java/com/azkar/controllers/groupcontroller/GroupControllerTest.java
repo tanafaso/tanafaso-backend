@@ -22,6 +22,7 @@ import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
+import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +43,9 @@ public class GroupControllerTest extends TestBase {
 
   @Autowired
   UserRepo userRepo;
+
+  @Autowired
+  FriendshipRepo friendshipRepo;
 
   private User user1 = UserFactory.getNewUser();
   private User user2 = UserFactory.getNewUser();
@@ -405,17 +409,18 @@ public class GroupControllerTest extends TestBase {
     User user2 = getNewRegisteredUser();
     azkarApi.makeFriends(user1, user2);
 
-    int user1NumGroupsBefore = userRepo.findById(user1.getId()).get().getUserGroups().size();
-    int user2NumGroupsBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
-
     Group group = azkarApi.addGroupAndReturn(user1, "group");
+    int user1GroupIndex = getLastAddedUserGroupIndex(user1);
     azkarApi.addGroup(user1, "irrelevant group");
+    int user1IrrelevantGroupIndex = getLastAddedUserGroupIndex(user1);
     azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, group.getId());
+    int user2GroupIndex = getLastAddedUserGroupIndex(user2);
 
     User user1InDb = userRepo.findById(user1.getId()).get();
     User user2InDb = userRepo.findById(user2.getId()).get();
-    user1InDb.getUserGroups().get(user1NumGroupsBefore + 0).setTotalScore(5);
-    user2InDb.getUserGroups().get(user2NumGroupsBefore + 0).setTotalScore(10);
+    user1InDb.getUserGroups().get(user1GroupIndex).setTotalScore(5);
+    user1InDb.getUserGroups().get(user1IrrelevantGroupIndex).setTotalScore(20);
+    user2InDb.getUserGroups().get(user2GroupIndex).setTotalScore(10);
     userRepo.save(user1InDb);
     userRepo.save(user2InDb);
     GetGroupLeaderboardResponse expectedResponse = new GetGroupLeaderboardResponse();
@@ -436,6 +441,63 @@ public class GroupControllerTest extends TestBase {
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
         .andReturn();
     azkarApi.getGroupLeaderboard(user2, group.getId())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
+  }
+
+  @Test
+  public void getGroupLeaderboard_binaryGroup_accountsForOtherGroupsScore() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
+    azkarApi.makeFriends(user1, user2);
+
+    Group group1 = azkarApi.addGroupAndReturn(user1, "group1");
+    int user1Group1Index = getLastAddedUserGroupIndex(user1);
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, group1.getId());
+    int user2Group1Index = getLastAddedUserGroupIndex(user2);
+
+    Group group2 = azkarApi.addGroupAndReturn(user2, "group2");
+    int user2Group2Index = getLastAddedUserGroupIndex(user2);
+    azkarApi.addUserToGroup(/*invitingUser=*/user2, user1, group2.getId());
+    int user1Group2Index = getLastAddedUserGroupIndex(user1);
+
+    azkarApi.addGroup(user1, "irrelevant group");
+    int user1IrrelevantGroupIndex = getLastAddedUserGroupIndex(user1);
+
+    User user1InDb = userRepo.findById(user1.getId()).get();
+    User user2InDb = userRepo.findById(user2.getId()).get();
+
+    user1InDb.getUserGroups().get(user1Group1Index).setTotalScore(5);
+    user1InDb.getUserGroups().get(user1Group2Index).setTotalScore(10);
+    user1InDb.getUserGroups().get(user1IrrelevantGroupIndex).setTotalScore(15);
+
+    user2InDb.getUserGroups().get(user2Group1Index).setTotalScore(50);
+    user2InDb.getUserGroups().get(user2Group2Index).setTotalScore(100);
+
+    userRepo.save(user1InDb);
+    userRepo.save(user2InDb);
+    GetGroupLeaderboardResponse expectedResponse = new GetGroupLeaderboardResponse();
+    List<UserScore> expectedUserScores = new ArrayList<>();
+    expectedUserScores.add(
+        UserScore.builder().firstName(user2.getFirstName()).lastName(user2.getLastName())
+            .username(user2.getUsername()).totalScore(150)
+            .build());
+    expectedUserScores.add(
+        UserScore.builder().firstName(user1.getFirstName()).lastName(user1.getLastName())
+            .username(user1.getUsername()).totalScore(15)
+            .build());
+    expectedResponse.setData(expectedUserScores);
+
+    String binaryGroupId =
+        friendshipRepo.findByUserId(user1.getId()).getFriends().get(0).getGroupId();
+    azkarApi.getGroupLeaderboard(user1, binaryGroupId)
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
+        .andReturn();
+    azkarApi.getGroupLeaderboard(user2, binaryGroupId)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
@@ -468,4 +530,7 @@ public class GroupControllerTest extends TestBase {
     return performPutRequest(user, String.format("/groups/%s/leave/", groupId), /*body=*/ null);
   }
 
+  private int getLastAddedUserGroupIndex(User user1) {
+    return userRepo.findById(user1.getId()).get().getUserGroups().size() - 1;
+  }
 }
