@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -363,7 +364,9 @@ public class ChallengeController extends BaseController {
 
   // Returns all non-personal challenges.
   @GetMapping(path = "/")
-  public ResponseEntity<GetChallengesResponse> getAllChallenges() {
+  public ResponseEntity<GetChallengesResponse> getAllChallenges(
+      @RequestHeader(API_VERSION_HEADER) String apiVersion) {
+    logger.info("API version requested is " + apiVersion);
     GetChallengesResponse response = new GetChallengesResponse();
     response.setData(getCurrentUser(userRepo).getUserChallenges());
     Collections.reverse(response.getData());
