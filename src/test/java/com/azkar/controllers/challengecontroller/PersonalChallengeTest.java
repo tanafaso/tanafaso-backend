@@ -221,6 +221,8 @@ public class PersonalChallengeTest extends TestBase {
   public void deletePersonalChallenge_normalScenario_shouldSucceed() throws Exception {
     Challenge queriedChallenge = createPersonalChallenge(USER);
     Challenge anotherChallenge = createPersonalChallenge(USER);
+    long numOfAllChallengesBeforeRequest = challengeRepo.count();
+
     DeleteChallengeResponse response = new DeleteChallengeResponse();
     response.setData(queriedChallenge);
     List<Challenge> userPersonalChallenges =
@@ -232,6 +234,7 @@ public class PersonalChallengeTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(response)));
 
+    assertThat(challengeRepo.count(), is(numOfAllChallengesBeforeRequest - 1b));
     userPersonalChallenges = userRepo.findById(USER.getId()).get().getPersonalChallenges();
     assertThat(userPersonalChallenges.size(), is(1));
     assertThat(userPersonalChallenges.get(0).getId(), equalTo(anotherChallenge.getId()));

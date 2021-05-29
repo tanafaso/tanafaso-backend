@@ -271,6 +271,8 @@ public class ChallengeController extends BaseController {
     }
     user.getPersonalChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
     userRepo.save(user);
+    // Also delete the original copy of it.
+    challengeRepo.deleteById(challengeId);
     response.setData(userPersonalChallenge.get());
     return ResponseEntity.ok(response);
   }
