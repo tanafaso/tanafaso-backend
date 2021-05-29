@@ -19,6 +19,7 @@ import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.UserRepo;
@@ -190,6 +191,28 @@ public class PersonalChallengeTest extends TestBase {
     assertThat(data, hasSize(2));
     assertUserChallengeConsistentWithRequest(data.get(0), request2);
     assertUserChallengeConsistentWithRequest(data.get(1), request1);
+  }
+
+  @Test
+  public void getOriginalChallenge_normalScenario_shouldSucceed() throws Exception {
+    Challenge queriedChallenge = createPersonalChallenge(USER);
+
+    // Change the user's copy of the challenge
+    User updatedUser1 = userRepo.findById(USER.getId()).get();
+    updatedUser1.getPersonalChallenges().stream().forEach(
+        userChallenge -> userChallenge.getSubChallenges().stream().forEach(
+            subChallenge -> subChallenge.setRepetitions(subChallenge.getRepetitions() + 1)
+        )
+    );
+    userRepo.save(updatedUser1);
+
+    GetChallengeResponse response = new GetChallengeResponse();
+    response.setData(queriedChallenge);
+
+    azkarApi.getOriginalChallenge(USER, queriedChallenge.getId())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(response)));
   }
 
   private void assertUserChallengeConsistentWithRequest(
