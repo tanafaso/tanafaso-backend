@@ -253,6 +253,28 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  @DeleteMapping("/personal/{challengeId}")
+  public ResponseEntity<DeleteChallengeResponse> deletePersonalChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    DeleteChallengeResponse response = new DeleteChallengeResponse();
+    User user = getCurrentUser(userRepo);
+    Optional<Challenge> userPersonalChallenge = user.getPersonalChallenges()
+        .stream()
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
+    if (!userPersonalChallenge.isPresent()) {
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+    user.getPersonalChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+    userRepo.save(user);
+    response.setData(userPersonalChallenge.get());
+    return ResponseEntity.ok(response);
+  }
+
   @GetMapping("/original/{challengeId}")
   public ResponseEntity<GetChallengeResponse> getOriginalChallenge(
       @PathVariable(value = "challengeId") String challengeId) {
