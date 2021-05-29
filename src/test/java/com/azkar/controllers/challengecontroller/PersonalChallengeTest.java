@@ -20,6 +20,7 @@ import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeReques
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
+import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
@@ -44,6 +45,9 @@ public class PersonalChallengeTest extends TestBase {
   @Autowired
   UserRepo userRepo;
 
+  @Autowired
+  ChallengeRepo challengeRepo;
+
   public static AddPersonalChallengeRequest createPersonalChallengeRequest(long expiryDate) {
     return createPersonalChallengeRequest(CHALLENGE_NAME, expiryDate);
   }
@@ -67,11 +71,14 @@ public class PersonalChallengeTest extends TestBase {
     long expiryDate = Instant.now().getEpochSecond() + DATE_OFFSET_IN_SECONDS;
     AddPersonalChallengeRequest requestBody = createPersonalChallengeRequest(expiryDate);
 
+    long allChallengesCountBeforeRequest = challengeRepo.count();
+
     MvcResult result = azkarApi.addPersonalChallenge(USER, requestBody)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andReturn();
 
+    assertThat(challengeRepo.count(), is(allChallengesCountBeforeRequest + 1));
     assertThat(userRepo.findById(USER.getId()).get().getPersonalChallenges().size(), is(1));
     Challenge expectedChallenge = Challenge.builder()
         .name(CHALLENGE_NAME)
