@@ -156,7 +156,7 @@ public class ChallengeController extends BaseController {
 
     Challenge challenge = request.getChallenge();
     challenge = challenge.toBuilder()
-        .id(UUID.randomUUID().toString())
+        .id(new ObjectId().toString())
         .groupId(Challenge.PERSONAL_CHALLENGES_NON_EXISTING_GROUP_ID)
         .creatingUserId(getCurrentUser().getUserId())
         .createdAt(Instant.now().getEpochSecond())
@@ -165,6 +165,7 @@ public class ChallengeController extends BaseController {
 
     User loggedInUser = getCurrentUser(userRepo);
     loggedInUser.getPersonalChallenges().add(challenge);
+    challengeRepo.save(challenge);
     userRepo.save(loggedInUser);
     response.setData(challenge);
     return ResponseEntity.ok(response);
