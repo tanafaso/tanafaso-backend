@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -265,8 +264,16 @@ public class ChallengeController extends BaseController {
                 .equals(
                     challengeId))
         .findFirst();
+    Optional<Challenge> personalChallenge = getCurrentUser(userRepo).getPersonalChallenges()
+        .stream()
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
     Optional<Challenge> originalChallenge = challengeRepo.findById(challengeId);
-    if (!userChallenge.isPresent() || !originalChallenge.isPresent()) {
+    if ((!userChallenge.isPresent() && !personalChallenge.isPresent())
+        || !originalChallenge.isPresent()) {
       response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
