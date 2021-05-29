@@ -1,6 +1,7 @@
 package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
@@ -19,6 +20,7 @@ import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.repos.ChallengeRepo;
@@ -213,6 +215,52 @@ public class PersonalChallengeTest extends TestBase {
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(response)));
+  }
+
+  @Test
+  public void deletePersonalChallenge_normalScenario_shouldSucceed() throws Exception {
+    Challenge queriedChallenge = createPersonalChallenge(USER);
+    Challenge anotherChallenge = createPersonalChallenge(USER);
+    DeleteChallengeResponse response = new DeleteChallengeResponse();
+    response.setData(queriedChallenge);
+    List<Challenge> userPersonalChallenges =
+        userRepo.findById(USER.getId()).get().getPersonalChallenges();
+    assertThat(userPersonalChallenges.size(), is(2));
+
+    azkarApi.deletePersonalChallenge(USER, queriedChallenge.getId())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(response)));
+
+    userPersonalChallenges = userRepo.findById(USER.getId()).get().getPersonalChallenges();
+    assertThat(userPersonalChallenges.size(), is(1));
+    assertThat(userPersonalChallenges.get(0).getId(), equalTo(anotherChallenge.getId()));
+  }
+
+
+  @Test
+  public void deletePersonalChallenge_invalidChallengeId_shouldFail() throws Exception {
+    DeleteChallengeResponse notFoundResponse = new DeleteChallengeResponse();
+    notFoundResponse.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+
+    azkarApi.deletePersonalChallenge(USER, "invalidChallengeId")
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
+  }
+
+  @Test
+  public void deletePersonalChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
+    Challenge challenge = createPersonalChallenge(USER);
+    User anotherUser = UserFactory.getNewUser();
+    addNewUser(anotherUser);
+    DeleteChallengeResponse notFoundResponse = new DeleteChallengeResponse();
+    notFoundResponse.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+
+    azkarApi.deletePersonalChallenge(anotherUser, challenge.getId())
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
   }
 
   private void assertUserChallengeConsistentWithRequest(
