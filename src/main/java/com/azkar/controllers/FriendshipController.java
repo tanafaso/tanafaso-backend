@@ -79,8 +79,9 @@ public class FriendshipController extends BaseController {
 
       List<UserScore> scores = getFriendsScores(currentUser, friendUser.get());
       friendsScores.add(FriendshipScores.builder()
-          .currentUserScore(scores.get(0))
-          .friendScore(scores.get(1))
+          .currentUserScore(scores.get(0).getTotalScore())
+          .friendScore(scores.get(1).getTotalScore())
+          .friend(friend)
           .build());
     });
 
