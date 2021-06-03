@@ -13,7 +13,7 @@ public class GetFriendsLeaderboardResponse extends ResponseBase<List<FriendshipS
   @Getter
   public static class FriendshipScores {
 
-    UserScore userScore1;
-    UserScore userScore2;
+    UserScore currentUserScore;
+    UserScore friendScore;
   }
 }
