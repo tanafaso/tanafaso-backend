@@ -19,7 +19,6 @@ import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -51,13 +50,10 @@ public abstract class TestBase {
 
   @Before
   public final void beforeBase() {
+    mongoTemplate.getDb().drop();
+
     Mockito.doNothing().when(notificationsService).
         sendNotificationToUser(any(), any(), any());
-  }
-
-  @After
-  public final void afterBase() {
-    mongoTemplate.getDb().drop();
   }
 
   protected void addNewUser(User user) {
