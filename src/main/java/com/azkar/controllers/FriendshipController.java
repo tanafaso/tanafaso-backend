@@ -8,15 +8,21 @@ import com.azkar.entities.User.UserGroup;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.usercontroller.responses.AddFriendResponse;
 import com.azkar.payload.usercontroller.responses.DeleteFriendResponse;
+import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardResponse;
+import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardResponse.FriendshipScores;
 import com.azkar.payload.usercontroller.responses.GetFriendsResponse;
 import com.azkar.payload.usercontroller.responses.ResolveFriendRequestResponse;
+import com.azkar.payload.utils.UserScore;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
+import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,6 +56,35 @@ public class FriendshipController extends BaseController {
 
     Friendship friendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
     response.setData(friendship);
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping(path = "/leaderboard")
+  public ResponseEntity<GetFriendsLeaderboardResponse> getFriendsLeaderboard() {
+    GetFriendsLeaderboardResponse response = new GetFriendsLeaderboardResponse();
+
+    User currentUser = getCurrentUser(userRepo);
+
+    List<FriendshipScores> friendsScores = new ArrayList<>();
+    Friendship friendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
+    friendship.getFriends().stream().forEach(friend -> {
+      if (friend.isPending()) {
+        return;
+      }
+
+      Optional<User> friendUser = userRepo.findById(friend.getUserId());
+      if (!friendUser.isPresent()) {
+        return;
+      }
+
+      List<UserScore> scores = getFriendsScores(currentUser, friendUser.get());
+      friendsScores.add(FriendshipScores.builder()
+          .userScore1(scores.get(0))
+          .userScore2(scores.get(1))
+          .build());
+    });
+
+    response.setData(friendsScores);
     return ResponseEntity.ok(response);
   }
 
@@ -269,5 +304,52 @@ public class FriendshipController extends BaseController {
       }
     }
     return -1;
+  }
+
+  // Accumulates the scores of the two users in all of the groups they are both members in.
+  private List<UserScore> getFriendsScores(User user1, User user2) {
+    AtomicInteger user1Score = new AtomicInteger(0);
+    AtomicInteger user2Score = new AtomicInteger(0);
+    groupRepo.findAll().stream().filter(
+        grp -> (grp.getUsersIds().contains(user1.getId()) && grp.getUsersIds()
+            .contains(user2.getId())))
+        .forEach(grp -> {
+          Optional<UserScore> user1ScoreInGrp = getUserScoreInGroup(user1.getId(), grp);
+          Optional<UserScore> user2ScoreInGrp = getUserScoreInGroup(user2.getId(), grp);
+          user1ScoreInGrp.ifPresent(userScore -> user1Score.addAndGet(userScore.getTotalScore()));
+          user2ScoreInGrp.ifPresent(userScore -> user2Score.addAndGet(userScore.getTotalScore()));
+        });
+    UserScore userScore1 = UserScore.builder()
+        .username(user1.getUsername())
+        .firstName(user1.getFirstName())
+        .lastName(user1.getLastName())
+        .totalScore(user1Score.get())
+        .build();
+    UserScore userScore2 = UserScore.builder()
+        .username(user2.getUsername())
+        .firstName(user2.getFirstName())
+        .lastName(user2.getLastName())
+        .totalScore(user2Score.get())
+        .build();
+    return ImmutableList.of(userScore1, userScore2);
+  }
+
+  private Optional<UserScore> getUserScoreInGroup(String userId, Group group) {
+    Optional<User> user = userRepo.findById(userId);
+    if (!user.isPresent()) {
+      return Optional.empty();
+    }
+
+    Optional<UserGroup> userGroup =
+        user.get().getUserGroups().stream()
+            .filter(userGroup1 -> userGroup1.getGroupId().equals(group.getId())).findFirst();
+    if (!userGroup.isPresent()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+        UserScore.builder().firstName(user.get().getFirstName()).lastName(user.get().getLastName())
+            .username(user.get().getUsername())
+            .totalScore(userGroup.get().getTotalScore()).build());
   }
 }

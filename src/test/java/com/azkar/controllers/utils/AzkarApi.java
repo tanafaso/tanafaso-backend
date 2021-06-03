@@ -196,6 +196,10 @@ public class AzkarApi {
         .performDeleteRequest(requester, String.format("/friends/%s", otherUser.getId()));
   }
 
+  public ResultActions getFriendsLeaderboard(User user) throws Exception {
+    return httpClient.performGetRequest(user, "/friends/leaderboard");
+  }
+
   public void makeFriends(User user1, User user2) throws Exception {
     sendFriendRequest(user1, user2);
     acceptFriendRequest(user2, user1);
