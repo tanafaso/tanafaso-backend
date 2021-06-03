@@ -478,13 +478,13 @@ public class FriendshipTest extends TestBase {
     GetFriendsLeaderboardResponse expectedResponse = new GetFriendsLeaderboardResponse();
     List<FriendshipScores> expectedFriendshipScores = ImmutableList.of(
         FriendshipScores.builder()
-            .userScore1(buildUserScoreTemplateForUser(user1).toBuilder().totalScore(2).build())
-            .userScore2(buildUserScoreTemplateForUser(user2).toBuilder().totalScore(1).build())
+            .currentUserScore(buildUserScoreTemplateForUser(user1).toBuilder().totalScore(2).build())
+            .friendScore(buildUserScoreTemplateForUser(user2).toBuilder().totalScore(1).build())
             .build(),
 
         FriendshipScores.builder()
-            .userScore1(buildUserScoreTemplateForUser(user1).toBuilder().totalScore(1).build())
-            .userScore2(buildUserScoreTemplateForUser(user3).toBuilder().totalScore(1).build())
+            .currentUserScore(buildUserScoreTemplateForUser(user1).toBuilder().totalScore(1).build())
+            .friendScore(buildUserScoreTemplateForUser(user3).toBuilder().totalScore(1).build())
             .build()
 
     );
