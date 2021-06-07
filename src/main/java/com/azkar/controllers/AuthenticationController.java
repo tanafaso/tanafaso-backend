@@ -104,23 +104,25 @@ public class AuthenticationController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
+
     if (registrationPinRepo.existsByEmail(body.getEmail())) {
-      response.setStatus(new Status(Status.PIN_ALREADY_SENT_TO_USER_ERROR));
-      return ResponseEntity.badRequest().body(response);
+      logger.warn("A user with email %s is trying to register more than once.", body.getEmail());
     }
+    RegistrationEmailConfirmationState registrationEmailConfirmationState =
+        registrationPinRepo.findByEmail(body.getEmail()).orElse(
+            RegistrationEmailConfirmationState.builder()
+                .email(body.getEmail())
+                .password(passwordEncoder.encode(body.getPassword()))
+                .firstName(body.getFirstName())
+                .lastName(body.getLastName())
+                .build());
 
     int pin = generatePin();
-
+    registrationEmailConfirmationState.setPin(pin);
     sendVerificationEmail(body.getEmail(), pin);
 
-    registrationPinRepo.save(
-        RegistrationEmailConfirmationState.builder()
-            .email(body.getEmail())
-            .password(passwordEncoder.encode(body.getPassword()))
-            .pin(pin)
-            .firstName(body.getFirstName())
-            .lastName(body.getLastName())
-            .build());
+    registrationPinRepo.save(registrationEmailConfirmationState);
+
     return ResponseEntity.ok(response);
   }
 
