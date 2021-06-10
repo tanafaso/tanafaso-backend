@@ -216,6 +216,10 @@ public class FriendshipController extends BaseController {
     userRepo.save(currentUser);
     userRepo.save(otherUser);
 
+    notificationsService.sendNotificationToUser(userRepo.findById(otherUserId).get(),
+        "تم قبول طلب الصداقة",
+        currentUser.getFirstName() + " " + currentUser.getLastName());
+
     return ResponseEntity.ok(response);
   }
 

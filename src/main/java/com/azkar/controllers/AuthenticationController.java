@@ -104,7 +104,6 @@ public class AuthenticationController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
-
     if (registrationPinRepo.existsByEmail(body.getEmail())) {
       logger.warn("A user with email %s is trying to register more than once.", body.getEmail());
     }
