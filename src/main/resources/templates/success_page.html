@@ -1,8 +1,8 @@
 <!doctype html>
-<html class="h-100" lang="ar" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="ar" class="h-100">
 <head>
   <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tanafaso</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300&display=swap"
         rel="stylesheet">
@@ -49,12 +49,11 @@ body {
 }
 
 
-
   </style>
 </head>
 <body class="text-center">
 <main class="body-style">
-  <img class="mb-4" height="114" th:src="@{images/success_icon.svg}" width="144">
+  <img class="mb-4" th:src="@{images/success_icon.svg}" width="144" height="114">
   <h2 th:text="${successMessage}"></h2>
 </main>
 </body>

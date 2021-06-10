@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta content="IE=edge" http-equiv="X-UA-Compatible">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tanafaso</title>
   <style>
         /* Style all input fields */
@@ -66,20 +66,19 @@
         content: "&#10006;";
         }
 
-
   </style>
 </head>
 <body>
 <div class="container">
   <form action="/feedback" method="POST" style="direction: rtl;">
     <label for="name">الاسم</label>
-    <input id="name" name="name" placeholder="الاسم" required type="text">
+    <input type="text" id="name" name="name" placeholder="الاسم" required>
     <label for="email">البريد الإلكتروني</label>
-    <input id="email" name="email" placeholder="البريد الإلكتروني" required type="text">
+    <input type="text" id="email" name="email" placeholder="البريد الإلكتروني" required>
     <label for="subject">العنوان</label>
-    <input id="subject" name="subject" placeholder="العنوان" required type="text">
+    <input type="text" id="subject" name="subject" placeholder="العنوان" required>
     <label for="msg">الرسالة</label>
-    <input id="msg" name="msg" placeholder="الرسالة" required type="text">
+    <input type="text" id="msg" name="msg" placeholder="الرسالة" required>
 
     <input type="submit" value="إرسال">
   </form>
