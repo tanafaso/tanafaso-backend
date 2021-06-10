@@ -338,8 +338,18 @@ public class ChallengeController extends BaseController {
     affectedUsers.forEach(user -> user.getUserChallenges().add(challenge));
     affectedUsers.forEach(affectedUser -> {
       if (!affectedUser.getId().equals(currentUser.getId())) {
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += currentUser.getFirstName();
+        body += " ";
+        body += currentUser.getLastName();
+        body += " (";
+
+        body += challenge.getName();
+        body += ")";
         notificationsService.sendNotificationToUser(affectedUser, "لديك تحدٍ جديد",
-            "تحداك" + " " + currentUser.getFirstName() + " " + currentUser.getLastName());
+            body);
       }
     });
     userRepo.saveAll(affectedUsers);
