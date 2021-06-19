@@ -339,7 +339,6 @@ public class ChallengeController extends BaseController {
     affectedUsers.forEach(affectedUser -> {
       if (!affectedUser.getId().equals(currentUser.getId())) {
         // Fire emoji 🔥
-        //CHECKSTYLE:OFF: AvoidEscapedUnicodeCharacters:
         String body = "\uD83D\uDD25";
         body += " ";
         body += currentUser.getFirstName();
@@ -425,7 +424,6 @@ public class ChallengeController extends BaseController {
     affectedUsers.forEach(affectedUser -> {
       if (!affectedUser.getId().equals(currentUser.getId())) {
         // Fire emoji 🔥
-        //CHECKSTYLE:OFF: AvoidEscapedUnicodeCharacters:
         String body = "\uD83D\uDD25";
         body += " ";
         body += currentUser.getFirstName();
@@ -582,7 +580,6 @@ public class ChallengeController extends BaseController {
       if (!userId.equals(userFinishedChallenge.getId())) {
 
         // Fire emoji 🔥
-        //CHECKSTYLE:OFF: AvoidEscapedUnicodeCharacters:
         String body = "\uD83D\uDD25";
         body += " ";
         body += userFinishedChallenge.getFirstName();
