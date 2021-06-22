@@ -38,4 +38,4 @@ jobs:
       - name: Run MongoDb in a container
         run:  docker run --name mongo -d -p 27017:27017 mongo
       - name: Build and test with Maven
-        run: mvn package
+        run: mvn clean && package
