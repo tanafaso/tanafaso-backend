@@ -257,9 +257,17 @@ public class AuthenticationController extends BaseController {
           userRepo.findByUserFacebookData_UserId(facebookResponse.getId()).orElse(null);
       if (user == null) {
         // Case 1
-        user = userService.buildNewUser(facebookResponse.email, facebookResponse.firstName,
-            facebookResponse.lastName);
-        user = userService.addNewUser(user);
+        final Optional<User> sameEmailUser = userRepo.findByEmail(facebookResponse.getEmail());
+        if (sameEmailUser.isPresent() && sameEmailUser.get().getUserFacebookData() == null) {
+          user = sameEmailUser.get();
+        } else if (sameEmailUser.isPresent()) {
+          response.setStatus(new Status(Status.SOMEONE_ELSE_ALREADY_CONNECTED_ERROR));
+          return ResponseEntity.badRequest().body(response);
+        } else {
+          user = userService.buildNewUser(facebookResponse.email, facebookResponse.firstName,
+                  facebookResponse.lastName);
+          user = userService.addNewUser(user);
+        }
       }
 
       UserFacebookData userFacebookData = UserFacebookData.builder()
