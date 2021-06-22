@@ -258,9 +258,9 @@ public class AuthenticationController extends BaseController {
       if (user == null) {
         // Case 1
         final Optional<User> sameEmailUser = userRepo.findByEmail(facebookResponse.getEmail());
-        if(sameEmailUser.isPresent() && sameEmailUser.get().getUserFacebookData() == null) {
+        if (sameEmailUser.isPresent() && sameEmailUser.get().getUserFacebookData() == null) {
           user = sameEmailUser.get();
-        } else if(sameEmailUser.isPresent()) {
+        } else if (sameEmailUser.isPresent()) {
           response.setStatus(new Status(Status.SOMEONE_ELSE_ALREADY_CONNECTED_ERROR));
           return ResponseEntity.badRequest().body(response);
         } else {
