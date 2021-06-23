@@ -6,7 +6,6 @@ import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody
 import com.azkar.payload.usercontroller.responses.GetUserResponse;
 import com.azkar.payload.usercontroller.responses.SetNotificationTokenResponse;
 import com.azkar.repos.UserRepo;
-import java.util.ArrayList;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

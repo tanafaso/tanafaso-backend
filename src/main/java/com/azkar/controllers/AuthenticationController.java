@@ -265,7 +265,7 @@ public class AuthenticationController extends BaseController {
           return ResponseEntity.badRequest().body(response);
         } else {
           user = userService.buildNewUser(facebookResponse.email, facebookResponse.firstName,
-                  facebookResponse.lastName);
+              facebookResponse.lastName);
           user = userService.addNewUser(user);
         }
       }
