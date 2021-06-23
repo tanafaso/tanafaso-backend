@@ -39,6 +39,27 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  @GetMapping(path = "/sabeq")
+  public ResponseEntity<GetUserResponse> getSabeq() {
+    GetUserResponse response = new GetUserResponse();
+
+    Optional<User> user = userRepo.findById(User.SABEQ_ID);
+    if (!user.isPresent()) {
+      response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    User userWithFilteredData = User.builder()
+        .id(user.get().getId())
+        .username(user.get().getUsername())
+        .firstName(user.get().getFirstName())
+        .lastName(user.get().getLastName())
+        .build();
+
+    response.setData(user.get());
+    return ResponseEntity.ok(response);
+  }
+
   /**
    * Searches for a user with {@code username} if specified. If {@code username} is not specified,
    * searches for a user with {@code facebook_user_id}.
