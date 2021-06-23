@@ -32,6 +32,11 @@ public class AzkarApi {
     return httpClient.performGetRequest(/*user=*/ (User) null, "/users/me");
   }
 
+  public ResultActions getUserById(User user, String id) throws Exception {
+    return httpClient.performGetRequest(user, String.format("/users/%s", id));
+  }
+
+
   public ResultActions searchForUserByUsername(User user, String username) throws Exception {
     return httpClient.performGetRequest(user, String.format("/users/search?username=%s", username));
   }

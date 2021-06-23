@@ -5,6 +5,7 @@ import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody;
 import com.azkar.payload.usercontroller.responses.GetUserResponse;
 import com.azkar.payload.usercontroller.responses.SetNotificationTokenResponse;
+import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.UserRepo;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +26,18 @@ public class UserController extends BaseController {
   @Autowired
   private UserRepo userRepo;
 
+  @Autowired
+  FriendshipRepo friendshipRepo;
+
   @GetMapping(path = "/{id}")
   public ResponseEntity<GetUserResponse> getUser(@PathVariable String id) {
     GetUserResponse response = new GetUserResponse();
+
+    if (!friendshipRepo.findByUserId(getCurrentUser(userRepo).getId()).getFriends().stream()
+        .anyMatch(friend -> friend.getUserId().equals(id))) {
+      response.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
 
     Optional<User> user = userRepo.findById(id);
     if (!user.isPresent()) {
@@ -35,7 +45,7 @@ public class UserController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
-    response.setData(user.get());
+    response.setData(getMinimalInfoAboutUser(user.get()));
     return ResponseEntity.ok(response);
   }
 
@@ -49,14 +59,7 @@ public class UserController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
-    User userWithFilteredData = User.builder()
-        .id(user.get().getId())
-        .username(user.get().getUsername())
-        .firstName(user.get().getFirstName())
-        .lastName(user.get().getLastName())
-        .build();
-
-    response.setData(user.get());
+    response.setData(getMinimalInfoAboutUser(user.get()));
     return ResponseEntity.ok(response);
   }
 
@@ -101,7 +104,7 @@ public class UserController extends BaseController {
       response.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
-    response.setData(user.get());
+    response.setData(getMinimalInfoAboutUser(user.get()));
     return ResponseEntity.ok(response);
   }
 
@@ -113,7 +116,7 @@ public class UserController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
-    response.setData(user.get());
+    response.setData(getMinimalInfoAboutUser(user.get()));
     return ResponseEntity.ok(response);
   }
 
@@ -122,5 +125,14 @@ public class UserController extends BaseController {
     GetUserResponse response = new GetUserResponse();
     response.setData(userRepo.findById(getCurrentUser().getUserId()).get());
     return ResponseEntity.ok(response);
+  }
+
+  private User getMinimalInfoAboutUser(User user) {
+    return User.builder()
+        .id(user.getId())
+        .firstName(user.getFirstName())
+        .lastName(user.getLastName())
+        .username(user.getUsername())
+        .build();
   }
 }
