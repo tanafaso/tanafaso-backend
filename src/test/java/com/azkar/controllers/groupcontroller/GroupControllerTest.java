@@ -54,6 +54,7 @@ public class GroupControllerTest extends TestBase {
   private Group user1Group = GroupFactory.getNewGroup(user1.getId());
   // A user who have never been authenticated and never added to the database.
   private User invalidUser = UserFactory.getNewUser();
+  private User sabeq;
 
   @Before
   public void before() {
@@ -62,6 +63,7 @@ public class GroupControllerTest extends TestBase {
     addNewUser(user3);
     addNewUser(user4);
     groupRepo.save(user1Group);
+    sabeq = userRepo.findById(User.SABEQ_ID).get();
   }
 
   @Test
@@ -129,6 +131,8 @@ public class GroupControllerTest extends TestBase {
 
   @Test
   public void addUser_invalidGroup_shouldNotSucceed() throws Exception {
+    int user2GroupsBefore = user2.getUserGroups().size();
+
     Group unSavedGroup = GroupFactory.getNewGroup(user1.getId());
 
     AddToGroupResponse expectedResponse = new AddToGroupResponse();
@@ -140,7 +144,7 @@ public class GroupControllerTest extends TestBase {
 
     User user2InRepo = userRepo.findById(user2.getId()).get();
     List<UserGroup> user2Groups = user2InRepo.getUserGroups();
-    assertThat(user2Groups.size(), is(0));
+    assertThat(user2Groups.size(), is(user2GroupsBefore));
     Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
     assertThat(user1GroupInRepo.getUsersIds().size(), is(1));
   }
@@ -370,13 +374,16 @@ public class GroupControllerTest extends TestBase {
 
   @Test
   public void getUserGroups_ownedGroups_normalScenario_shouldSucceed() throws Exception {
+    List<UserGroup> user1GroupsBefore = user1.getUserGroups();
+    List<UserGroup> user2GroupsBefore = user2.getUserGroups();
+
     String groupName1 = "group1name";
     String groupName2 = "group2name";
     Group group1 = azkarApi.addGroupAndReturn(user1, groupName1);
     Group group2 = azkarApi.addGroupAndReturn(user2, groupName2);
 
     GetUserGroupsResponse expectedUser1Response = new GetUserGroupsResponse();
-    List<UserGroup> expectedUser1Groups = new ArrayList();
+    List<UserGroup> expectedUser1Groups = user1GroupsBefore;
     expectedUser1Groups.add(UserGroup.builder()
         .groupId(group1.getId())
         .groupName(groupName1)
@@ -384,7 +391,7 @@ public class GroupControllerTest extends TestBase {
     expectedUser1Response.setData(expectedUser1Groups);
 
     GetUserGroupsResponse expectedUser2Response = new GetUserGroupsResponse();
-    List<UserGroup> expectedUser2Groups = new ArrayList();
+    List<UserGroup> expectedUser2Groups = user2GroupsBefore;
     expectedUser2Groups.add(UserGroup.builder()
         .groupId(group2.getId())
         .groupName(groupName2)
@@ -450,6 +457,7 @@ public class GroupControllerTest extends TestBase {
   @Test
   public void getGroupLeaderboard_binaryGroup_accountsForOtherGroupsScore() throws Exception {
     User user1 = getNewRegisteredUser();
+    int user1FriendsCountBefore = friendshipRepo.findByUserId(user1.getId()).getFriends().size();
     User user2 = getNewRegisteredUser();
     azkarApi.makeFriends(user1, user2);
 
@@ -491,7 +499,8 @@ public class GroupControllerTest extends TestBase {
     expectedResponse.setData(expectedUserScores);
 
     String binaryGroupId =
-        friendshipRepo.findByUserId(user1.getId()).getFriends().get(0).getGroupId();
+        friendshipRepo.findByUserId(user1.getId()).getFriends().get(user1FriendsCountBefore)
+            .getGroupId();
     azkarApi.getGroupLeaderboard(user1, binaryGroupId)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))

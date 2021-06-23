@@ -30,7 +30,7 @@ public class UserServiceTest extends TestBase {
 
     userService.addNewUser(userService.buildNewUser(email, firstName, lastName));
 
-    User user = Iterators.getOnlyElement(userRepo.findAll().iterator());
+    User user = Iterators.getLast(userRepo.findAll().iterator());
     assertThat(user.getEmail(), equalTo(email));
     assertThat(user.getFirstName(), equalTo(firstName));
     assertThat(user.getLastName(), equalTo(lastName));
@@ -47,7 +47,7 @@ public class UserServiceTest extends TestBase {
 
     userService.addNewUser(userService.buildNewUser(email, firstName, lastName));
 
-    User user = Iterators.getOnlyElement(userRepo.findAll().iterator());
+    User user = Iterators.getLast(userRepo.findAll().iterator());
     assertThat(user.getEmail(), equalTo(email));
     assertThat(user.getFirstName(), equalTo(firstName));
     assertThat(user.getLastName(), equalTo(lastName));
@@ -62,7 +62,7 @@ public class UserServiceTest extends TestBase {
 
     userService.addNewUser(userService.buildNewUser(email, firstName, lastName));
 
-    User user = Iterators.getOnlyElement(userRepo.findAll().iterator());
+    User user = Iterators.getLast(userRepo.findAll().iterator());
     assertThat(user.getEmail(), equalTo(email));
     assertThat(user.getFirstName(), equalTo(firstName));
     assertThat(user.getLastName(), equalTo(lastName));
@@ -71,6 +71,7 @@ public class UserServiceTest extends TestBase {
 
   @Test
   public void buildAndAddNewUser_HundredUsersWithSameName_usernamesShouldBeUnique() {
+    long usersCountBefore = userRepo.count();
     String email = "example_email@example_domain.com";
     String firstName = "Example First Name";
     String lastName = "Example Last Name";
@@ -79,7 +80,7 @@ public class UserServiceTest extends TestBase {
       userService.addNewUser(userService.buildNewUser(email + "i", firstName, lastName));
     }
 
-    assertThat(userRepo.count(), is(100L));
+    assertThat(userRepo.count(), is(usersCountBefore + 100));
     List<User> users = userRepo.findAll();
     HashSet<String> usernames = new HashSet<>();
     for (User user : users) {
@@ -99,7 +100,7 @@ public class UserServiceTest extends TestBase {
 
     userService.addNewUser(userService.buildNewUser(email, firstName, lastName));
 
-    User user = Iterators.getOnlyElement(userRepo.findAll().iterator());
+    User user = Iterators.getLast(userRepo.findAll().iterator());
     assertThat(user.getEmail(), equalTo(email));
     assertThat(user.getFirstName(), equalTo(firstName));
     assertThat(user.getLastName(), equalTo(lastName));
@@ -115,7 +116,7 @@ public class UserServiceTest extends TestBase {
 
     userService.addNewUser(userService.buildNewUser(email, firstName, lastName));
 
-    User user = Iterators.getOnlyElement(userRepo.findAll().iterator());
+    User user = Iterators.getLast(userRepo.findAll().iterator());
     assertThat(user.getEmail(), equalTo(email));
     assertThat(user.getFirstName(), equalTo(firstName));
     assertThat(user.getLastName(), equalTo(lastName));

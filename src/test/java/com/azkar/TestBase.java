@@ -14,6 +14,7 @@ import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
+import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -45,6 +46,8 @@ public abstract class TestBase {
   UserService userService;
   @Autowired
   MongoTemplate mongoTemplate;
+  @Autowired
+  UserRepo userRepo;
   @MockBean
   NotificationsService notificationsService;
 
@@ -54,6 +57,14 @@ public abstract class TestBase {
 
     Mockito.doNothing().when(notificationsService).
         sendNotificationToUser(any(), any(), any());
+
+    User sabeq = User.builder()
+        .id(User.SABEQ_ID)
+        .firstName("سابق")
+        .lastName("\uD83C\uDFCE️️")
+        .username("sabeq")
+        .build();
+    userRepo.save(sabeq);
   }
 
   protected void addNewUser(User user) {
