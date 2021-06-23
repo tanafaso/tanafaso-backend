@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
+import com.azkar.controllers.utils.AzkarApi;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
@@ -19,6 +20,9 @@ public class UserRetrievalTest extends TestBase {
 
   @Autowired
   UserRepo userRepo;
+
+  @Autowired
+  AzkarApi azkarApi;
 
   @Test
   public void getLoggedInUserProfile_shouldSucceed() throws Exception {
@@ -36,41 +40,57 @@ public class UserRetrievalTest extends TestBase {
   }
 
   @Test
-  public void getUserById_validUserId_shouldSucceed() throws Exception {
-    String userId = "example id";
-    User user = UserFactory.getNewUser().toBuilder().
-        id(userId).
-        build();
-    addNewUser(user);
+  public void getUserById_notFriend_shouldFail() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
     GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setData(user);
+    expectedResponse.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
 
-    ResultActions result = performGetRequest(user, String.format("/users/%s", userId));
+    azkarApi.getUserById(user1, user2.getId())
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+  }
 
-    result
+  @Test
+  public void getUserById_normalScenario_shouldSucceed() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
+    azkarApi.makeFriends(user1, user2);
+
+    GetUserResponse expectedResponse = new GetUserResponse();
+    User expectedReturnedUser = User.builder()
+        .id(user2.getId())
+        .username(user2.getUsername())
+        .firstName(user2.getFirstName())
+        .lastName(user2.getLastName())
+        .build();
+    expectedResponse.setData(expectedReturnedUser);
+
+    azkarApi.getUserById(user1, user2.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
 
+  public UserRepo getUserRepo() {
+    return userRepo;
+  }
 
   @Test
   public void getSabeq_shouldSucceed() throws Exception {
     String userId = "example id";
     User sabeq = userRepo.findById(User.SABEQ_ID).get();
-    User user = User.builder()
+    User expectedReturnedUser = User.builder()
         .id(sabeq.getId())
         .username(sabeq.getUsername())
         .firstName(sabeq.getFirstName())
         .lastName(sabeq.getLastName())
         .build();
-    addNewUser(user);
     GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setData(user);
+    expectedResponse.setData(expectedReturnedUser);
 
-    ResultActions result = performGetRequest(user, String.format("/users/sabeq", userId));
-
-    result
+    performGetRequest(expectedReturnedUser, String.format("/users/sabeq", userId))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
@@ -85,7 +105,7 @@ public class UserRetrievalTest extends TestBase {
         build();
     addNewUser(user);
     GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
+    expectedResponse.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
 
     ResultActions result = performGetRequest(user, String.format("/users/%s", fakeUserId));
 
@@ -102,8 +122,15 @@ public class UserRetrievalTest extends TestBase {
         username(username).
         build();
     addNewUser(user);
+
+    User expectedReturnedUser = User.builder()
+        .id(user.getId())
+        .firstName(user.getFirstName())
+        .lastName(user.getLastName())
+        .username(user.getUsername())
+        .build();
     GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setData(user);
+    expectedResponse.setData(expectedReturnedUser);
 
     ResultActions result = azkarApi.searchForUserByUsername(user, username);
 
@@ -137,8 +164,14 @@ public class UserRetrievalTest extends TestBase {
     String facebookUserId = "0123401234";
     User user = UserFactory.getUserRegisteredWithFacebookWithFacebookUserId(facebookUserId);
     addNewUser(user);
+    User expectedReturnedUser = User.builder()
+        .id(user.getId())
+        .firstName(user.getFirstName())
+        .lastName(user.getLastName())
+        .username(user.getUsername())
+        .build();
     GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setData(user);
+    expectedResponse.setData(expectedReturnedUser);
 
     ResultActions result = azkarApi.searchForUserByFacebookUserId(user, facebookUserId);
 
