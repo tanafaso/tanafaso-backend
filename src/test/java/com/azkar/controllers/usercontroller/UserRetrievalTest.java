@@ -9,11 +9,16 @@ import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.usercontroller.responses.GetUserResponse;
+import com.azkar.repos.UserRepo;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 
 public class UserRetrievalTest extends TestBase {
+
+  @Autowired
+  UserRepo userRepo;
 
   @Test
   public void getLoggedInUserProfile_shouldSucceed() throws Exception {
@@ -41,6 +46,29 @@ public class UserRetrievalTest extends TestBase {
     expectedResponse.setData(user);
 
     ResultActions result = performGetRequest(user, String.format("/users/%s", userId));
+
+    result
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+  }
+
+
+  @Test
+  public void getSabeq_shouldSucceed() throws Exception {
+    String userId = "example id";
+    User sabeq = userRepo.findById(User.SABEQ_ID).get();
+    User user = User.builder()
+        .id(sabeq.getId())
+        .username(sabeq.getUsername())
+        .firstName(sabeq.getFirstName())
+        .lastName(sabeq.getLastName())
+        .build();
+    addNewUser(user);
+    GetUserResponse expectedResponse = new GetUserResponse();
+    expectedResponse.setData(user);
+
+    ResultActions result = performGetRequest(user, String.format("/users/sabeq", userId));
 
     result
         .andExpect(status().isOk())
