@@ -22,6 +22,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 public class User extends EntityBase {
 
+  // Sabeq is a user that is added by default as a friend for all users so that new users can try
+  // the application by sending challenges to sabeq and seeing him on the leaderboard and also so
+  // that users can use him to create personal challenges.
+  public static final String SABEQ_ID = "60d18088076b0b7d53e5a35a";
+
   @Id
   private String id;
   private String email;

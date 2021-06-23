@@ -93,6 +93,8 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
 
   @Test
   public void updateChallenge_finishChallengeTwice_shouldUpdateScoreOnce() throws Exception {
+    int userGroupsCountBefore = user.getUserGroups().size();
+
     assertThat(userRepo.findById(user.getId()).get().getUserGroups().get(0).getTotalScore(), is(0));
 
     Challenge challenge = createGroupChallenge(user, group.getId());
@@ -108,14 +110,15 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
         .andExpect(status().isOk());
 
     User updatedUser = userRepo.findById(user.getId()).get();
-    assertThat(updatedUser.getUserGroups().size(), is(1));
+    assertThat(updatedUser.getUserGroups().size(), is(userGroupsCountBefore + 1));
 
-    UserGroup userGroup = updatedUser.getUserGroups().get(0);
+    UserGroup userGroup = updatedUser.getUserGroups().get(userGroupsCountBefore);
     assertThat(userGroup.getTotalScore(), is(1));
   }
 
   @Test
   public void updateChallenge_partiallyFinishedChallenge_shouldNotUpdateScore() throws Exception {
+    int userGroupsCountBefore = user.getUserGroups().size();
     assertThat(userRepo.findById(user.getId()).get().getUserGroups().get(0).getTotalScore(), is(0));
 
     Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
@@ -132,9 +135,9 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
         .andExpect(status().isOk());
 
     User updatedUser = userRepo.findById(user.getId()).get();
-    assertThat(updatedUser.getUserGroups().size(), is(1));
+    assertThat(updatedUser.getUserGroups().size(), is(userGroupsCountBefore + 1));
 
-    UserGroup userGroup = updatedUser.getUserGroups().get(0);
+    UserGroup userGroup = updatedUser.getUserGroups().get(userGroupsCountBefore);
     assertThat(userGroup.getTotalScore(), is(0));
   }
 

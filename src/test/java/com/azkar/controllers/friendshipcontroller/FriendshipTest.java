@@ -52,21 +52,17 @@ public class FriendshipTest extends TestBase {
   private static User USER4 = UserFactory.getNewUser();
   private static User USER5 = UserFactory.getNewUser();
   private static User UNAUTHENTICATED_USER = UserFactory.getNewUser();
-
   @Autowired
   FriendshipRepo friendshipRepo;
-
   @Autowired
   GroupRepo groupRepo;
-
   @Autowired
   ChallengeRepo challengeRepo;
-
   @Autowired
   UserRepo userRepo;
-
   @Autowired
   AzkarApi azkarApi;
+  private User sabeq;
 
   @Before
   public void before() {
@@ -75,12 +71,13 @@ public class FriendshipTest extends TestBase {
     addNewUser(USER3);
     addNewUser(USER4);
     addNewUser(USER5);
+    sabeq = userRepo.findById(User.SABEQ_ID).get();
   }
 
   @Test
   public void addFriend_normalScenario_shouldSucceed() throws Exception {
     AddFriendResponse expectedResponse = new AddFriendResponse();
-    assertThat(groupRepo.count(), equalTo(0L));
+    long groupsCount = groupRepo.count();
 
     azkarApi.sendFriendRequest(USER1, USER2)
         .andExpect(status().isOk())
@@ -90,18 +87,19 @@ public class FriendshipTest extends TestBase {
     Friendship user1Friendship = friendshipRepo.findByUserId(USER1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(USER2.getId());
 
-    assertThat(user1Friendship.getFriends().size(), is(0));
-    assertThat(user2Friendship.getFriends().size(), is(1));
+    // Only sabeq
+    assertThat(user1Friendship.getFriends().size(), is(1));
+    assertThat(user2Friendship.getFriends().size(), is(2));
 
-    Friend user2Friend = user2Friendship.getFriends().get(0);
+    Friend user2Friend = user2Friendship.getFriends().get(1);
     assertFriendship(user2Friend, USER1, /*isPending=*/true);
 
-    assertThat(groupRepo.count(), equalTo(0L));
+    assertThat(groupRepo.count(), equalTo(groupsCount));
   }
 
   @Test
   public void addFriend_requesterRequestedBefore_shouldNotSucceed() throws Exception {
-    assertThat(groupRepo.count(), equalTo(0L));
+    long groupsCountBefore = groupRepo.count();
 
     azkarApi.sendFriendRequest(USER1, USER2);
 
@@ -113,7 +111,7 @@ public class FriendshipTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    assertThat(groupRepo.count(), equalTo(0L));
+    assertThat(groupRepo.count(), is(groupsCountBefore));
   }
 
 
@@ -130,14 +128,20 @@ public class FriendshipTest extends TestBase {
     Friendship user1Friendship = friendshipRepo.findByUserId(USER1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(USER2.getId());
 
-    assertThat(user1Friendship.getFriends().size(), is(1));
-    assertThat(user2Friendship.getFriends().size(), is(1));
+    assertThat(user1Friendship.getFriends().size(), is(2));
+    assertThat(user2Friendship.getFriends().size(), is(2));
 
-    Friend user1Friend = user1Friendship.getFriends().get(0);
-    assertFriendship(user1Friend, USER2, /*isPending=*/false);
+    Friend user1Friend1 = user1Friendship.getFriends().get(0);
+    assertFriendship(user1Friend1, sabeq, /*isPending=*/false);
 
-    Friend user2Friend = user2Friendship.getFriends().get(0);
-    assertFriendship(user2Friend, USER1, /*isPending=*/false);
+    Friend user1Friend2 = user1Friendship.getFriends().get(1);
+    assertFriendship(user1Friend2, USER2, /*isPending=*/false);
+
+    Friend user2Friend1 = user2Friendship.getFriends().get(0);
+    assertFriendship(user2Friend1, sabeq, /*isPending=*/false);
+
+    Friend user2Friend2 = user2Friendship.getFriends().get(1);
+    assertFriendship(user2Friend2, USER1, /*isPending=*/false);
   }
 
 
@@ -165,9 +169,7 @@ public class FriendshipTest extends TestBase {
 
   @Test
   public void acceptFriendRequest_normalScenario_shouldSucceed() throws Exception {
-    assertThat(groupRepo.count(), equalTo(0L));
-    assertThat(USER1.getUserGroups().size(), equalTo(0));
-    assertThat(USER2.getUserGroups().size(), equalTo(0));
+    long groupsCountBefore = groupRepo.count();
 
     azkarApi.sendFriendRequest(USER1, USER2);
 
@@ -180,17 +182,18 @@ public class FriendshipTest extends TestBase {
     Friendship user1Friendship = friendshipRepo.findByUserId(USER1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(USER2.getId());
 
-    assertThat(user1Friendship.getFriends().size(), is(1));
-    assertThat(user2Friendship.getFriends().size(), is(1));
+    // Sabeq and the new friend.
+    assertThat(user1Friendship.getFriends().size(), is(2));
+    assertThat(user2Friendship.getFriends().size(), is(2));
 
-    Friend user1Friend = user1Friendship.getFriends().get(0);
+    Friend user1Friend = user1Friendship.getFriends().get(1);
     assertFriendship(user1Friend, USER2, /*isPending=*/false);
 
-    Friend user2Friend = user2Friendship.getFriends().get(0);
+    Friend user2Friend = user2Friendship.getFriends().get(1);
     assertFriendship(user2Friend, USER1, /*isPending=*/false);
 
-    assertThat(groupRepo.count(), equalTo(1L));
-    Group group = Iterators.getOnlyElement(groupRepo.findAll().iterator());
+    assertThat(groupRepo.count(), equalTo(groupsCountBefore + 1));
+    Group group = Iterators.getLast(groupRepo.findAll().iterator());
     assertThat(group.getUsersIds().size(), equalTo(2));
     assertThat(group.getUsersIds().contains(USER1.getId()), is(true));
     assertThat(group.getUsersIds().contains(USER2.getId()), is(true));
@@ -200,15 +203,15 @@ public class FriendshipTest extends TestBase {
 
     User updatedUser1 = userRepo.findById(USER1.getId()).get();
     User updatedUser2 = userRepo.findById(USER2.getId()).get();
-    assertThat(Iterators.getOnlyElement(updatedUser1.getUserGroups().iterator()).getGroupId(),
+    assertThat(Iterators.getLast(updatedUser1.getUserGroups().iterator()).getGroupId(),
         equalTo(group.getId()));
-    assertThat(Iterators.getOnlyElement(updatedUser2.getUserGroups().iterator()).getGroupId(),
+    assertThat(Iterators.getLast(updatedUser2.getUserGroups().iterator()).getGroupId(),
         equalTo(group.getId()));
   }
 
   @Test
   public void rejectFriendRequest_normalScenario_shouldSucceed() throws Exception {
-    assertThat(groupRepo.count(), equalTo(0L));
+    long groupsCountBefore = groupRepo.count();
 
     azkarApi.sendFriendRequest(USER1, USER2);
 
@@ -221,9 +224,10 @@ public class FriendshipTest extends TestBase {
     Friendship user1Friendship = friendshipRepo.findByUserId(USER1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(USER2.getId());
 
-    assertThat(user1Friendship.getFriends().size(), is(0));
-    assertThat(user2Friendship.getFriends().size(), is(0));
-    assertThat(groupRepo.count(), equalTo(0L));
+    // only sabeq is a friend
+    assertThat(user1Friendship.getFriends().size(), is(1));
+    assertThat(user2Friendship.getFriends().size(), is(1));
+    assertThat(groupRepo.count(), equalTo(groupsCountBefore));
   }
 
   @Test
@@ -239,8 +243,9 @@ public class FriendshipTest extends TestBase {
     Friendship user1Friendship = friendshipRepo.findByUserId(USER1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(USER2.getId());
 
-    assertThat(user1Friendship.getFriends().size(), is(0));
-    assertThat(user2Friendship.getFriends().size(), is(0));
+    // Only sabeq is a friend.
+    assertThat(user1Friendship.getFriends().size(), is(1));
+    assertThat(user2Friendship.getFriends().size(), is(1));
   }
 
   @Test
@@ -301,6 +306,14 @@ public class FriendshipTest extends TestBase {
     // user1 expected friends.
     List<Friend> expectedUser1Friends = new ArrayList();
     expectedUser1Friends.add(Friend.builder()
+        .userId(sabeq.getId())
+        .username(sabeq.getUsername())
+        .firstName(sabeq.getFirstName())
+        .lastName(sabeq.getLastName())
+        .isPending(false)
+        .build()
+    );
+    expectedUser1Friends.add(Friend.builder()
         .userId(USER2.getId())
         .username(USER2.getUsername())
         .firstName(USER2.getFirstName())
@@ -331,6 +344,14 @@ public class FriendshipTest extends TestBase {
     // user5 expected friends.
     List<Friend> expectedUser5Friends = new ArrayList();
     expectedUser5Friends.add(Friend.builder()
+        .userId(sabeq.getId())
+        .username(sabeq.getUsername())
+        .firstName(sabeq.getFirstName())
+        .lastName(sabeq.getLastName())
+        .isPending(false)
+        .build()
+    );
+    expectedUser5Friends.add(Friend.builder()
         .userId(USER1.getId())
         .username(USER1.getUsername())
         .firstName(USER1.getFirstName())
@@ -351,12 +372,15 @@ public class FriendshipTest extends TestBase {
 
   @Test
   public void deleteFriend_normalScenario_shouldSucceed() throws Exception {
+    long groupsCountBefore = groupRepo.count();
+    int user1GroupsCountBefore = userRepo.findById(USER1.getId()).get().getUserGroups().size();
+    int user2GroupsCountBefore = userRepo.findById(USER2.getId()).get().getUserGroups().size();
     azkarApi.makeFriends(USER1, USER2);
-    assertThat(groupRepo.count(), equalTo(1L));
+    assertThat(groupRepo.count(), equalTo(groupsCountBefore + 1));
     User updatedUser1 = userRepo.findById(USER1.getId()).get();
     User updatedUser2 = userRepo.findById(USER2.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), equalTo(1));
-    assertThat(updatedUser2.getUserGroups().size(), equalTo(1));
+    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsCountBefore + 1));
+    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsCountBefore + 1));
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     azkarApi.deleteFriend(USER1, USER2)
@@ -367,14 +391,15 @@ public class FriendshipTest extends TestBase {
     Friendship user1Friendship = friendshipRepo.findByUserId(USER1.getId());
     Friendship user2Friendship = friendshipRepo.findByUserId(USER2.getId());
 
-    assertThat(user1Friendship.getFriends().size(), is(0));
-    assertThat(user2Friendship.getFriends().size(), is(0));
+    // Only sabeq is left as a friend
+    assertThat(user1Friendship.getFriends().size(), is(1));
+    assertThat(user2Friendship.getFriends().size(), is(1));
 
-    assertThat(groupRepo.count(), equalTo(0L));
+    assertThat(groupRepo.count(), equalTo(groupsCountBefore));
     updatedUser1 = userRepo.findById(USER1.getId()).get();
     updatedUser2 = userRepo.findById(USER2.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), equalTo(0));
-    assertThat(updatedUser2.getUserGroups().size(), equalTo(0));
+    assertThat(updatedUser1.getUserGroups().size(), equalTo(user1GroupsCountBefore));
+    assertThat(updatedUser2.getUserGroups().size(), equalTo(user2GroupsCountBefore));
   }
 
   @Test
@@ -478,6 +503,13 @@ public class FriendshipTest extends TestBase {
     GetFriendsLeaderboardResponse expectedResponse = new GetFriendsLeaderboardResponse();
     List<FriendshipScores> expectedFriendshipScores = ImmutableList.of(
         FriendshipScores.builder()
+            .currentUserScore(0)
+            .friendScore(0)
+            .friend(
+                Friend.builder().userId(sabeq.getId()).build())
+            .build(),
+
+        FriendshipScores.builder()
             .currentUserScore(2)
             .friendScore(1)
             .friend(
@@ -497,7 +529,7 @@ public class FriendshipTest extends TestBase {
     azkarApi.getFriendsLeaderboard(user1)
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse), /*strict=*/false));
   }
 
   private UserScore buildUserScoreTemplateForUser(User user) {

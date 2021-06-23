@@ -56,6 +56,10 @@ public class Challenge extends EntityBase {
   @LastModifiedDate
   private long modifiedAt;
 
+  public boolean finished() {
+    return !subChallenges.stream().anyMatch(subChallenge -> subChallenge.repetitions != 0);
+  }
+
   @Getter
   @Setter
   @NoArgsConstructor
