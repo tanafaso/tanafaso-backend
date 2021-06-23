@@ -24,10 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController extends BaseController {
 
   @Autowired
-  private UserRepo userRepo;
-
-  @Autowired
   FriendshipRepo friendshipRepo;
+  @Autowired
+  private UserRepo userRepo;
 
   @GetMapping(path = "/{id}")
   public ResponseEntity<GetUserResponse> getUser(@PathVariable String id) {
