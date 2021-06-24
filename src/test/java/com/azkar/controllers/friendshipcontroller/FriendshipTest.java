@@ -523,6 +523,10 @@ public class FriendshipTest extends TestBase {
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse), /*strict=*/false));
+    azkarApi.getFriendsLeaderboardWithApiVersion(user1, "1.3.9")
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse), /*strict=*/false));
   }
 
   @Test
