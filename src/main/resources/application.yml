@@ -20,6 +20,8 @@ server:
 
 
 spring:
+  main:
+    lazy-initialization: true
   data.mongodb:
     auto-index-creation: false
     uri: mongodb://${DATABASE_USER}:${DATABASE_PASSWORD}@localhost:27017/${DATABASE_NAME}
