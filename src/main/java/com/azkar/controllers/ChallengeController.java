@@ -18,6 +18,8 @@ import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
+import com.azkar.payload.utils.FeaturesVersions;
+import com.azkar.payload.utils.VersionComparator;
 import com.azkar.repos.ChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
@@ -31,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.swing.text.html.Option;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -460,10 +463,26 @@ public class ChallengeController extends BaseController {
     if (apiVersion != null) {
       logger.info("API version requested is " + apiVersion);
     }
+    List<Challenge> userChallenges = getCurrentUser(userRepo).getUserChallenges();
+    if (VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
+      userChallenges = filterOutSabeqChallenges(userChallenges);
+    }
+
     GetChallengesResponse response = new GetChallengesResponse();
-    response.setData(getCurrentUser(userRepo).getUserChallenges());
+    response.setData(userChallenges);
     Collections.reverse(response.getData());
     return ResponseEntity.ok(response);
+  }
+
+  private List<Challenge> filterOutSabeqChallenges(List<Challenge> challenges) {
+    List<Challenge> filtered = challenges.stream().filter(challenge -> {
+      Optional<Group> group = groupRepo.findById(challenge.getGroupId());
+      if (!group.isPresent()) {
+        return false;
+      }
+      return !group.get().getUsersIds().contains(User.SABEQ_ID);
+    }).collect(Collectors.toList());
+    return filtered;
   }
 
   @GetMapping(path = "/groups/{groupId}/")

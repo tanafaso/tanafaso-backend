@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class DbMigrations {
   private String dbName;
 
   @Bean
+  @Lazy(value = false)
   public Mongobee mongobee() {
     Mongobee runner = new Mongobee(dbUri);
     runner.setDbName(dbName);         // host must be set if not set in URI
@@ -41,7 +43,7 @@ public class DbMigrations {
     return runner;
   }
 
-  @ChangeSet(order = "0001", id = "addSabeq8", author = "")
+  @ChangeSet(order = "0001", id = "addSabeq", author = "")
   public void addSabeq(MongoTemplate mongoTemplate) {
     // Check the unicode displayed at https://emojipedia.org/racing-car/
     User sabeq = User.builder()

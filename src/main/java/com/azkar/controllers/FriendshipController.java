@@ -12,7 +12,9 @@ import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardResponse;
 import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardResponse.FriendshipScores;
 import com.azkar.payload.usercontroller.responses.GetFriendsResponse;
 import com.azkar.payload.usercontroller.responses.ResolveFriendRequestResponse;
+import com.azkar.payload.utils.FeaturesVersions;
 import com.azkar.payload.utils.UserScore;
+import com.azkar.payload.utils.VersionComparator;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
@@ -23,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,6 +34,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -60,14 +64,20 @@ public class FriendshipController extends BaseController {
   }
 
   @GetMapping(path = "/leaderboard")
-  public ResponseEntity<GetFriendsLeaderboardResponse> getFriendsLeaderboard() {
+  public ResponseEntity<GetFriendsLeaderboardResponse> getFriendsLeaderboard(
+      @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
     GetFriendsLeaderboardResponse response = new GetFriendsLeaderboardResponse();
 
     User currentUser = getCurrentUser(userRepo);
 
     List<FriendshipScores> friendsScores = new ArrayList<>();
     Friendship friendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
-    friendship.getFriends().stream().forEach(friend -> {
+    List<Friend> friends = friendship.getFriends();
+    if (VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
+      friends = friends.stream().filter(friend -> !friend.getUserId().equals(User.SABEQ_ID))
+          .collect(Collectors.toList());
+    }
+    friends.stream().forEach(friend -> {
       if (friend.isPending()) {
         return;
       }
