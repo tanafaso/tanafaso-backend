@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.azkar.controllers.BaseController;
 import com.azkar.entities.User;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
@@ -37,6 +38,14 @@ public class HttpClient {
 
   public ResultActions performGetRequest(User user, String path) throws Exception {
     MockHttpServletRequestBuilder requestBuilder = get(path);
+    addAuthenticationToken(requestBuilder, user);
+    return mockMvc.perform(requestBuilder);
+  }
+
+  public ResultActions performGetRequestWithApiVersion(User user, String path, String apiVersion)
+      throws Exception {
+    MockHttpServletRequestBuilder requestBuilder = get(path);
+    requestBuilder.header(BaseController.API_VERSION_HEADER, apiVersion);
     addAuthenticationToken(requestBuilder, user);
     return mockMvc.perform(requestBuilder);
   }

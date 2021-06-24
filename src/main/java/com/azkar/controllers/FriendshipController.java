@@ -73,7 +73,8 @@ public class FriendshipController extends BaseController {
     List<FriendshipScores> friendsScores = new ArrayList<>();
     Friendship friendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
     List<Friend> friends = friendship.getFriends();
-    if (VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
+    if (apiVersion == null
+        || VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
       friends = friends.stream().filter(friend -> !friend.getUserId().equals(User.SABEQ_ID))
           .collect(Collectors.toList());
     }
