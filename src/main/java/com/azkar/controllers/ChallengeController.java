@@ -463,7 +463,8 @@ public class ChallengeController extends BaseController {
       logger.info("API version requested is " + apiVersion);
     }
     List<Challenge> userChallenges = getCurrentUser(userRepo).getUserChallenges();
-    if (VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
+    if (apiVersion == null
+        || VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
       userChallenges = filterOutSabeqChallenges(userChallenges);
     }
 

@@ -437,7 +437,96 @@ public class FriendshipTest extends TestBase {
   }
 
   @Test
-  public void getFriendsLeaderboard_normalScenario_shouldSucceed() throws Exception {
+  public void getFriendsLeaderboard_notSupportingSabeqFeature_shouldSucceed() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
+    User user3 = getNewRegisteredUser();
+    User user4 = getNewRegisteredUser();
+
+    // user1 is friends with user2 and user3 only.
+    azkarApi.makeFriends(user1, user2);
+    String user1And2FriendshipGroupId = getFriendshipGroupId(user1, user2);
+    azkarApi.makeFriends(user1, user3);
+    String user1And3FriendshipGroupId = getFriendshipGroupId(user1, user3);
+    azkarApi.makeFriends(user2, user3);
+    azkarApi.makeFriends(user3, user4);
+
+    // Members = [user1, user2]
+    Group group1 = azkarApi.addGroupAndReturn(user1, "group1");
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, group1.getId());
+
+    // Members = [user1, user2]
+    Group group2 = azkarApi.addGroupAndReturn(user2, "group2");
+    azkarApi.addUserToGroup(/*invitingUser=*/user2, user1, group2.getId());
+
+    // Members = [user1, user2, user3]
+    Group group3 = azkarApi.addGroupAndReturn(user1, "group3");
+    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, group3.getId());
+    azkarApi.addUserToGroup(/*invitingUser=*/user2, user3, group3.getId());
+
+    // Members = [user3, user4]
+    Group group4 = azkarApi.addGroupAndReturn(user3, "group4");
+    azkarApi.addUserToGroup(/*invitingUser=*/user3, user4, group4.getId());
+
+    Challenge challenge = createChallengeInGroup(user1, user1And2FriendshipGroupId);
+    createChallengeInGroup(user1, user1And2FriendshipGroupId);
+    finishChallenge(user1, challenge.getId());
+    // Friends Scores Now:
+    // [user1, user2] = [1, 0]
+    // [user1, user3] = [0, 0]
+    // [user1, user4] = [0, 0]
+
+    challenge = createChallengeInGroup(user1, user1And3FriendshipGroupId);
+    finishChallenge(user3, challenge.getId());
+    // Friends Scores Now:
+    // [user1, user2] = [1, 0]
+    // [user1, user3] = [0, 1]
+
+    challenge = createChallengeInGroup(user3, group4.getId());
+    finishChallenge(user3, challenge.getId());
+    // Friends Scores Now:
+    // [user1, user2] = [1, 0]
+    // [user1, user3] = [0, 1]
+
+    challenge = createChallengeInGroup(user1, group1.getId());
+    finishChallenge(user2, challenge.getId());
+    // Friends Scores Now:
+    // [user1, user2] = [1, 1]
+    // [user1, user3] = [0, 1]
+
+    challenge = createChallengeInGroup(user3, group3.getId());
+    finishChallenge(user1, challenge.getId());
+    // Friends Scores Now:
+    // [user1, user2] = [2, 1]
+    // [user1, user3] = [1, 1]
+
+    GetFriendsLeaderboardResponse expectedResponse = new GetFriendsLeaderboardResponse();
+    List<FriendshipScores> expectedFriendshipScores = ImmutableList.of(
+        FriendshipScores.builder()
+            .currentUserScore(2)
+            .friendScore(1)
+            .friend(
+                Friend.builder().userId(user2.getId()).groupId(user1And2FriendshipGroupId).build())
+            .build(),
+
+        FriendshipScores.builder()
+            .currentUserScore(1)
+            .friendScore(1)
+            .friend(
+                Friend.builder().userId(user3.getId()).groupId(user1And3FriendshipGroupId).build())
+            .build()
+
+    );
+
+    expectedResponse.setData(expectedFriendshipScores);
+    azkarApi.getFriendsLeaderboard(user1)
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse), /*strict=*/false));
+  }
+
+  @Test
+  public void getFriendsLeaderboard_supportingSabeqFeature_shouldSucceed() throws Exception {
     User user1 = getNewRegisteredUser();
     User user2 = getNewRegisteredUser();
     User user3 = getNewRegisteredUser();
@@ -526,7 +615,11 @@ public class FriendshipTest extends TestBase {
     );
 
     expectedResponse.setData(expectedFriendshipScores);
-    azkarApi.getFriendsLeaderboard(user1)
+    azkarApi.getFriendsLeaderboardWithApiVersion(user1, "1.4.0")
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse), /*strict=*/false));
+    azkarApi.getFriendsLeaderboardWithApiVersion(user1, "1.4.1")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse), /*strict=*/false));
