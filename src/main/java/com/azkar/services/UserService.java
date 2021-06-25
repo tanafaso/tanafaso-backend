@@ -62,11 +62,15 @@ public class UserService {
   private void addSabeqAsFriend(User user) {
     Friendship friendship = Friendship.builder().userId(user.getId()).build();
     User sabeq = userRepo.findById(User.SABEQ_ID).get();
+
+    // Create Group
     Group binaryGroup = Group.builder()
         .usersIds(Arrays.asList(user.getId(), sabeq.getId()))
         .creatorId(sabeq.getId())
         .build();
     groupRepo.save(binaryGroup);
+
+    // Add sabeq to user friends
     Friend sabeqAsFriend = Friend.builder()
         .userId(sabeq.getId())
         .username(sabeq.getUsername())
@@ -77,6 +81,21 @@ public class UserService {
         .build();
     friendship.getFriends().add(sabeqAsFriend);
     friendshipRepo.save(friendship);
+
+    // Add user to sabeq friends
+    Friend userAsSabeqFriend = Friend.builder()
+        .userId(user.getId())
+        .username(user.getUsername())
+        .firstName(user.getFirstName())
+        .lastName(user.getLastName())
+        .isPending(false)
+        .groupId(binaryGroup.getId())
+        .build();
+    Friendship sabeqFriendship = friendshipRepo.findByUserId(User.SABEQ_ID);
+    sabeqFriendship.getFriends().add(userAsSabeqFriend);
+    friendshipRepo.save(friendship);
+
+    // Add user group
     UserGroup userGroup = UserGroup.builder()
         .totalScore(0)
         .monthScore(0)
