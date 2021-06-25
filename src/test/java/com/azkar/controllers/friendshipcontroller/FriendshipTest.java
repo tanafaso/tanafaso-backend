@@ -507,14 +507,16 @@ public class FriendshipTest extends TestBase {
             .currentUserScore(2)
             .friendScore(1)
             .friend(
-                Friend.builder().userId(user2.getId()).groupId(user1And2FriendshipGroupId).build())
+                Friend.builder().userId(user2.getId()).groupId(user1And2FriendshipGroupId)
+                    .userTotalScore(2).friendTotalScore(1).build())
             .build(),
 
         FriendshipScores.builder()
             .currentUserScore(1)
             .friendScore(1)
             .friend(
-                Friend.builder().userId(user3.getId()).groupId(user1And3FriendshipGroupId).build())
+                Friend.builder().userId(user3.getId()).groupId(user1And3FriendshipGroupId)
+                    .userTotalScore(1).friendTotalScore(1).build())
             .build()
 
     );
@@ -600,21 +602,24 @@ public class FriendshipTest extends TestBase {
             .currentUserScore(0)
             .friendScore(0)
             .friend(
-                Friend.builder().userId(sabeq.getId()).build())
+                Friend.builder().userId(sabeq.getId()).userTotalScore(0).friendTotalScore(0)
+                    .build())
             .build(),
 
         FriendshipScores.builder()
             .currentUserScore(2)
             .friendScore(1)
             .friend(
-                Friend.builder().userId(user2.getId()).groupId(user1And2FriendshipGroupId).build())
+                Friend.builder().userId(user2.getId()).groupId(user1And2FriendshipGroupId)
+                    .userTotalScore(2).friendTotalScore(1).build())
             .build(),
 
         FriendshipScores.builder()
             .currentUserScore(1)
             .friendScore(1)
             .friend(
-                Friend.builder().userId(user3.getId()).groupId(user1And3FriendshipGroupId).build())
+                Friend.builder().userId(user3.getId()).groupId(user1And3FriendshipGroupId)
+                    .userTotalScore(1).friendTotalScore(1).build())
             .build()
 
     );
@@ -664,32 +669,32 @@ public class FriendshipTest extends TestBase {
 
     Challenge challenge = createChallengeInGroup(user1, user1And2FriendshipGroupId);
     createChallengeInGroup(user1, user1And2FriendshipGroupId);
-    finishChallengeV2(user1, challenge.getId());
+    finishChallenge(user1, challenge.getId());
     // Friends Scores Now:
     // [user1, user2] = [1, 0]
     // [user1, user3] = [0, 0]
     // [user1, user4] = [0, 0]
 
     challenge = createChallengeInGroup(user1, user1And3FriendshipGroupId);
-    finishChallengeV2(user3, challenge.getId());
+    finishChallenge(user3, challenge.getId());
     // Friends Scores Now:
     // [user1, user2] = [1, 0]
     // [user1, user3] = [0, 1]
 
     challenge = createChallengeInGroup(user3, group4.getId());
-    finishChallengeV2(user3, challenge.getId());
+    finishChallenge(user3, challenge.getId());
     // Friends Scores Now:
     // [user1, user2] = [1, 0]
     // [user1, user3] = [0, 1]
 
     challenge = createChallengeInGroup(user1, group1.getId());
-    finishChallengeV2(user2, challenge.getId());
+    finishChallenge(user2, challenge.getId());
     // Friends Scores Now:
     // [user1, user2] = [1, 1]
     // [user1, user3] = [0, 1]
 
     challenge = createChallengeInGroup(user3, group3.getId());
-    finishChallengeV2(user1, challenge.getId());
+    finishChallenge(user1, challenge.getId());
     // Friends Scores Now:
     // [user1, user2] = [2, 1]
     // [user1, user3] = [1, 1]
@@ -763,32 +768,32 @@ public class FriendshipTest extends TestBase {
 
     Challenge challenge = createChallengeInGroup(user1, user1And2FriendshipGroupId);
     createChallengeInGroup(user1, user1And2FriendshipGroupId);
-    finishChallengeV2(user1, challenge.getId());
+    finishChallenge(user1, challenge.getId());
     // Friends Scores Now:
     // [user1, user2] = [1, 0]
     // [user1, user3] = [0, 0]
     // [user1, user4] = [0, 0]
 
     challenge = createChallengeInGroup(user1, user1And3FriendshipGroupId);
-    finishChallengeV2(user3, challenge.getId());
+    finishChallenge(user3, challenge.getId());
     // Friends Scores Now:
     // [user1, user2] = [1, 0]
     // [user1, user3] = [0, 1]
 
     challenge = createChallengeInGroup(user3, group4.getId());
-    finishChallengeV2(user3, challenge.getId());
+    finishChallenge(user3, challenge.getId());
     // Friends Scores Now:
     // [user1, user2] = [1, 0]
     // [user1, user3] = [0, 1]
 
     challenge = createChallengeInGroup(user1, group1.getId());
-    finishChallengeV2(user2, challenge.getId());
+    finishChallenge(user2, challenge.getId());
     // Friends Scores Now:
     // [user1, user2] = [1, 1]
     // [user1, user3] = [0, 1]
 
     challenge = createChallengeInGroup(user3, group3.getId());
-    finishChallengeV2(user1, challenge.getId());
+    finishChallenge(user1, challenge.getId());
     // Friends Scores Now:
     // [user1, user2] = [2, 1]
     // [user1, user3] = [1, 1]
@@ -880,16 +885,6 @@ public class FriendshipTest extends TestBase {
         UpdateChallengeRequest.builder().newChallenge(challenge).build();
     UpdateChallengeRequest.builder().newChallenge(challenge).build();
     azkarApi.updateChallenge(user, challengeId, request);
-  }
-
-  private void finishChallengeV2(User user, String challengeId) throws Exception {
-    Challenge challenge = challengeRepo.findById(challengeId).get();
-    assertThat(challenge.getSubChallenges().size(), is(1));
-    challenge.getSubChallenges().get(0).setRepetitions(0);
-    UpdateChallengeRequest request =
-        UpdateChallengeRequest.builder().newChallenge(challenge).build();
-    UpdateChallengeRequest.builder().newChallenge(challenge).build();
-    azkarApi.updateChallengeV2(user, challengeId, request);
   }
 
   private String getFriendshipGroupId(User user1, User user2) throws Exception {
