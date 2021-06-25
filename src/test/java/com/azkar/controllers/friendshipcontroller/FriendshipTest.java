@@ -306,14 +306,14 @@ public class FriendshipTest extends TestBase {
 
     // user1 expected friends.
     List<Friend> expectedUser1Friends = new ArrayList();
-    expectedUser1Friends.add(Friend.builder()
+/*    expectedUser1Friends.add(Friend.builder()
         .userId(sabeq.getId())
         .username(sabeq.getUsername())
         .firstName(sabeq.getFirstName())
         .lastName(sabeq.getLastName())
         .isPending(false)
         .build()
-    );
+    );*/
     expectedUser1Friends.add(Friend.builder()
         .userId(USER2.getId())
         .username(USER2.getUsername())
@@ -344,14 +344,14 @@ public class FriendshipTest extends TestBase {
 
     // user5 expected friends.
     List<Friend> expectedUser5Friends = new ArrayList();
-    expectedUser5Friends.add(Friend.builder()
+/*    expectedUser5Friends.add(Friend.builder()
         .userId(sabeq.getId())
         .username(sabeq.getUsername())
         .firstName(sabeq.getFirstName())
         .lastName(sabeq.getLastName())
         .isPending(false)
         .build()
-    );
+    );*/
     expectedUser5Friends.add(Friend.builder()
         .userId(USER1.getId())
         .username(USER1.getUsername())
