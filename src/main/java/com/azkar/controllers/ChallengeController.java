@@ -146,8 +146,8 @@ public class ChallengeController extends BaseController {
   private void updateScoreV2(User user, String groupId) {
     Group group = groupRepo.findById(groupId).orElse(null);
     if (group == null) {
-      logger.warn("Group with ID: %s not found will trying to update score for user: %s", groupId
-          , user.getId());
+      logger.warn("Group with ID: %s not found will trying to update score for user: %s", groupId,
+          user.getId());
       return;
     }
 
