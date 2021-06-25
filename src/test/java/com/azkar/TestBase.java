@@ -14,10 +14,11 @@ import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
-import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.mongobee.Mongobee;
+import com.github.mongobee.exception.MongobeeException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import org.junit.Before;
@@ -47,24 +48,19 @@ public abstract class TestBase {
   @Autowired
   MongoTemplate mongoTemplate;
   @Autowired
-  UserRepo userRepo;
+  Mongobee mongobee;
   @MockBean
   NotificationsService notificationsService;
 
   @Before
-  public final void beforeBase() {
-    mongoTemplate.getDb().drop();
+  public final void beforeBase() throws MongobeeException {
+    mongoTemplate.getCollectionNames().stream().forEach(name -> {
+      mongoTemplate.dropCollection(name);
+    });
+    mongobee.execute();
 
     Mockito.doNothing().when(notificationsService).
         sendNotificationToUser(any(), any(), any());
-
-    User sabeq = User.builder()
-        .id(User.SABEQ_ID)
-        .firstName("سابق")
-        .lastName("\uD83C\uDFCE️️")
-        .username("sabeq")
-        .build();
-    userRepo.save(sabeq);
   }
 
   protected void addNewUser(User user) {
