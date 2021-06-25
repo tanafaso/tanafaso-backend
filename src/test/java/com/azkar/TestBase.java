@@ -18,9 +18,14 @@ import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.mongobee.Mongobee;
+import com.github.mongobee.exception.MongobeeException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,24 +52,17 @@ public abstract class TestBase {
   @Autowired
   MongoTemplate mongoTemplate;
   @Autowired
-  UserRepo userRepo;
+  Mongobee mongobee;
   @MockBean
   NotificationsService notificationsService;
 
   @Before
-  public final void beforeBase() {
+  public final void beforeBase() throws MongobeeException {
     mongoTemplate.getDb().drop();
+    mongobee.execute();
 
     Mockito.doNothing().when(notificationsService).
         sendNotificationToUser(any(), any(), any());
-
-    User sabeq = User.builder()
-        .id(User.SABEQ_ID)
-        .firstName("سابق")
-        .lastName("\uD83C\uDFCE️️")
-        .username("sabeq")
-        .build();
-    userRepo.save(sabeq);
   }
 
   protected void addNewUser(User user) {
