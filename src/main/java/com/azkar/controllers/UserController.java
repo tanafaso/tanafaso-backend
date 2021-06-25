@@ -31,12 +31,15 @@ public class UserController extends BaseController {
   @GetMapping(path = "/{id}")
   public ResponseEntity<GetUserResponse> getUser(@PathVariable String id) {
     GetUserResponse response = new GetUserResponse();
-
+    /*
+//    Return minimal user information, even if not friends so as to allow displaying non-friends in
+//    a group.
     if (!friendshipRepo.findByUserId(getCurrentUser(userRepo).getId()).getFriends().stream()
         .anyMatch(friend -> friend.getUserId().equals(id))) {
       response.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
+    */
 
     Optional<User> user = userRepo.findById(id);
     if (!user.isPresent()) {

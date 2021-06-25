@@ -40,14 +40,21 @@ public class UserRetrievalTest extends TestBase {
   }
 
   @Test
-  public void getUserById_notFriend_shouldFail() throws Exception {
+  public void getUserById_notFriend_shouldRetrieveMinimalInformation() throws Exception {
     User user1 = getNewRegisteredUser();
     User user2 = getNewRegisteredUser();
+
     GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
+    User expectedReturnedUser = User.builder()
+        .id(user2.getId())
+        .username(user2.getUsername())
+        .firstName(user2.getFirstName())
+        .lastName(user2.getLastName())
+        .build();
+    expectedResponse.setData(expectedReturnedUser);
 
     azkarApi.getUserById(user1, user2.getId())
-        .andExpect(status().isBadRequest())
+        .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
   }
@@ -105,7 +112,7 @@ public class UserRetrievalTest extends TestBase {
         build();
     addNewUser(user);
     GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setStatus(new Status(Status.NO_FRIENDSHIP_ERROR));
+    expectedResponse.setStatus(new Status(Status.USER_NOT_FOUND_ERROR));
 
     ResultActions result = performGetRequest(user, String.format("/users/%s", fakeUserId));
 
