@@ -74,11 +74,8 @@ public class User extends EntityBase {
     private String groupName;
     @NotNull
     private String invitingUserId;
-    @Deprecated
     @Default
     private int monthScore = 0;
-    // Use the score in Friendship collection instead
-    @Deprecated
     @Default
     private int totalScore = 0;
   }

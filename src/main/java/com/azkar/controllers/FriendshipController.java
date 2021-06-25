@@ -60,10 +60,18 @@ public class FriendshipController extends BaseController {
   GroupRepo groupRepo;
 
   @GetMapping
-  public ResponseEntity<GetFriendsResponse> getFriends() {
+  public ResponseEntity<GetFriendsResponse> getFriends(
+      @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
     GetFriendsResponse response = new GetFriendsResponse();
 
     Friendship friendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
+    List<Friend> friends = friendship.getFriends();
+    if (apiVersion == null
+        || VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
+      friends = friends.stream().filter(friend -> !friend.getUserId().equals(User.SABEQ_ID))
+          .collect(Collectors.toList());
+    }
+    friendship.setFriends(friends);
     response.setData(friendship);
     return ResponseEntity.ok(response);
   }
@@ -75,8 +83,6 @@ public class FriendshipController extends BaseController {
       @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
     GetFriendsLeaderboardResponse response = new GetFriendsLeaderboardResponse();
 
-    User currentUser = getCurrentUser(userRepo);
-
     List<FriendshipScores> friendsScores = new ArrayList<>();
     Friendship friendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
     List<Friend> friends = friendship.getFriends();
@@ -86,19 +92,9 @@ public class FriendshipController extends BaseController {
           .collect(Collectors.toList());
     }
     friends.stream().forEach(friend -> {
-      if (friend.isPending()) {
-        return;
-      }
-
-      Optional<User> friendUser = userRepo.findById(friend.getUserId());
-      if (!friendUser.isPresent()) {
-        return;
-      }
-
-      List<UserScore> scores = getFriendsScores(currentUser, friendUser.get());
       friendsScores.add(FriendshipScores.builder()
-          .currentUserScore(scores.get(0).getTotalScore())
-          .friendScore(scores.get(1).getTotalScore())
+          .currentUserScore((int) friend.getUserTotalScore())
+          .friendScore((int) friend.getFriendTotalScore())
           .friend(friend)
           .build());
     });

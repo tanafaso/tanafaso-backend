@@ -5,7 +5,6 @@ spring:
     auto-index-creation: false
     uri: mongodb://localhost:27017/azkar_test
     name: azkar_test
-    port: 27017
 
 files:
   azkar: test-azkar.csv

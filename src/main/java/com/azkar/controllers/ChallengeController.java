@@ -101,7 +101,7 @@ public class ChallengeController extends BaseController {
     return Optional.empty();
   }
 
-  private static void updateScore(User user, String groupId) {
+  private static void updateScoreInUserGroup(User user, String groupId) {
     Optional<UserGroup> group =
         user.getUserGroups().stream().filter(userGroup -> userGroup.getGroupId().equals(groupId))
             .findAny();
@@ -143,7 +143,7 @@ public class ChallengeController extends BaseController {
     return Optional.empty();
   }
 
-  private void updateScoreV2(User user, String groupId) {
+  private void updateScoreInFriendships(User user, String groupId) {
     Group group = groupRepo.findById(groupId).orElse(null);
     if (group == null) {
       logger.warn("Group with ID: %s not found will trying to update score for user: %s", groupId,
@@ -560,8 +560,6 @@ public class ChallengeController extends BaseController {
   // TODO(issue/204): This is not an atomic operation anymore, i.e. it is not guranteed that if
   //  something wrong happened in the middle of handling a request, the state will remain the
   //  same as before doing the request.
-  // Use updateChallengeV2 instead
-  @Deprecated
   @PutMapping(path = "/{challengeId}", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<UpdateChallengeResponse> updateChallenge(
       @PathVariable(value = "challengeId") String challengeId,
@@ -596,61 +594,8 @@ public class ChallengeController extends BaseController {
     boolean newSubChallengesFinished =
         oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
     if (newSubChallengesFinished && !oldSubChallengesFinished) {
-      updateScore(currentUser, currentUserChallenge.get().getGroupId());
-      userRepo.save(currentUser);
-
-      Challenge challenge = challengeRepo.findById(challengeId).get();
-      updateChallengeOnUserFinished(challenge, currentUser);
-      // Invalidate current user because it may have changed indirectly (by changing only the
-      // database instance) after calling updateChallengeOnUserFinished.
-      currentUser = userRepo.findById(currentUser.getId()).get();
-
-      sendNotificationOnFinishedChallenge(getCurrentUser(userRepo), challenge);
-      challengeRepo.save(challenge);
-    }
-    userRepo.save(currentUser);
-
-    return ResponseEntity.ok(new UpdateChallengeResponse());
-  }
-
-  // TODO(issue/204): This is not an atomic operation anymore, i.e. it is not guranteed that if
-  //  something wrong happened in the middle of handling a request, the state will remain the
-  //  same as before doing the request.
-  @PutMapping(path = "/{challengeId}/v2", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<UpdateChallengeResponse> updateChallengeV2(
-      @PathVariable(value = "challengeId") String challengeId,
-      @RequestBody UpdateChallengeRequest request) {
-    User currentUser = getCurrentUser(userRepo);
-    Optional<Challenge> currentUserChallenge = currentUser.getUserChallenges()
-        .stream()
-        .filter(challenge -> challenge.getId()
-            .equals(
-                challengeId))
-        .findFirst();
-    if (!currentUserChallenge.isPresent()) {
-      UpdateChallengeResponse response = new UpdateChallengeResponse();
-      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
-    // TODO(issue#170): Time should be supplied by a bean to allow easier testing
-    if (currentUserChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
-      UpdateChallengeResponse response = new UpdateChallengeResponse();
-      response.setStatus(new Status(Status.CHALLENGE_EXPIRED_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
-
-    List<SubChallenge> oldSubChallenges = currentUserChallenge.get().getSubChallenges();
-    boolean oldSubChallengesFinished =
-        oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
-    Optional<ResponseEntity<UpdateChallengeResponse>> errorResponse = updateOldSubChallenges(
-        oldSubChallenges, request.getNewChallenge().getSubChallenges());
-    if (errorResponse.isPresent()) {
-      return errorResponse.get();
-    }
-    boolean newSubChallengesFinished =
-        oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
-    if (newSubChallengesFinished && !oldSubChallengesFinished) {
-      updateScoreV2(currentUser, currentUserChallenge.get().getGroupId());
+      updateScoreInUserGroup(currentUser, currentUserChallenge.get().getGroupId());
+      updateScoreInFriendships(currentUser, currentUserChallenge.get().getGroupId());
       userRepo.save(currentUser);
 
       Challenge challenge = challengeRepo.findById(challengeId).get();
