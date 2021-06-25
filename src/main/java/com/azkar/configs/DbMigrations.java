@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
@@ -241,6 +242,32 @@ public class DbMigrations {
     });
 
     friendshipsToBeSaved.stream().forEach(friendship -> mongoTemplate.save(friendship));
+  }
+
+  @ChangeSet(order = "0005", id = "createEmptyFriendshipForSabeq", author = "")
+  public void createEmptyFriendshipForSabeq(MongoTemplate mongoTemplate) {
+    Friendship sabeqFriendship = Friendship.builder()
+        .userId(User.SABEQ_ID)
+        .friends(new ArrayList<>())
+        .id(new ObjectId().toString())
+        .build();
+
+    mongoTemplate.findAll(User.class).stream().forEach(user -> {
+      if (!user.getId().equals(User.SABEQ_ID)) {
+        sabeqFriendship.getFriends().add(Friend.builder()
+            .userId(user.getId())
+            .username(user.getUsername())
+            .firstName(user.getFirstName())
+            .lastName(user.getLastName())
+            .isPending(false)
+            .userTotalScore(0)
+            .friendTotalScore(0)
+            .groupId(null)
+            .build()
+        );
+      }
+    });
+    mongoTemplate.save(sabeqFriendship);
   }
 
   private void updateFriendScore(MongoTemplate mongoTemplate, String userId, Friend friend) {
