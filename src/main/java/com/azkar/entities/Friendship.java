@@ -44,6 +44,7 @@ public class Friendship extends EntityBase {
   @AllArgsConstructor
   public static class Friend {
 
+    // Change the name to friendId so as to be consistent with score variables names.
     @NotNull
     private String userId;
     private String groupId;
@@ -54,5 +55,10 @@ public class Friendship extends EntityBase {
     @NotNull
     private String lastName;
     private boolean isPending;
+
+    @Default
+    private long userTotalScore = 0;
+    @Default
+    private long friendTotalScore = 0;
   }
 }

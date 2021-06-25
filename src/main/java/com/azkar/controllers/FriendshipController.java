@@ -10,6 +10,7 @@ import com.azkar.payload.usercontroller.responses.AddFriendResponse;
 import com.azkar.payload.usercontroller.responses.DeleteFriendResponse;
 import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardResponse;
 import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardResponse.FriendshipScores;
+import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardV2Response;
 import com.azkar.payload.usercontroller.responses.GetFriendsResponse;
 import com.azkar.payload.usercontroller.responses.ResolveFriendRequestResponse;
 import com.azkar.payload.utils.FeaturesVersions;
@@ -26,6 +27,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -41,6 +44,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/friends", produces = MediaType.APPLICATION_JSON_VALUE)
 public class FriendshipController extends BaseController {
+
+  private static final Logger logger = LoggerFactory.getLogger(FriendshipController.class);
 
   @Autowired
   NotificationsService notificationsService;
@@ -63,6 +68,8 @@ public class FriendshipController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  // Use getFriendsLeaderboardV2 instead
+  @Deprecated
   @GetMapping(path = "/leaderboard")
   public ResponseEntity<GetFriendsLeaderboardResponse> getFriendsLeaderboard(
       @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
@@ -97,6 +104,25 @@ public class FriendshipController extends BaseController {
     });
 
     response.setData(friendsScores);
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping(path = "/leaderboard/v2")
+  public ResponseEntity<GetFriendsLeaderboardV2Response> getFriendsLeaderboardV2(
+      @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
+    GetFriendsLeaderboardV2Response response = new GetFriendsLeaderboardV2Response();
+
+    Friendship friendship =
+        friendshipRepo.findByUserId(getCurrentUser().getUserId());
+
+    List<Friend> friends = friendship.getFriends();
+    if (apiVersion == null
+        || VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
+      friends = friends.stream().filter(friend -> !friend.getUserId().equals(User.SABEQ_ID))
+          .collect(Collectors.toList());
+    }
+
+    response.setData(friends);
     return ResponseEntity.ok(response);
   }
 
