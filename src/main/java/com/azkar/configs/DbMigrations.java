@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 @EnableMongoRepositories(basePackages = {"com.azkar.repos"})
 @Service
 public class DbMigrations {
+
   private static final Logger logger = LoggerFactory.getLogger(DbMigrations.class);
 
   // This change set has failed because a lot of corner cases weren't handled which led to leaving

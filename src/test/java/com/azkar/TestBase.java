@@ -14,7 +14,6 @@ import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
-import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,10 +21,7 @@ import com.github.mongobee.Mongobee;
 import com.github.mongobee.exception.MongobeeException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
-import org.junit.After;
 import org.junit.Before;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +54,9 @@ public abstract class TestBase {
 
   @Before
   public final void beforeBase() throws MongobeeException {
-    mongoTemplate.getDb().drop();
+    mongoTemplate.getCollectionNames().stream().forEach(name -> {
+      mongoTemplate.dropCollection(name);
+    });
     mongobee.execute();
 
     Mockito.doNothing().when(notificationsService).
