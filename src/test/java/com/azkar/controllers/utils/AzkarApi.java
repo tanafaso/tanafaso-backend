@@ -117,6 +117,13 @@ public class AzkarApi {
         JsonHandler.toJson(request));
   }
 
+
+  public ResultActions updateChallengeV2(User user, String challengeId,
+      UpdateChallengeRequest request) throws Exception {
+    return httpClient.performPutRequest(user, String.format("/challenges/%s/v2", challengeId),
+        JsonHandler.toJson(request));
+  }
+
   public ResultActions getPersonalChallenges(User user) throws Exception {
     return httpClient.performGetRequest(user, "/challenges/personal");
   }
@@ -204,9 +211,18 @@ public class AzkarApi {
     return httpClient.performGetRequest(user, "/friends/leaderboard");
   }
 
+  public ResultActions getFriendsLeaderboardV2(User user) throws Exception {
+    return httpClient.performGetRequest(user, "/friends/leaderboard/v2");
+  }
+
   public ResultActions getFriendsLeaderboardWithApiVersion(User user, String apiVersion)
       throws Exception {
     return httpClient.performGetRequestWithApiVersion(user, "/friends/leaderboard", apiVersion);
+  }
+
+  public ResultActions getFriendsLeaderboardV2WithApiVersion(User user, String apiVersion)
+      throws Exception {
+    return httpClient.performGetRequestWithApiVersion(user, "/friends/leaderboard/v2", apiVersion);
   }
 
   public void makeFriends(User user1, User user2) throws Exception {
