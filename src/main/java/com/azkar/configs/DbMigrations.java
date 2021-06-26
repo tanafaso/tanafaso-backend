@@ -270,6 +270,73 @@ public class DbMigrations {
     mongoTemplate.save(sabeqFriendship);
   }
 
+  @ChangeSet(order = "0006", id = "addOldPersonalChallengesToSabeqScore", author = "")
+  public void addOldPersonalChallengesToSabeqScore(MongoTemplate mongoTemplate) {
+    mongoTemplate.findAll(Friendship.class).stream().forEach(friendship -> {
+      if (friendship.getFriends().size() == 0 || !friendship.getFriends().get(0).getUserId()
+          .equals(User.SABEQ_ID)) {
+        logger.warn("Found a friendship of size 0. Its ID is %s", friendship.getId());
+        return;
+      }
+      logger.info("Migrating old personal challenge score for user with ID: %s",
+          friendship.getUserId());
+
+      Friend saqbeqAsAFriend = friendship.getFriends().get(0);
+      User user;
+      try {
+        // Copy the user's personal challenges to a challenge between the user and sabeq.
+        user = mongoTemplate.findById(friendship.getUserId(), User.class);
+        if (user.getId() == null) {
+          logger.warn("Found a user with null ID");
+          return;
+        }
+      } catch (Exception e) {
+        logger.error("Couldn't find user with id: " + friendship.getUserId());
+        return;
+      }
+
+      try {
+        user.getPersonalChallenges().stream().forEach(personalChallenge -> {
+          if (!personalChallenge.finished()) {
+            return;
+          }
+          Challenge originalPersonalChallenge = null;
+          try {
+            originalPersonalChallenge =
+                mongoTemplate.findById(personalChallenge.getId(), Challenge.class);
+          } catch (Exception e) {
+            logger.info("Mongotemplate failed to find an original challenge for user: %s",
+                user.getId());
+          }
+
+          if (originalPersonalChallenge != null) {
+            // not old
+            return;
+          }
+          logger.info("Found an old challenge for user with ID: %s", user.getId());
+
+          long oldScore = saqbeqAsAFriend.getUserTotalScore();
+          saqbeqAsAFriend.setUserTotalScore(oldScore + 1);
+
+          UserGroup userAndSabeqGroup = user.getUserGroups().stream()
+              .filter(userGroup -> userGroup.getGroupId().equals(saqbeqAsAFriend.getGroupId()))
+              .findFirst()
+              .orElse(null);
+          if (userAndSabeqGroup == null) {
+            logger.warn("Couldn't find user group with sabeq for user with ID: %s", user.getId());
+            return;
+          }
+          userAndSabeqGroup.setTotalScore((int) (oldScore + 1));
+        });
+        mongoTemplate.save(friendship);
+        mongoTemplate.save(user);
+      } catch (Exception e) {
+        logger.warn("Something wrong happened while updating score for user with ID: %s",
+            user.getId());
+      }
+    });
+  }
+
   private void updateFriendScore(MongoTemplate mongoTemplate, String userId, Friend friend) {
     User user = mongoTemplate.findById(userId, User.class);
     User friendUser = mongoTemplate.findById(friend.getUserId(), User.class);
