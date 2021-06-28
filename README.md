@@ -26,7 +26,6 @@ Also, take a look at the [Frontend](https://github.com/challenge-azkar/tanafaso-
 - [repos/](https://github.com/challenge-azkar/tanafaso-backend/tree/master/src/main/java/com/azkar/repos): Contains interfaces that are all annotated by [@Repository](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Repository.html) and will be scanned on startup to create beans for every repository that can later be [@Autowired](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/annotation/Autowired.html) and used throughout the code to interact with the Mongo database.
 - [services/](https://github.com/challenge-azkar/tanafaso-backend/tree/master/src/main/java/com/azkar/services): Contains interfaces that are all annotated by [@Service](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Service.html) and can be used throughout the code to provide some utilities, e.g. [NotificationsService](https://github.com/challenge-azkar/tanafaso-backend/blob/master/src/main/java/com/azkar/services/NotificationsService.java) can be used to send a notification to a user.
 
-## Get Started
 ## Get Started Guide
 ### Setup MongoDB
 For this please follow the official [MongoDB installation guide](https://docs.mongodb.com/manual/installation/).
