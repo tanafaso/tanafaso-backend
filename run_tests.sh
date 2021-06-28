@@ -1,1 +1,0 @@
-DATABASE_USER=examplespringuser;DATABASE_NAME=exampledatabasename;DATABASE_PASSWORD=examplepassword;SERVER_PORT=8080;MONGODB_URI=spring.data.mongodb.uri\\\\\\=mongodb://root:root@localhost:27017/test_db;JWT_SECRET=examplesecret;LOGS_PATH=logs/;SERVER_HOST=localhost;GOOGLE_APPLICATION_CREDENTIALS=firebase-key.json mvn package 
