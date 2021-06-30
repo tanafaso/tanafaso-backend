@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
-import com.azkar.controllers.AuthenticationController;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.RegistrationEmailConfirmationState;
 import com.azkar.entities.User;
@@ -352,14 +351,14 @@ public class RegistrationWithEmailTest extends TestBase {
   private ResultActions registerWithEmail(String body) throws Exception {
     return performPutRequest(
         /*user=*/null,
-        AuthenticationController.REGISTER_WITH_EMAIL_PATH,
+        ApiAuthenticationController.REGISTER_WITH_EMAIL_PATH,
         body);
   }
 
   private ResultActions verifyEmail(String body) throws Exception {
     return performPutRequest(
         /*user=*/null,
-        AuthenticationController.VERIFY_EMAIL_PATH,
+        ApiAuthenticationController.VERIFY_EMAIL_PATH,
         body);
   }
 }

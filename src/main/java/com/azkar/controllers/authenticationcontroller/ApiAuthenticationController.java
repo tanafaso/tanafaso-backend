@@ -1,5 +1,6 @@
-package com.azkar.controllers;
+package com.azkar.controllers.authenticationcontroller;
 
+import com.azkar.controllers.BaseController;
 import com.azkar.entities.RegistrationEmailConfirmationState;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserFacebookData;
@@ -55,19 +56,27 @@ import org.springframework.web.client.RestTemplate;
 
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-public class AuthenticationController extends BaseController {
+public class ApiAuthenticationController extends BaseController {
 
   public static final String LOGIN_WITH_FACEBOOK_PATH = "/login/facebook";
+  // Use REGISTER_WITH_EMAIL_V2_PATH instead.
+  @Deprecated
   public static final String REGISTER_WITH_EMAIL_PATH = "/register/email";
+  public static final String REGISTER_WITH_EMAIL_V2_PATH = "/register/email/v2";
+  // Use AuthenticationWebController.VERIFY_EMAIL_V2_PATH instead.
+  @Deprecated
   public static final String VERIFY_EMAIL_PATH = "/verify/email";
   public static final String LOGIN_WITH_EMAIL_PATH = "/login/email";
   public static final String RESET_PASSWORD_PATH = "/reset_password";
-  private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
+  private static final Logger logger = LoggerFactory.getLogger(ApiAuthenticationController.class);
   private static final long RESET_PASSWORD_EXPIRY_TIME_SECONDS = 30 * 60;
 
   private static final String RESET_PASSWORD_EMAIL_TEMPLATE_PATH =
       "emailTemplates/reset_password_email.html";
+  // Use VERIFY_EMAIL_V2_TEMPLATE_PATH instead.
+  @Deprecated
   private static final String VERIFY_EMAIL_TEMPLATE_PATH = "emailTemplates/verify_email.html";
+  private static final String VERIFY_EMAIL_V2_TEMPLATE_PATH = "emailTemplates/verify_email_v2.html";
 
   @Autowired
   UserRepo userRepo;
@@ -78,15 +87,17 @@ public class AuthenticationController extends BaseController {
   @Autowired
   PasswordEncoder passwordEncoder;
   @Autowired
-  private RegistrationEmailConfirmationStateRepo registrationPinRepo;
+  private RegistrationEmailConfirmationStateRepo registrationEmailConfirmationStateRepo;
   @Autowired
   private JavaMailSender javaMailSender;
   private RestTemplate restTemplate;
 
-  public AuthenticationController(RestTemplateBuilder restTemplateBuilder) {
+  public ApiAuthenticationController(RestTemplateBuilder restTemplateBuilder) {
     restTemplate = restTemplateBuilder.build();
   }
 
+  // Use registerWithEmailV2 instead.
+  @Deprecated
   @PutMapping(value = REGISTER_WITH_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<EmailRegistrationResponse> registerWithEmail(
       @RequestBody EmailRegistrationRequestBody body)
@@ -104,11 +115,11 @@ public class AuthenticationController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
-    if (registrationPinRepo.existsByEmail(body.getEmail())) {
+    if (registrationEmailConfirmationStateRepo.existsByEmail(body.getEmail())) {
       logger.warn("A user with email %s is trying to register more than once.", body.getEmail());
     }
     RegistrationEmailConfirmationState registrationEmailConfirmationState =
-        registrationPinRepo.findByEmail(body.getEmail()).orElse(
+        registrationEmailConfirmationStateRepo.findByEmail(body.getEmail()).orElse(
             RegistrationEmailConfirmationState.builder()
                 .email(body.getEmail())
                 .password(passwordEncoder.encode(body.getPassword()))
@@ -120,11 +131,51 @@ public class AuthenticationController extends BaseController {
     registrationEmailConfirmationState.setPin(pin);
     sendVerificationEmail(body.getEmail(), pin);
 
-    registrationPinRepo.save(registrationEmailConfirmationState);
+    registrationEmailConfirmationStateRepo.save(registrationEmailConfirmationState);
 
     return ResponseEntity.ok(response);
   }
 
+  @PutMapping(value = REGISTER_WITH_EMAIL_V2_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<EmailRegistrationResponse> registerWithEmailV2(
+      @RequestBody EmailRegistrationRequestBody body)
+      throws MessagingException, IOException {
+    EmailRegistrationResponse response = new EmailRegistrationResponse();
+    body.validate();
+
+    if (userRepo.existsByEmail(body.getEmail())) {
+      response.setStatus(new Status(Status.USER_ALREADY_REGISTERED_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    if (userRepo.existsByUserFacebookData_Email(body.getEmail())) {
+      response.setStatus(new Status(Status.USER_ALREADY_REGISTERED_WITH_FACEBOOK));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    if (registrationEmailConfirmationStateRepo.existsByEmail(body.getEmail())) {
+      logger.warn("A user with email %s is trying to register more than once.", body.getEmail());
+    }
+    RegistrationEmailConfirmationState registrationEmailConfirmationState =
+        registrationEmailConfirmationStateRepo.findByEmail(body.getEmail()).orElse(
+            RegistrationEmailConfirmationState.builder()
+                .email(body.getEmail())
+                .password(passwordEncoder.encode(body.getPassword()))
+                .firstName(body.getFirstName())
+                .lastName(body.getLastName())
+                .build());
+
+    String emailValidationToken = UUID.randomUUID().toString();
+    registrationEmailConfirmationState.setToken(emailValidationToken);
+    sendVerificationEmailV2(body.getEmail(), emailValidationToken);
+
+    registrationEmailConfirmationStateRepo.save(registrationEmailConfirmationState);
+
+    return ResponseEntity.ok(response);
+  }
+
+  // Use verifyEmailV2 instead.
+  @Deprecated
   @PutMapping(value = VERIFY_EMAIL_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<EmailVerificationResponse> verifyEmail(
       @RequestBody EmailVerificationRequestBody body) {
@@ -137,7 +188,7 @@ public class AuthenticationController extends BaseController {
     }
 
     Optional<RegistrationEmailConfirmationState> registrationEmailConfirmationState =
-        registrationPinRepo.findByEmail(body.getEmail());
+        registrationEmailConfirmationStateRepo.findByEmail(body.getEmail());
     if (!registrationEmailConfirmationState.isPresent()
         || registrationEmailConfirmationState.get().getPin() != body.getPin().intValue()) {
       response.setStatus(new Status(Status.VERIFICATION_ERROR));
@@ -150,7 +201,7 @@ public class AuthenticationController extends BaseController {
         registrationEmailConfirmationState.get().getPassword());
 
     userService.addNewUser(user);
-    registrationPinRepo.delete(registrationEmailConfirmationState.get());
+    registrationEmailConfirmationStateRepo.delete(registrationEmailConfirmationState.get());
 
     return ResponseEntity.ok(response);
   }
@@ -168,7 +219,7 @@ public class AuthenticationController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
-    if (registrationPinRepo.existsByEmail(body.getEmail())) {
+    if (registrationEmailConfirmationStateRepo.existsByEmail(body.getEmail())) {
       response.setStatus(new Status(Status.EMAIL_NOT_VERIFIED_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
@@ -343,6 +394,15 @@ public class AuthenticationController extends BaseController {
     String text = getEmailTemplate(VERIFY_EMAIL_TEMPLATE_PATH)
         .replaceAll("PIN", "" + pin);
     sendEmail(email, subject, text);
+  }
+
+  private void sendVerificationEmailV2(String email, String token)
+      throws MessagingException, IOException {
+    String subject = "تأكيد البريد الإلكتروني";
+    String url = String.format("https://www.tanafaso.com/verify/email/v2?token=%s", token);
+    String html = getEmailTemplate(VERIFY_EMAIL_V2_TEMPLATE_PATH)
+        .replaceAll("URL", url);
+    sendEmail(email, subject, html);
   }
 
   private void sendResetPasswordEmail(String email, String token)

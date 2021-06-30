@@ -9,5 +9,7 @@ public interface RegistrationEmailConfirmationStateRepo extends
 
   boolean existsByEmail(String email);
 
+  Optional<RegistrationEmailConfirmationState> findByToken(String token);
+
   Optional<RegistrationEmailConfirmationState> findByEmail(String email);
 }

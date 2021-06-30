@@ -1,5 +1,8 @@
 package com.azkar.controllers.authenticationcontroller;
 
+import static com.azkar.controllers.authenticationcontroller.WebAuthenticationController.ERROR_PAGE_VIEW_NAME;
+import static com.azkar.controllers.authenticationcontroller.WebAuthenticationController.SUCCESS_PAGE_VIEW_NAME;
+import static com.azkar.controllers.authenticationcontroller.WebAuthenticationController.UPDATE_PASSWORD_VIEW_NAME;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.emptyString;
@@ -10,7 +13,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.azkar.TestBase;
-import com.azkar.controllers.UpdatePasswordController;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
@@ -78,7 +80,7 @@ public class ResetPasswordTest extends TestBase {
     String token = userFromDb.getResetPasswordToken();
 
     azkarApi.verifyResetPasswordToken(token).andExpect(status().isOk())
-        .andExpect(view().name(UpdatePasswordController.UPDATE_PASSWORD_VIEW_NAME));
+        .andExpect(view().name(UPDATE_PASSWORD_VIEW_NAME));
   }
 
   @Test
@@ -87,7 +89,7 @@ public class ResetPasswordTest extends TestBase {
 
     azkarApi.verifyResetPasswordToken("invalid_token").andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.valueOf("text/html;charset=UTF-8")))
-        .andExpect(view().name(UpdatePasswordController.ERROR_PAGE_VIEW_NAME));
+        .andExpect(view().name(ERROR_PAGE_VIEW_NAME));
   }
 
   @Test
@@ -96,7 +98,7 @@ public class ResetPasswordTest extends TestBase {
 
     String resetPasswordToken = userRepo.findByEmail(user.getEmail()).get().getResetPasswordToken();
     azkarApi.updatePassword(resetPasswordToken, NEW_PASSWORD).andExpect(status().isOk())
-        .andExpect(view().name(UpdatePasswordController.SUCCESS_PAGE_VIEW_NAME));
+        .andExpect(view().name(SUCCESS_PAGE_VIEW_NAME));
 
     String newEncodedPassword = userRepo.findByEmail(user.getEmail()).get().getEncodedPassword();
     assertThat(passwordEncoder.matches(NEW_PASSWORD, newEncodedPassword), is(true));
@@ -108,10 +110,10 @@ public class ResetPasswordTest extends TestBase {
 
     String resetPasswordToken = userRepo.findByEmail(user.getEmail()).get().getResetPasswordToken();
     azkarApi.updatePassword(resetPasswordToken, NEW_PASSWORD).andExpect(status().isOk())
-        .andExpect(view().name(UpdatePasswordController.SUCCESS_PAGE_VIEW_NAME));
+        .andExpect(view().name(SUCCESS_PAGE_VIEW_NAME));
 
     azkarApi.updatePassword(resetPasswordToken, NEW_PASSWORD).andExpect(status().isBadRequest())
-        .andExpect(view().name(UpdatePasswordController.ERROR_PAGE_VIEW_NAME));
+        .andExpect(view().name(ERROR_PAGE_VIEW_NAME));
   }
 
   @Test
@@ -121,7 +123,7 @@ public class ResetPasswordTest extends TestBase {
 
     azkarApi.updatePassword("invalid_token", NEW_PASSWORD).andExpect(status().isBadRequest())
         .andExpect(
-            view().name(UpdatePasswordController.ERROR_PAGE_VIEW_NAME));
+            view().name(ERROR_PAGE_VIEW_NAME));
 
     String newEncodedPassword = userRepo.findByEmail(user.getEmail()).get().getEncodedPassword();
     assertThat(passwordEncoder.matches(NEW_PASSWORD, newEncodedPassword), is(false));
@@ -138,7 +140,7 @@ public class ResetPasswordTest extends TestBase {
     String resetPasswordToken = userRepo.findByEmail(user.getEmail()).get().getResetPasswordToken();
     azkarApi.updatePassword(resetPasswordToken, INVALID_PASSWORD_TOO_SHORT)
         .andExpect(status().isBadRequest())
-        .andExpect(view().name(UpdatePasswordController.ERROR_PAGE_VIEW_NAME));
+        .andExpect(view().name(ERROR_PAGE_VIEW_NAME));
 
     String newEncodedPassword = userRepo.findByEmail(user.getEmail()).get().getEncodedPassword();
     assertThat(oldEncodedPassword, is(newEncodedPassword));
@@ -154,7 +156,7 @@ public class ResetPasswordTest extends TestBase {
     String resetPasswordToken = userFromDb.getResetPasswordToken();
     azkarApi.updatePassword(resetPasswordToken, NEW_PASSWORD)
         .andExpect(status().isBadRequest())
-        .andExpect(view().name(UpdatePasswordController.ERROR_PAGE_VIEW_NAME));
+        .andExpect(view().name(ERROR_PAGE_VIEW_NAME));
 
     String oldEncodedPassword = userFromDb.getEncodedPassword();
     String newEncodedPassword = userRepo.findByEmail(user.getEmail()).get().getEncodedPassword();

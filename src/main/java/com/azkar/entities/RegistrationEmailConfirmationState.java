@@ -22,7 +22,10 @@ public class RegistrationEmailConfirmationState extends EntityBase {
   private String email;
   @NotNull
   private String password;
+  // Use token instead
+  @Deprecated
   private int pin;
+  private String token;
   @NotNull
   private String firstName;
   @NotNull
