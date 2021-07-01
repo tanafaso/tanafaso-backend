@@ -28,6 +28,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.ResultActions;
 
+// NOTE: Add tests for register/email/v2 and verify/email/v2 instead of register/email and
+// verify/email.
 @Ignore("issue/108: Email tests are flaky")
 public class RegistrationWithEmailTest extends TestBase {
 
