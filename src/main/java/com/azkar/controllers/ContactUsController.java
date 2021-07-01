@@ -1,5 +1,8 @@
 package com.azkar.controllers;
 
+import static com.azkar.controllers.authenticationcontroller.WebAuthenticationController.ERROR_PAGE_VIEW_NAME;
+import static com.azkar.controllers.authenticationcontroller.WebAuthenticationController.SUCCESS_PAGE_VIEW_NAME;
+
 import java.io.FileWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,11 +43,11 @@ public class ContactUsController {
       pw.flush();
       pw.close();
       model.addAttribute("successMessage", SUCCESS_MESSAGE);
-      return UpdatePasswordController.SUCCESS_PAGE_VIEW_NAME;
+      return SUCCESS_PAGE_VIEW_NAME;
     } catch (Exception e) {
       logger.error(String.format("Cannot write to %s file.", FEEDBACK_FILE_PATH), e);
       model.addAttribute("errorMessage", ERROR_MESSAGE);
-      return UpdatePasswordController.ERROR_PAGE_VIEW_NAME;
+      return ERROR_PAGE_VIEW_NAME;
     }
 
   }

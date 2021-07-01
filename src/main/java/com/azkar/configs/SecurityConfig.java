@@ -2,8 +2,8 @@ package com.azkar.configs;
 
 import com.azkar.configs.authentication.JwtAuthenticationFilter;
 import com.azkar.configs.authentication.OAuthSuccessHandler;
-import com.azkar.controllers.AuthenticationController;
-import com.azkar.controllers.UpdatePasswordController;
+import com.azkar.controllers.authenticationcontroller.ApiAuthenticationController;
+import com.azkar.controllers.authenticationcontroller.WebAuthenticationController;
 import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -25,12 +25,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       "/contact",
       "/feedback",
       "/images/**",
-      UpdatePasswordController.UPDATE_PASSWORD_PATH + "/**", // allow all subdirectories
-      AuthenticationController.REGISTER_WITH_EMAIL_PATH,
-      AuthenticationController.VERIFY_EMAIL_PATH,
-      AuthenticationController.LOGIN_WITH_EMAIL_PATH,
-      AuthenticationController.LOGIN_WITH_FACEBOOK_PATH,
-      AuthenticationController.RESET_PASSWORD_PATH
+      WebAuthenticationController.UPDATE_PASSWORD_PATH + "/**", // allow all subdirectories
+      ApiAuthenticationController.REGISTER_WITH_EMAIL_PATH,
+      ApiAuthenticationController.REGISTER_WITH_EMAIL_V2_PATH,
+      ApiAuthenticationController.VERIFY_EMAIL_PATH,
+      WebAuthenticationController.VERIFY_EMAIL_V2_PATH,
+      ApiAuthenticationController.LOGIN_WITH_EMAIL_PATH,
+      ApiAuthenticationController.LOGIN_WITH_FACEBOOK_PATH,
+      ApiAuthenticationController.RESET_PASSWORD_PATH
   };
   @Autowired
   JwtAuthenticationFilter jwtAuthenticationFilter;

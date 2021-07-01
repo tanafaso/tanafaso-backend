@@ -4,7 +4,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
-import com.azkar.controllers.AuthenticationController;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.User;
 import com.azkar.factories.entities.UserFactory;
@@ -125,7 +124,7 @@ public class LoginWithEmailTest extends TestBase {
         EmailRegistrationRequestBodyFactory.getDefaultEmailRegistrationRequestBody();
 
     performPutRequest(
-        AuthenticationController.REGISTER_WITH_EMAIL_PATH,
+        ApiAuthenticationController.REGISTER_WITH_EMAIL_PATH,
         JsonHandler.toJson(emailRegistrationRequestBody))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -145,7 +144,7 @@ public class LoginWithEmailTest extends TestBase {
 
   private ResultActions loginWithEmail(String body) throws Exception {
     return performPutRequest(
-        AuthenticationController.LOGIN_WITH_EMAIL_PATH,
+        ApiAuthenticationController.LOGIN_WITH_EMAIL_PATH,
         body);
   }
 }

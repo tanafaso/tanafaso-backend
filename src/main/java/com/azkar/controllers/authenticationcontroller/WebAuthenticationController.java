@@ -1,7 +1,10 @@
-package com.azkar.controllers;
+package com.azkar.controllers.authenticationcontroller;
 
+import com.azkar.entities.RegistrationEmailConfirmationState;
 import com.azkar.entities.User;
+import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
+import com.azkar.services.UserService;
 import java.time.Instant;
 import java.util.Optional;
 import javax.servlet.http.HttpServletResponse;
@@ -15,14 +18,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * This control is responsible for handling the reset password scenario. Since resetting password is
- * only allowed from a browser. This controller produces html pages directly and not JSON.
+ * This controller is responsible for handling some of the authentication endpoints and will only
+ * return HTML pages and not JSON.
  */
 @Controller()
-public class UpdatePasswordController {
+public class WebAuthenticationController {
+
 
   public static final String UPDATE_PASSWORD_PATH = "/update_password";
   public static final String UPDATE_PASSWORD_VIEW_NAME = "update_password";
+  public static final String VERIFY_EMAIL_V2_PATH = "/verify/email/v2";
+
   public static final String ERROR_PAGE_VIEW_NAME = "error_page";
   public static final String SUCCESS_PAGE_VIEW_NAME = "success_page";
 
@@ -31,6 +37,12 @@ public class UpdatePasswordController {
   public static final String PASSWORD_MALFORMED_ERROR =
       "يجب ألا تقل كلمة المرور عن 8 أحرف.";
   private static final String UPDATE_SUCCESSFUL_MESSAGE = "تم تغيير كلمة المرور بنجاح.";
+
+  @Autowired
+  RegistrationEmailConfirmationStateRepo registrationEmailConfirmationStateRepo;
+
+  @Autowired
+  UserService userService;
 
   @Autowired
   UserRepo userRepo;
@@ -77,5 +89,40 @@ public class UpdatePasswordController {
       model.addAttribute("errorMessage", INVALID_TOKEN_ERROR);
       return ERROR_PAGE_VIEW_NAME;
     }
+  }
+
+  @GetMapping(value = VERIFY_EMAIL_V2_PATH)
+  public String verifyEmailV2(
+      @RequestParam String token,
+      HttpServletResponse response,
+      Model model) {
+
+    Optional<RegistrationEmailConfirmationState> state =
+        registrationEmailConfirmationStateRepo.findByToken(token);
+
+    if (!state.isPresent()) {
+      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      model.addAttribute("errorMessage",
+          "هذا الرابط منتهي أو غير صحيح. من فضلك حاول الإشتراك في البرنامج مرة أخرى.");
+      return ERROR_PAGE_VIEW_NAME;
+    }
+
+    if (userRepo.existsByEmail(state.get().getEmail())) {
+      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      model.addAttribute("errorMessage", "تم التحقق من هذا البريد الإلكتروني بالفعل من قبل.");
+      return ERROR_PAGE_VIEW_NAME;
+    }
+
+    User user = userService.buildNewUser(state.get().getEmail(),
+        state.get().getFirstName(),
+        state.get().getLastName(),
+        state.get().getPassword());
+
+    userService.addNewUser(user);
+    registrationEmailConfirmationStateRepo.delete(state.get());
+
+    model.addAttribute("successMessage",
+        "تم التحقق من البريد الإلكتروني بنجاح. يمكنك الآن تسجيل الدخول في البرنامج.");
+    return SUCCESS_PAGE_VIEW_NAME;
   }
 }
