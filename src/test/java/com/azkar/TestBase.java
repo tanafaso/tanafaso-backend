@@ -4,12 +4,12 @@ package com.azkar;
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.azkar.controllers.challengecontroller.PersonalChallengeTest;
+import com.azkar.controllers.challengecontroller.PersonalAzkarChallengeTest;
 import com.azkar.controllers.utils.AzkarApi;
 import com.azkar.controllers.utils.HttpClient;
 import com.azkar.controllers.utils.JsonHandler;
-import com.azkar.entities.Challenge;
 import com.azkar.entities.User;
+import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
@@ -124,26 +124,27 @@ public abstract class TestBase {
   }
 
   // TODO(issue#156): Think about a place for helper functions for tests
-  protected Challenge createGroupChallenge(User user, String groupId) throws Exception {
-    Challenge challenge = ChallengeFactory.getNewChallenge(groupId);
+  protected AzkarChallenge createGroupChallenge(User user, String groupId) throws Exception {
+    AzkarChallenge challenge = ChallengeFactory.getNewChallenge(groupId);
     azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
     return challenge;
   }
 
-  protected Challenge createGroupChallenge(User user, Challenge challenge) throws Exception {
+  protected AzkarChallenge createGroupChallenge(User user, AzkarChallenge challenge)
+      throws Exception {
     azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
     return challenge;
   }
 
-  protected Challenge createPersonalChallenge(User user)
+  protected AzkarChallenge createPersonalChallenge(User user)
       throws Exception {
     long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
-    AddPersonalChallengeRequest request = PersonalChallengeTest
+    AddPersonalChallengeRequest request = PersonalAzkarChallengeTest
         .createPersonalChallengeRequest(expiryDate);
     return createPersonalChallenge(user, request);
   }
 
-  protected Challenge createPersonalChallenge(User user, AddPersonalChallengeRequest request)
+  protected AzkarChallenge createPersonalChallenge(User user, AddPersonalChallengeRequest request)
       throws Exception {
     ResultActions response = azkarApi.addPersonalChallenge(user, request)
         .andExpect(status().isOk());

@@ -10,11 +10,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.azkar.TestBase;
 import com.azkar.controllers.utils.AzkarApi;
 import com.azkar.controllers.utils.JsonHandler;
-import com.azkar.entities.Challenge;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
@@ -476,7 +476,7 @@ public class FriendshipTest extends TestBase {
     Group group4 = azkarApi.addGroupAndReturn(user3, "group4");
     azkarApi.addUserToGroup(/*invitingUser=*/user3, user4, group4.getId());
 
-    Challenge challenge = createChallengeInGroup(user1, user1And2FriendshipGroupId);
+    AzkarChallenge challenge = createChallengeInGroup(user1, user1And2FriendshipGroupId);
     createChallengeInGroup(user1, user1And2FriendshipGroupId);
     finishChallenge(user1, challenge.getId());
     // Friends Scores Now:
@@ -571,7 +571,7 @@ public class FriendshipTest extends TestBase {
     Group group4 = azkarApi.addGroupAndReturn(user3, "group4");
     azkarApi.addUserToGroup(/*invitingUser=*/user3, user4, group4.getId());
 
-    Challenge challenge = createChallengeInGroup(user1, user1And2FriendshipGroupId);
+    AzkarChallenge challenge = createChallengeInGroup(user1, user1And2FriendshipGroupId);
     createChallengeInGroup(user1, user1And2FriendshipGroupId);
     finishChallenge(user1, challenge.getId());
     // Friends Scores Now:
@@ -674,7 +674,7 @@ public class FriendshipTest extends TestBase {
     Group group4 = azkarApi.addGroupAndReturn(user3, "group4");
     azkarApi.addUserToGroup(/*invitingUser=*/user3, user4, group4.getId());
 
-    Challenge challenge = createChallengeInGroup(user1, user1And2FriendshipGroupId);
+    AzkarChallenge challenge = createChallengeInGroup(user1, user1And2FriendshipGroupId);
     createChallengeInGroup(user1, user1And2FriendshipGroupId);
     finishChallenge(user1, challenge.getId());
     // Friends Scores Now:
@@ -773,7 +773,7 @@ public class FriendshipTest extends TestBase {
     Group group4 = azkarApi.addGroupAndReturn(user3, "group4");
     azkarApi.addUserToGroup(/*invitingUser=*/user3, user4, group4.getId());
 
-    Challenge challenge = createChallengeInGroup(user1, user1And2FriendshipGroupId);
+    AzkarChallenge challenge = createChallengeInGroup(user1, user1And2FriendshipGroupId);
     createChallengeInGroup(user1, user1And2FriendshipGroupId);
     finishChallenge(user1, challenge.getId());
     // Friends Scores Now:
@@ -876,8 +876,8 @@ public class FriendshipTest extends TestBase {
     }
   }
 
-  private Challenge createChallengeInGroup(User user, String groupId) throws Exception {
-    Challenge challenge = ChallengeFactory.getNewChallenge(groupId);
+  private AzkarChallenge createChallengeInGroup(User user, String groupId) throws Exception {
+    AzkarChallenge challenge = ChallengeFactory.getNewChallenge(groupId);
     challenge.setSubChallenges(ImmutableList.of(ChallengeFactory.subChallenge1()));
     challenge.getSubChallenges().get(0).setRepetitions(SUB_CHALLENGES_REPETITIONS);
     azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
@@ -885,7 +885,7 @@ public class FriendshipTest extends TestBase {
   }
 
   private void finishChallenge(User user, String challengeId) throws Exception {
-    Challenge challenge = challengeRepo.findById(challengeId).get();
+    AzkarChallenge challenge = challengeRepo.findById(challengeId).get();
     assertThat(challenge.getSubChallenges().size(), is(1));
     challenge.getSubChallenges().get(0).setRepetitions(0);
     UpdateChallengeRequest request =

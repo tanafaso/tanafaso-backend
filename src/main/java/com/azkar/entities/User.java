@@ -1,5 +1,6 @@
 package com.azkar.entities;
 
+import com.azkar.entities.challenges.AzkarChallenge;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ public class User extends EntityBase {
   // that users can use him to create personal challenges.
   public static final String SABEQ_ID = "60d18088076b0b7d53e5a35a";
 
+  @Indexed
   @Id
   private String id;
   private String email;
@@ -35,9 +37,10 @@ public class User extends EntityBase {
   @JsonIgnore
   private String notificationsToken;
   // These Challenge instances are not documents in the challenges collection.
+  @Deprecated
   @Indexed(name = "username_index", unique = true)
   @Default
-  private List<Challenge> personalChallenges = new ArrayList<>();
+  private List<AzkarChallenge> personalChallenges = new ArrayList<>();
   private String username;
   @NotNull
   private String firstName;
@@ -48,8 +51,14 @@ public class User extends EntityBase {
   private List<UserGroup> userGroups = new ArrayList();
   // Every Challenge instance in this list is a user-customized-copy of a Challenge document in
   // the challenges collection.
+  // Use azkarChallenges or meaningChallenges instead.
+  @Deprecated
   @Default
-  private List<Challenge> userChallenges = new ArrayList();
+  private List<AzkarChallenge> userChallenges = new ArrayList();
+  @Default
+  private List<AzkarChallenge> azkarChallenges = new ArrayList();
+  @Default
+  private List<AzkarChallenge> meaningChallenges = new ArrayList();
   @JsonIgnore
   @Default
   private String resetPasswordToken = "";

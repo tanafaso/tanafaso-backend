@@ -6,11 +6,11 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.azkar.entities.Challenge;
-import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
+import com.azkar.entities.challenges.AzkarChallenge;
+import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 
-public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
+public class UpdateGroupAzkarChallengeTest extends UpdateAzkarChallengeTestBase {
 
   @Autowired
   ChallengeRepo challengeRepo;
@@ -45,7 +45,7 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
     azkarApi.makeFriends(user1, user2InGroup1);
     azkarApi.addUserToGroup(/*invitingUser*/user1, /*user=*/user2InGroup1, group1.getId());
 
-    Challenge challenge = createGroupChallenge(user1, group1.getId());
+    AzkarChallenge challenge = createGroupChallenge(user1, group1.getId());
     for (SubChallenge subChallenge : challenge.getSubChallenges()) {
       subChallenge.setRepetitions(0);
     }
@@ -54,8 +54,8 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
     updateChallenge(user1, challenge.getId(), requestBody)
         .andExpect(status().isOk());
 
-    Challenge updatedUser1Challenge = azkarApi.getChallengeAndReturn(user1, challenge.getId());
-    Challenge updatedUser2Challenge =
+    AzkarChallenge updatedUser1Challenge = azkarApi.getChallengeAndReturn(user1, challenge.getId());
+    AzkarChallenge updatedUser2Challenge =
         azkarApi.getChallengeAndReturn(user2InGroup1, challenge.getId());
     assertThat(updatedUser1Challenge.getSubChallenges().get(0).getRepetitions(), is(
         0));
@@ -69,7 +69,7 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
         equalTo(user1.getId()));
     assertThat(Iterators.getOnlyElement(updatedUser2Challenge.getUsersFinished().iterator()),
         equalTo(user1.getId()));
-    Challenge updatedChallenge = challengeRepo.findById(challenge.getId()).get();
+    AzkarChallenge updatedChallenge = challengeRepo.findById(challenge.getId()).get();
     assertThat(Iterators.getOnlyElement(updatedChallenge.getUsersFinished().iterator()),
         equalTo(user1.getId()));
 
@@ -97,7 +97,7 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
 
     assertThat(userRepo.findById(user.getId()).get().getUserGroups().get(0).getTotalScore(), is(0));
 
-    Challenge challenge = createGroupChallenge(user, group.getId());
+    AzkarChallenge challenge = createGroupChallenge(user, group.getId());
     for (SubChallenge subChallenge : challenge.getSubChallenges()) {
       subChallenge.setRepetitions(0);
     }
@@ -121,11 +121,11 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
     int userGroupsCountBefore = user.getUserGroups().size();
     assertThat(userRepo.findById(user.getId()).get().getUserGroups().get(0).getTotalScore(), is(0));
 
-    Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
+    AzkarChallenge challenge = ChallengeFactory.getNewChallenge(group.getId());
     assertThat(challenge.getSubChallenges().size(), not(0));
     challenge.getSubChallenges().get(0).setRepetitions(2);
 
-    Challenge createdChallenge = createGroupChallenge(user, challenge);
+    AzkarChallenge createdChallenge = createGroupChallenge(user, challenge);
     for (SubChallenge subChallenge : createdChallenge.getSubChallenges()) {
       subChallenge.setRepetitions(1);
     }
@@ -150,7 +150,7 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
   // Use azkarApi.getChallengeAndReturn instead.
   @Deprecated
   @Override
-  protected Challenge getChallengeProgressFromApi(Challenge challenge)
+  protected AzkarChallenge getChallengeProgressFromApi(AzkarChallenge challenge)
       throws Exception {
     ResultActions resultActions = azkarApi.getChallenge(user, challenge.getId())
         .andExpect(status().isOk());
@@ -158,7 +158,7 @@ public class UpdateGroupChallengeTest extends UpdateChallengeTestBase {
   }
 
   @Override
-  protected Challenge createNewChallenge(User user) throws Exception {
+  protected AzkarChallenge createNewChallenge(User user) throws Exception {
     return createGroupChallenge(user, group.getId());
   }
 }

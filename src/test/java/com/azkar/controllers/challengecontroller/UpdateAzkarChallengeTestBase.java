@@ -7,11 +7,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.azkar.TestBase;
 import com.azkar.controllers.utils.JsonHandler;
-import com.azkar.entities.Challenge;
-import com.azkar.entities.Challenge.SubChallenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.Zekr;
+import com.azkar.entities.challenges.AzkarChallenge;
+import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 
-public abstract class UpdateChallengeTestBase extends TestBase {
+public abstract class UpdateAzkarChallengeTestBase extends TestBase {
 
   public static final int OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS = ChallengeFactory.subChallenge1()
       .getRepetitions();
@@ -44,7 +44,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   @Autowired
   protected UserRepo userRepo;
 
-  static UpdateChallengeRequest createUpdateChallengeRequest(Challenge newChallenge) {
+  static UpdateChallengeRequest createUpdateChallengeRequest(AzkarChallenge newChallenge) {
     return UpdateChallengeRequest.builder().newChallenge(newChallenge).build();
   }
 
@@ -57,7 +57,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
 
   @Test
   public void updateChallenge_updateOneSubChallenge_shouldSucceed() throws Exception {
-    Challenge challenge = createNewChallenge(user);
+    AzkarChallenge challenge = createNewChallenge(user);
     challenge.getSubChallenges().get(1)
         .setRepetitions(NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
@@ -68,7 +68,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(status().isOk())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    AzkarChallenge updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(), is(
         OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(), is(
@@ -77,7 +77,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
 
   @Test
   public void updateChallenge_updateMultipleSubChallenges_shouldSucceed() throws Exception {
-    Challenge challenge = createNewChallenge(user);
+    AzkarChallenge challenge = createNewChallenge(user);
     challenge.getSubChallenges().get(0)
         .setRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
     challenge.getSubChallenges().get(1)
@@ -87,7 +87,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk());
 
-    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    AzkarChallenge updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(),
         is(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(),
@@ -96,14 +96,14 @@ public abstract class UpdateChallengeTestBase extends TestBase {
 
   @Test
   public void updateChallenge_NegativeLeftRepetitions_shouldUpdateWithZero() throws Exception {
-    Challenge challenge = createNewChallenge(user);
+    AzkarChallenge challenge = createNewChallenge(user);
     challenge.getSubChallenges().get(0).setRepetitions(-1);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
 
     updateChallenge(user, challenge.getId(), requestBody)
         .andExpect(status().isOk());
 
-    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    AzkarChallenge updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(),
         is(0));
     assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(),
@@ -113,7 +113,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
 
   @Test
   public void updateChallenge_IncrementLeftRepetitions_shouldFail() throws Exception {
-    Challenge challenge = createNewChallenge(user);
+    AzkarChallenge challenge = createNewChallenge(user);
     challenge.getSubChallenges().get(0)
         .setRepetitions(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS + 1);
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
@@ -126,7 +126,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    AzkarChallenge updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(),
         is(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(),
@@ -137,7 +137,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
   @Test
   public void updateChallenge_invalidZekrId_shouldFail() throws Exception {
     int invalidZekrId = 777;
-    Challenge challenge = createNewChallenge(user);
+    AzkarChallenge challenge = createNewChallenge(user);
     challenge.getSubChallenges().get(1).setZekr(Zekr.builder().id(invalidZekrId).build());
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
     UpdateChallengeResponse expectedResponse = new UpdateChallengeResponse();
@@ -149,7 +149,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    AzkarChallenge updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(),
         is(OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(),
@@ -159,7 +159,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
 
   @Test
   public void updateChallenge_invalidChallengeId_shouldFail() throws Exception {
-    Challenge unsavedChallenge = ChallengeFactory.getNewChallenge("invalidId");
+    AzkarChallenge unsavedChallenge = ChallengeFactory.getNewChallenge("invalidId");
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(unsavedChallenge);
     UpdateChallengeResponse response = new UpdateChallengeResponse();
     response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
@@ -171,7 +171,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
 
   @Test
   public void updateChallenge_extraSubChallenge_shouldFail() throws Exception {
-    Challenge challenge = createNewChallenge(user);
+    AzkarChallenge challenge = createNewChallenge(user);
     List<SubChallenge> updatedSubChallenges = ImmutableList.of(
         challenge.getSubChallenges().get(0),
         challenge.getSubChallenges().get(0),
@@ -186,7 +186,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(response)));
 
-    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    AzkarChallenge updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(), is(
         OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(), is(
@@ -195,7 +195,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
 
   @Test
   public void updateChallenge_missingSubChallenge_shouldFail() throws Exception {
-    Challenge challenge = createNewChallenge(user);
+    AzkarChallenge challenge = createNewChallenge(user);
     List<SubChallenge> updatedSubChallenges = ImmutableList.of(
         challenge.getSubChallenges().get(0));
     updatedSubChallenges.get(0).setRepetitions(NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS);
@@ -208,7 +208,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(response)));
 
-    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    AzkarChallenge updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(), is(
         OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(), is(
@@ -217,7 +217,7 @@ public abstract class UpdateChallengeTestBase extends TestBase {
 
   @Test
   public void updateChallenge_duplicatedSubChallenge_shouldFail() throws Exception {
-    Challenge challenge = createNewChallenge(user);
+    AzkarChallenge challenge = createNewChallenge(user);
     List<SubChallenge> updatedSubChallenges = ImmutableList.of(
         challenge.getSubChallenges().get(0),
         challenge.getSubChallenges().get(0));
@@ -232,18 +232,18 @@ public abstract class UpdateChallengeTestBase extends TestBase {
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(response)));
 
-    Challenge updatedChallenge = getChallengeProgressFromApi(challenge);
+    AzkarChallenge updatedChallenge = getChallengeProgressFromApi(challenge);
     assertThat(updatedChallenge.getSubChallenges().get(0).getRepetitions(), is(
         OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS));
     assertThat(updatedChallenge.getSubChallenges().get(1).getRepetitions(), is(
         OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS));
   }
 
-  protected abstract Challenge createNewChallenge(User user) throws Exception;
+  protected abstract AzkarChallenge createNewChallenge(User user) throws Exception;
 
   protected abstract ResultActions updateChallenge(User user, String challengeId,
       UpdateChallengeRequest requestBody) throws Exception;
 
-  protected abstract Challenge getChallengeProgressFromApi(Challenge challenge)
+  protected abstract AzkarChallenge getChallengeProgressFromApi(AzkarChallenge challenge)
       throws Exception;
 }

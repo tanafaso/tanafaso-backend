@@ -8,9 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.azkar.TestBase;
 import com.azkar.controllers.utils.JsonHandler;
-import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
-public class ChallengeTest extends TestBase {
+public class AzkarChallengeTest extends TestBase {
 
   @Autowired
   UserRepo userRepo;
@@ -44,11 +44,11 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void deleteChallenge_normalScenario_shouldSucceed() throws Exception {
-    Challenge queriedChallenge = createGroupChallenge(user, group);
-    Challenge anotherChallenge = createGroupChallenge(user, group);
+    AzkarChallenge queriedChallenge = createGroupChallenge(user, group);
+    AzkarChallenge anotherChallenge = createGroupChallenge(user, group);
     DeleteChallengeResponse response = new DeleteChallengeResponse();
     response.setData(queriedChallenge);
-    List<Challenge> userChallenges = userRepo.findById(user.getId()).get().getUserChallenges();
+    List<AzkarChallenge> userChallenges = userRepo.findById(user.getId()).get().getUserChallenges();
     assertThat(userChallenges.size(), is(2));
 
     azkarApi.deleteChallenge(user, queriedChallenge.getId())
@@ -75,7 +75,7 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void deleteChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
-    Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
+    AzkarChallenge challenge = ChallengeFactory.getNewChallenge(group.getId());
     azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
     User nonGroupMember = UserFactory.getNewUser();
     addNewUser(nonGroupMember);
@@ -90,7 +90,7 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void getOriginalChallenge_normalScenario_shouldSucceed() throws Exception {
-    Challenge queriedChallenge = createGroupChallenge(user, group);
+    AzkarChallenge queriedChallenge = createGroupChallenge(user, group);
     // Create irrelevant challenge
     createGroupChallenge(user, group);
 
@@ -124,7 +124,7 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void getOriginalChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
-    Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
+    AzkarChallenge challenge = ChallengeFactory.getNewChallenge(group.getId());
     azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
     User nonGroupMember = UserFactory.getNewUser();
     addNewUser(nonGroupMember);
@@ -148,8 +148,8 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void getChallenge_normalScenario_shouldSucceed() throws Exception {
-    Challenge queriedChallenge = createGroupChallenge(user, group);
-    Challenge anotherChallenge = createGroupChallenge(user, group);
+    AzkarChallenge queriedChallenge = createGroupChallenge(user, group);
+    AzkarChallenge anotherChallenge = createGroupChallenge(user, group);
     GetChallengeResponse response = new GetChallengeResponse();
     response.setData(queriedChallenge);
 
@@ -161,7 +161,7 @@ public class ChallengeTest extends TestBase {
 
   @Test
   public void getChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
-    Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
+    AzkarChallenge challenge = ChallengeFactory.getNewChallenge(group.getId());
     azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
     User nonGroupMember = UserFactory.getNewUser();
     addNewUser(nonGroupMember);
@@ -173,9 +173,9 @@ public class ChallengeTest extends TestBase {
         .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
   }
 
-  private Challenge createGroupChallenge(User user, Group group)
+  private AzkarChallenge createGroupChallenge(User user, Group group)
       throws Exception {
-    Challenge challenge = ChallengeFactory.getNewChallenge(group.getId());
+    AzkarChallenge challenge = ChallengeFactory.getNewChallenge(group.getId());
     return azkarApi.addChallengeAndReturn(user, challenge);
   }
 
