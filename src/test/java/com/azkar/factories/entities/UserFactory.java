@@ -12,7 +12,7 @@ public class UserFactory {
     return User.builder()
         .id("testId" + usersRequested)
         .email("testEmail" + usersRequested + "@example_domain.com")
-        .username("testUsername" + usersRequested)
+        .username("test_username" + usersRequested)
         .firstName("testFirstName" + usersRequested)
         .lastName("testLastName" + usersRequested)
         .build();
@@ -24,7 +24,7 @@ public class UserFactory {
         .id("testId" + usersRequested)
         .email(email)
         .encodedPassword(encodedPassword)
-        .username("testUsername" + usersRequested)
+        .username("test_username" + usersRequested)
         .firstName("testFirstName" + usersRequested)
         .lastName("testLastName" + usersRequested)
         .build();
