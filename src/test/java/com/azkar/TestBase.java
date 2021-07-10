@@ -22,8 +22,6 @@ import com.github.mongobee.exception.MongobeeException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,13 +124,13 @@ public abstract class TestBase {
   // TODO(issue#156): Think about a place for helper functions for tests
   protected AzkarChallenge createGroupChallenge(User user, String groupId) throws Exception {
     AzkarChallenge challenge = ChallengeFactory.getNewChallenge(groupId);
-    azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
+    azkarApi.addAzkarChallenge(user, challenge).andExpect(status().isOk());
     return challenge;
   }
 
   protected AzkarChallenge createGroupChallenge(User user, AzkarChallenge challenge)
       throws Exception {
-    azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
+    azkarApi.addAzkarChallenge(user, challenge).andExpect(status().isOk());
     return challenge;
   }
 

@@ -3,6 +3,7 @@ package com.azkar.controllers.challengecontroller;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,12 +12,16 @@ import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.challenges.AzkarChallenge;
+import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
+import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
+import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
+import com.azkar.payload.usercontroller.responses.GetFriendsResponse;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import java.util.List;
@@ -24,8 +29,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
-public class AzkarChallengeTest extends TestBase {
+public class MeaningChallengeTest extends TestBase {
 
   @Autowired
   UserRepo userRepo;
@@ -43,9 +49,29 @@ public class AzkarChallengeTest extends TestBase {
   }
 
   @Test
+  public void addMeaningChallenge_normalScenario_shouldSucceed() throws Exception {
+    int meaningChallengesCountBefore = user.getMeaningChallenges().size();
+
+    MvcResult mvcResult = httpClient.performPostRequest(user, "/challenges/meaning",
+        JsonHandler.toJson(new AddMeaningChallengeRequest()))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
+
+    AddMeaningChallengeResponse response = JsonHandler
+        .fromJson(mvcResult.getResponse().getContentAsString(), AddMeaningChallengeResponse.class);
+
+    User updatedUser = userRepo.findById(user.ge)
+    MeaningChallenge resultChallenge = response.getData()
+    assertThat(response.getData().getMeanings().size(), is(3));
+    assertThat(response.getData().getWords().size(), is(3));
+    assertThat(response.getData().getWords().get(0), not());
+  }
+
+  @Test
   public void deleteChallenge_normalScenario_shouldSucceed() throws Exception {
-    AzkarChallenge queriedChallenge = createGroupChallenge(user, group);
-    AzkarChallenge anotherChallenge = createGroupChallenge(user, group);
+    AzkarChallenge queriedChallenge = createMeaningGroupChallenge(user, group);
+    AzkarChallenge anotherChallenge = createMeaningGroupChallenge(user, group);
     DeleteChallengeResponse response = new DeleteChallengeResponse();
     response.setData(queriedChallenge);
     List<AzkarChallenge> userChallenges = userRepo.findById(user.getId()).get().getAzkarChallenges();
@@ -90,9 +116,9 @@ public class AzkarChallengeTest extends TestBase {
 
   @Test
   public void getOriginalChallenge_normalScenario_shouldSucceed() throws Exception {
-    AzkarChallenge queriedChallenge = createGroupChallenge(user, group);
+    AzkarChallenge queriedChallenge = createMeaningGroupChallenge(user, group);
     // Create irrelevant challenge
-    createGroupChallenge(user, group);
+    createMeaningGroupChallenge(user, group);
 
     // Change the user's copy of the challenge
     User updatedUser1 = userRepo.findById(user.getId()).get();
@@ -148,8 +174,8 @@ public class AzkarChallengeTest extends TestBase {
 
   @Test
   public void getChallenge_normalScenario_shouldSucceed() throws Exception {
-    AzkarChallenge queriedChallenge = createGroupChallenge(user, group);
-    AzkarChallenge anotherChallenge = createGroupChallenge(user, group);
+    AzkarChallenge queriedChallenge = createMeaningGroupChallenge(user, group);
+    AzkarChallenge anotherChallenge = createMeaningGroupChallenge(user, group);
     GetChallengeResponse response = new GetChallengeResponse();
     response.setData(queriedChallenge);
 
@@ -171,12 +197,6 @@ public class AzkarChallengeTest extends TestBase {
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
-  }
-
-  private AzkarChallenge createGroupChallenge(User user, Group group)
-      throws Exception {
-    AzkarChallenge challenge = ChallengeFactory.getNewChallenge(group.getId());
-    return azkarApi.addAzkarChallengeAndReturn(user, challenge);
   }
 
   private GetChallengeResponse getGetChallengeNotFoundResponse() {

@@ -39,7 +39,6 @@ import java.util.Comparator;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
@@ -880,7 +879,7 @@ public class FriendshipTest extends TestBase {
     AzkarChallenge challenge = ChallengeFactory.getNewChallenge(groupId);
     challenge.setSubChallenges(ImmutableList.of(ChallengeFactory.subChallenge1()));
     challenge.getSubChallenges().get(0).setRepetitions(SUB_CHALLENGES_REPETITIONS);
-    azkarApi.addChallenge(user, challenge).andExpect(status().isOk());
+    azkarApi.addAzkarChallenge(user, challenge).andExpect(status().isOk());
     return challenge;
   }
 
