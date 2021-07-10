@@ -39,6 +39,7 @@ import java.util.Comparator;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
@@ -47,12 +48,12 @@ public class FriendshipTest extends TestBase {
 
   private static final int SUB_CHALLENGES_REPETITIONS = 2;
 
-  private static User USER1 = UserFactory.getNewUser();
-  private static User USER2 = UserFactory.getNewUser();
-  private static User USER3 = UserFactory.getNewUser();
-  private static User USER4 = UserFactory.getNewUser();
-  private static User USER5 = UserFactory.getNewUser();
-  private static User UNAUTHENTICATED_USER = UserFactory.getNewUser();
+  private static User USER1;
+  private static User USER2;
+  private static User USER3;
+  private static User USER4;
+  private static User USER5;
+  private static User UNAUTHENTICATED_USER;
   @Autowired
   FriendshipRepo friendshipRepo;
   @Autowired
@@ -67,6 +68,12 @@ public class FriendshipTest extends TestBase {
 
   @Before
   public void before() {
+    USER1 = UserFactory.getNewUser();
+    USER2 = UserFactory.getNewUser();
+    USER3 = UserFactory.getNewUser();
+    USER4 = UserFactory.getNewUser();
+    USER5 = UserFactory.getNewUser();
+    UNAUTHENTICATED_USER = UserFactory.getNewUser();
     addNewUser(USER1);
     addNewUser(USER2);
     addNewUser(USER3);

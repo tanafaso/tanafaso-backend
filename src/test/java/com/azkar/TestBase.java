@@ -22,6 +22,8 @@ import com.github.mongobee.exception.MongobeeException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,10 @@ import org.springframework.test.web.servlet.ResultActions;
 @ActiveProfiles("test")
 public abstract class TestBase {
 
+  // This is needed instead of adding @beforeClass because @beforeClass requires the method to be
+  // static which doesn't work with Autowired objects.
+  public static boolean BEFORE_ALL_DONE = false;
+
   @Autowired
   public AzkarApi azkarApi;
   @Autowired
@@ -54,13 +60,17 @@ public abstract class TestBase {
 
   @Before
   public final void beforeBase() throws MongobeeException {
+    Mockito.doNothing().when(notificationsService).
+        sendNotificationToUser(any(), any(), any());
+
+    if (BEFORE_ALL_DONE) {
+      return;
+    }
+    BEFORE_ALL_DONE = true;
     mongoTemplate.getCollectionNames().stream().forEach(name -> {
       mongoTemplate.dropCollection(name);
     });
     mongobee.execute();
-
-    Mockito.doNothing().when(notificationsService).
-        sendNotificationToUser(any(), any(), any());
   }
 
   protected void addNewUser(User user) {
