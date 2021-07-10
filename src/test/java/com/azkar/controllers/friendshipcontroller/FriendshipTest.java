@@ -27,7 +27,7 @@ import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardV2Respons
 import com.azkar.payload.usercontroller.responses.GetFriendsResponse;
 import com.azkar.payload.usercontroller.responses.ResolveFriendRequestResponse;
 import com.azkar.payload.utils.UserScore;
-import com.azkar.repos.ChallengeRepo;
+import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
@@ -59,7 +59,7 @@ public class FriendshipTest extends TestBase {
   @Autowired
   GroupRepo groupRepo;
   @Autowired
-  ChallengeRepo challengeRepo;
+  AzkarChallengeRepo challengeRepo;
   @Autowired
   UserRepo userRepo;
   @Autowired

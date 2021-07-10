@@ -15,7 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @Setter
 @Document(collection = "meaning_challenges")
-public class MeaningChallenge extends Challenge {
+public class MeaningChallenge extends ChallengeBase {
 
   @NotNull
   private List<String> words;

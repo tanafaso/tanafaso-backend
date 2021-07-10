@@ -17,7 +17,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @Setter
 @Document(collection = "challenges")
-public class AzkarChallenge extends Challenge {
+public class AzkarChallenge extends ChallengeBase {
 
   /**
    * Personal challenges are represented the same way as normal challenges. One difference is that

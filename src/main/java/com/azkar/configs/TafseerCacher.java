@@ -65,7 +65,7 @@ public class TafseerCacher {
 
   @Builder
   @Data
-  static class WordMeaningPair {
+  public static class WordMeaningPair {
 
     String word;
     String meaning;

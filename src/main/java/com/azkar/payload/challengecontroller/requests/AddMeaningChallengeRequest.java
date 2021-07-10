@@ -17,13 +17,10 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class AddMeaningChallengeRequest extends RequestBodyBase {
 
-  private MeaningChallenge meaningChallenge;
   private List<String> friendsIds;
 
   @Override
   public void validate() throws BadRequestException {
-    ChallengeValidationUtil.validate(meaningChallenge);
-
     validateFriendIds();
   }
 

@@ -23,7 +23,7 @@ import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeRespo
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
-import com.azkar.repos.ChallengeRepo;
+import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
@@ -49,7 +49,7 @@ public class PersonalAzkarChallengeTest extends TestBase {
   UserRepo userRepo;
 
   @Autowired
-  ChallengeRepo challengeRepo;
+  AzkarChallengeRepo challengeRepo;
 
   public static AddPersonalChallengeRequest createPersonalChallengeRequest(long expiryDate) {
     return createPersonalChallengeRequest(CHALLENGE_NAME, expiryDate);

@@ -16,7 +16,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 @Data
 @NoArgsConstructor
 @SuperBuilder(toBuilder = true)
-public class Challenge {
+public class ChallengeBase {
 
   @Indexed
   @Id

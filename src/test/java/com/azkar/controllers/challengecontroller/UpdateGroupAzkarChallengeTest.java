@@ -15,7 +15,7 @@ import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
-import com.azkar.repos.ChallengeRepo;
+import com.azkar.repos.AzkarChallengeRepo;
 import com.google.common.collect.Iterators;
 import java.util.List;
 import org.junit.Before;
@@ -26,7 +26,7 @@ import org.springframework.test.web.servlet.ResultActions;
 public class UpdateGroupAzkarChallengeTest extends UpdateAzkarChallengeTestBase {
 
   @Autowired
-  ChallengeRepo challengeRepo;
+  AzkarChallengeRepo challengeRepo;
 
   @Before
   public void setup() throws Exception {
