@@ -23,13 +23,14 @@ public class TafseerCacher {
   private static final Logger logger = LoggerFactory.getLogger(TafseerCacher.class);
   @Value("${files.tafseer}")
   public String tafseerFile;
-  ArrayList<WordMeaningPair> wordMeaningPairs = new ArrayList<>();
+  ArrayList<WordMeaningPair> wordMeaningPairs;
 
   @Lazy(value = false)
   @Bean
   @Primary
   public TafseerCacher parseTafseerFromFile() {
     TafseerCacher cacher = new TafseerCacher();
+    cacher.wordMeaningPairs = new ArrayList<>();
     try {
       BufferedReader reader =
           new BufferedReader(
@@ -56,7 +57,6 @@ public class TafseerCacher {
       if (cacher.wordMeaningPairs.size() == 0) {
         throw new IOException("Error while parsing file: " + tafseerFile);
       }
-      cacher.wordMeaningPairs = wordMeaningPairs;
     } catch (Exception e) {
       logger.error("Can't retrieve tafseer", e);
     }

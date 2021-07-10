@@ -29,7 +29,7 @@ public class AddAzkarChallengeRequest extends RequestBodyBase {
 
   @Override
   public void validate() throws BadRequestException {
-    ChallengeValidationUtil.validate(challenge);
+    ChallengeValidationUtil.validateExpiryDate(challenge.getExpiryDate());
 
     // NOTE: The challenge group ID can be null in this case as the group will be auto-generated.
     checkNotNull(challenge.getName(), challenge.getSubChallenges());

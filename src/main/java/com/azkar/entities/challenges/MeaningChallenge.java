@@ -21,5 +21,5 @@ public class MeaningChallenge extends ChallengeBase {
   private List<String> words;
   @NotNull
   private List<String> meanings;
-
+  private boolean finished = false;
 }

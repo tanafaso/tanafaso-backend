@@ -1,6 +1,5 @@
 package com.azkar.payload.challengecontroller.requests;
 
-import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.payload.RequestBodyBase;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.exceptions.BadRequestException;
@@ -18,9 +17,12 @@ import lombok.NoArgsConstructor;
 public class AddMeaningChallengeRequest extends RequestBodyBase {
 
   private List<String> friendsIds;
+  private long expiryDate;
+
 
   @Override
   public void validate() throws BadRequestException {
+    ChallengeValidationUtil.validateExpiryDate(expiryDate);
     validateFriendIds();
   }
 

@@ -95,18 +95,20 @@ public class AzkarApi {
         JsonHandler.toJson(new AddChallengeRequest(challenge)));
   }
 
-  public MeaningChallenge addMeaningChallengeAndReturn(User user)
+  public MeaningChallenge addMeaningChallengeAndReturn(User user,
+      AddMeaningChallengeRequest request)
       throws Exception {
-    MvcResult result = addMeaningChallenge(user).andReturn();
+    MvcResult result = addMeaningChallenge(user, request).andReturn();
     AddMeaningChallengeResponse response =
         JsonHandler.fromJson(result.getResponse().getContentAsString(),
             AddMeaningChallengeResponse.class);
     return response.getData();
   }
 
-  public ResultActions addMeaningChallenge(User user) throws Exception {
+  public ResultActions addMeaningChallenge(User user, AddMeaningChallengeRequest request)
+      throws Exception {
     return httpClient.performPostRequest(user, "/challenges/meaning",
-        JsonHandler.toJson(new AddMeaningChallengeRequest()));
+        JsonHandler.toJson(request));
   }
 
   public ResultActions addFriendsChallenge(User user, AddAzkarChallengeRequest request)

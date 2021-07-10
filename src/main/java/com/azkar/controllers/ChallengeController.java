@@ -19,8 +19,12 @@ import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse
 import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.FinishMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
+import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
+import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.Challenge;
+import com.azkar.payload.challengecontroller.responses.GetMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.payload.utils.FeaturesVersions;
@@ -65,6 +69,7 @@ public class ChallengeController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ChallengeController.class);
 
   private static final int RANDOMLY_CHOSEN_WORDS_INDEX_DIFF = 100;
+  private static final int MAX_RETURNED_CHALLENGES = 60;
 
   @Autowired
   NotificationsService notificationsService;
@@ -286,6 +291,26 @@ public class ChallengeController extends BaseController {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     response.setData(userChallenge.get());
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/meaning/{challengeId}")
+  public ResponseEntity<GetMeaningChallengeResponse> getMeaningChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    GetMeaningChallengeResponse response = new GetMeaningChallengeResponse();
+    Optional<MeaningChallenge> userMeaningChallenge =
+        getCurrentUser(userRepo).getMeaningChallenges()
+            .stream()
+            .filter(
+                challenge -> challenge.getId()
+                    .equals(
+                        challengeId))
+            .findFirst();
+    if (!userMeaningChallenge.isPresent()) {
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+    response.setData(userMeaningChallenge.get());
     return ResponseEntity.ok(response);
   }
 
@@ -558,6 +583,7 @@ public class ChallengeController extends BaseController {
         .id(new ObjectId().toString())
         .creatingUserId(currentUser.getId())
         .groupId(newGroup.getId())
+        .expiryDate(request.getExpiryDate())
         .words(extractWords(wordMeaningPairs))
         .meanings(extractMeanings(wordMeaningPairs))
         .build();
@@ -584,7 +610,7 @@ public class ChallengeController extends BaseController {
         body += currentUser.getLastName();
         body += " (";
 
-        body += "معنى كلمات القرآن";
+        body += "معاني كلمات القرآن";
         body += ")";
         notificationsService.sendNotificationToUser(affectedUser, "لديك تحدٍ جديد",
             body);
@@ -637,6 +663,7 @@ public class ChallengeController extends BaseController {
   }
 
   // Returns all non-personal challenges.
+  @Deprecated
   @GetMapping(path = "/")
   public ResponseEntity<GetChallengesResponse> getAllChallenges(
       @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
@@ -651,6 +678,34 @@ public class ChallengeController extends BaseController {
 
     GetChallengesResponse response = new GetChallengesResponse();
     response.setData(userChallenges);
+    Collections.reverse(response.getData());
+    return ResponseEntity.ok(response);
+  }
+
+  // Returns all challenges with all types.
+  @GetMapping(path = "/v2")
+  public ResponseEntity<GetChallengesV2Response> getAllChallengesV2(
+      @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
+    if (apiVersion != null) {
+      logger.info("API version requested is " + apiVersion);
+    }
+    List<AzkarChallenge> userAzkarChallenges = getCurrentUser(userRepo).getAzkarChallenges();
+    List<MeaningChallenge> userMeaningChallenges = getCurrentUser(userRepo).getMeaningChallenges();
+
+    List<Challenge> challenges = new ArrayList<>();
+    for (int i = 0; i < Math.min(MAX_RETURNED_CHALLENGES / 2, userAzkarChallenges.size()); i++) {
+      Challenge challenge = Challenge.builder().azkarChallenge(userAzkarChallenges.get(i)).build();
+      challenges.add(challenge);
+    }
+    for (int i = 0; i < Math.min(MAX_RETURNED_CHALLENGES / 2, userMeaningChallenges.size()); i++) {
+      Challenge challenge =
+          Challenge.builder().meaningChallenge(userMeaningChallenges.get(i)).build();
+      challenges.add(challenge);
+    }
+    Collections.sort(challenges);
+
+    GetChallengesV2Response response = new GetChallengesV2Response();
+    response.setData(challenges);
     Collections.reverse(response.getData());
     return ResponseEntity.ok(response);
   }
@@ -750,12 +805,52 @@ public class ChallengeController extends BaseController {
       // database instance) after calling updateChallengeOnUserFinished.
       currentUser = userRepo.findById(currentUser.getId()).get();
 
-      sendNotificationOnFinishedChallenge(getCurrentUser(userRepo), challenge);
+      sendNotificationOnFinishedAzkarChallenge(getCurrentUser(userRepo), challenge);
       azkarChallengeRepo.save(challenge);
     }
     userRepo.save(currentUser);
 
     return ResponseEntity.ok(new UpdateChallengeResponse());
+  }
+
+  @PutMapping(path = "/finish/meaning/{challengeId}")
+  public ResponseEntity<FinishMeaningChallengeResponse> finishMeaningChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    User currentUser = getCurrentUser(userRepo);
+    Optional<MeaningChallenge> currentUserChallenge = currentUser.getMeaningChallenges()
+        .stream()
+        .filter(challenge -> challenge.getId()
+            .equals(
+                challengeId))
+        .findFirst();
+    if (!currentUserChallenge.isPresent()) {
+      FinishMeaningChallengeResponse response = new FinishMeaningChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+    // TODO(issue#170): Time should be supplied by a bean to allow easier testing
+    if (currentUserChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
+      FinishMeaningChallengeResponse response = new FinishMeaningChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_EXPIRED_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    currentUserChallenge.get().setFinished(true);
+    updateScoreInUserGroup(currentUser, currentUserChallenge.get().getGroupId());
+    updateScoreInFriendships(currentUser, currentUserChallenge.get().getGroupId());
+    userRepo.save(currentUser);
+
+    MeaningChallenge challenge = meaningChallengeRepo.findById(challengeId).get();
+    updateMeaningChallengeOnUserFinished(challenge, currentUser);
+    // Invalidate current user because it may have changed indirectly (by changing only the
+    // database instance) after calling updateChallengeOnUserFinished.
+    currentUser = userRepo.findById(currentUser.getId()).get();
+
+    sendNotificationOnFinishedMeaningChallenge(getCurrentUser(userRepo), challenge);
+    meaningChallengeRepo.save(challenge);
+    userRepo.save(currentUser);
+
+    return ResponseEntity.ok(new FinishMeaningChallengeResponse());
   }
 
   private void updateAzkarChallengeOnUserFinished(AzkarChallenge challenge, User currentUser) {
@@ -774,7 +869,23 @@ public class ChallengeController extends BaseController {
     });
   }
 
-  private void sendNotificationOnFinishedChallenge(User userFinishedChallenge,
+  private void updateMeaningChallengeOnUserFinished(MeaningChallenge challenge, User currentUser) {
+    // Update the original copy of the challenge
+    challenge.getUsersFinished().add(currentUser.getId());
+
+    // Update users copies of the challenge
+    groupRepo.findById(challenge.getGroupId()).get().getUsersIds().forEach(groupMember -> {
+      User user = userRepo.findById(groupMember).get();
+      user.getMeaningChallenges().forEach(userChallenge -> {
+        if (userChallenge.getId().equals(challenge.getId())) {
+          userChallenge.getUsersFinished().add(currentUser.getId());
+        }
+      });
+      userRepo.save(user);
+    });
+  }
+
+  private void sendNotificationOnFinishedAzkarChallenge(User userFinishedChallenge,
       AzkarChallenge challenge) {
     Group group = groupRepo.findById(challenge.getGroupId()).get();
     group.getUsersIds().stream().forEach(userId -> {
@@ -789,6 +900,29 @@ public class ChallengeController extends BaseController {
         body += " (";
 
         body += challenge.getName();
+        body += ")";
+        notificationsService
+            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
+                body);
+      }
+    });
+  }
+
+  private void sendNotificationOnFinishedMeaningChallenge(User userFinishedChallenge,
+      MeaningChallenge challenge) {
+    Group group = groupRepo.findById(challenge.getGroupId()).get();
+    group.getUsersIds().stream().forEach(userId -> {
+      if (!userId.equals(userFinishedChallenge.getId())) {
+
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += userFinishedChallenge.getFirstName();
+        body += " ";
+        body += userFinishedChallenge.getLastName();
+        body += " (";
+
+        body += "معاني كلمات القرآن";
         body += ")";
         notificationsService
             .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",

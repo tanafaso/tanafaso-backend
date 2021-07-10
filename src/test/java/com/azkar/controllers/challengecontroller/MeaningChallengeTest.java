@@ -1,5 +1,6 @@
 package com.azkar.controllers.challengecontroller;
 
+import static com.azkar.factories.entities.ChallengeFactory.EXPIRY_DATE_OFFSET;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -8,24 +9,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
+import com.azkar.configs.TafseerCacher;
 import com.azkar.controllers.utils.JsonHandler;
-import com.azkar.entities.Group;
+import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.User;
-import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
-import com.azkar.factories.entities.ChallengeFactory;
-import com.azkar.factories.entities.GroupFactory;
-import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
-import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
-import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
-import com.azkar.payload.usercontroller.responses.GetFriendsResponse;
-import com.azkar.repos.GroupRepo;
+import com.azkar.payload.challengecontroller.responses.FinishMeaningChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.GetMeaningChallengeResponse;
+import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardV2Response;
+import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.UserRepo;
+import com.google.common.collect.ImmutableList;
+import java.time.Instant;
 import java.util.List;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -35,25 +34,30 @@ public class MeaningChallengeTest extends TestBase {
 
   @Autowired
   UserRepo userRepo;
-  private User user;
-  private Group group;
-  @Autowired
-  private GroupRepo groupRepo;
 
-  @Before
-  public void setUp() {
-    user = UserFactory.getNewUser();
-    addNewUser(user);
-    group = GroupFactory.getNewGroup(user.getId());
-    groupRepo.save(group);
-  }
+  @Autowired
+  TafseerCacher tafseerCacher;
+
+  @Autowired
+  FriendshipRepo friendshipRepo;
 
   @Test
   public void addMeaningChallenge_normalScenario_shouldSucceed() throws Exception {
-    int meaningChallengesCountBefore = user.getMeaningChallenges().size();
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
+    User user3 = getNewRegisteredUser();
 
-    MvcResult mvcResult = httpClient.performPostRequest(user, "/challenges/meaning",
-        JsonHandler.toJson(new AddMeaningChallengeRequest()))
+    azkarApi.makeFriends(user1, user2);
+    azkarApi.makeFriends(user1, user3);
+
+    int meaningChallengesCountBefore = user1.getMeaningChallenges().size();
+
+    AddMeaningChallengeRequest request = AddMeaningChallengeRequest.builder()
+        .friendsIds(ImmutableList.of(user2.getId(), user3.getId()))
+        .expiryDate(Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET)
+        .build();
+    MvcResult mvcResult = httpClient.performPostRequest(user1, "/challenges/meaning",
+        JsonHandler.toJson(request))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andReturn();
@@ -61,147 +65,236 @@ public class MeaningChallengeTest extends TestBase {
     AddMeaningChallengeResponse response = JsonHandler
         .fromJson(mvcResult.getResponse().getContentAsString(), AddMeaningChallengeResponse.class);
 
-    User updatedUser = userRepo.findById(user.ge)
-    MeaningChallenge resultChallenge = response.getData()
-    assertThat(response.getData().getMeanings().size(), is(3));
-    assertThat(response.getData().getWords().size(), is(3));
-    assertThat(response.getData().getWords().get(0), not());
+    User updatedUser = userRepo.findById(user1.getId()).get();
+    assertThat(updatedUser.getMeaningChallenges().size(), is(meaningChallengesCountBefore + 1));
+    MeaningChallenge resultChallenge =
+        updatedUser.getMeaningChallenges().stream()
+            .filter(meaningChallenge -> meaningChallenge.getId().equals(response.getData().getId()))
+            .findFirst().get();
+
+    assertThat(resultChallenge.getMeanings().size(), is(3));
+    assertThat(resultChallenge.getWords().size(), is(3));
+    assertThat(resultChallenge.getWords().get(0), not(resultChallenge.getWords().get(1)));
+    assertThat(resultChallenge.getWords().get(1), not(resultChallenge.getWords().get(2)));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(resultChallenge, /*pairIdx=*/0));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(resultChallenge, /*pairIdx=*/1));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(resultChallenge, /*pairIdx=*/2));
+
+    User updatedUser2 = userRepo.findById(user2.getId()).get();
+    MeaningChallenge user2ResultChallenge =
+        updatedUser2.getMeaningChallenges().stream()
+            .filter(meaningChallenge -> meaningChallenge.getId().equals(response.getData().getId()))
+            .findFirst().get();
+    assertThat(user2ResultChallenge.getMeanings().size(), is(3));
+    assertThat(user2ResultChallenge.getWords().size(), is(3));
+    assertThat(user2ResultChallenge.getWords().get(0), not(user2ResultChallenge.getWords().get(1)));
+    assertThat(user2ResultChallenge.getWords().get(1), not(user2ResultChallenge.getWords().get(2)));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(user2ResultChallenge, /*pairIdx=*/0));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(user2ResultChallenge, /*pairIdx=*/1));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(user2ResultChallenge, /*pairIdx=*/2));
   }
 
   @Test
-  public void deleteChallenge_normalScenario_shouldSucceed() throws Exception {
-    AzkarChallenge queriedChallenge = createMeaningGroupChallenge(user, group);
-    AzkarChallenge anotherChallenge = createMeaningGroupChallenge(user, group);
-    DeleteChallengeResponse response = new DeleteChallengeResponse();
-    response.setData(queriedChallenge);
-    List<AzkarChallenge> userChallenges = userRepo.findById(user.getId()).get().getAzkarChallenges();
-    assertThat(userChallenges.size(), is(2));
+  public void addMeaningChallenge_withOneUser_shouldSucceed() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
 
-    azkarApi.deleteChallenge(user, queriedChallenge.getId())
+    azkarApi.makeFriends(user1, user2);
+
+    int meaningChallengesCountBefore = user1.getMeaningChallenges().size();
+
+    AddMeaningChallengeRequest request = AddMeaningChallengeRequest.builder()
+        .friendsIds(ImmutableList.of(user2.getId()))
+        .expiryDate(Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET)
+        .build();
+    MvcResult mvcResult = httpClient.performPostRequest(user1, "/challenges/meaning",
+        JsonHandler.toJson(request))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(response)));
+        .andReturn();
 
-    userChallenges = userRepo.findById(user.getId()).get().getAzkarChallenges();
-    assertThat(userChallenges.size(), is(1));
-    assertThat(userChallenges.get(0).getId(), equalTo(anotherChallenge.getId()));
+    AddMeaningChallengeResponse response = JsonHandler
+        .fromJson(mvcResult.getResponse().getContentAsString(), AddMeaningChallengeResponse.class);
+
+    User updatedUser1 = userRepo.findById(user1.getId()).get();
+    assertThat(updatedUser1.getMeaningChallenges().size(), is(meaningChallengesCountBefore + 1));
+    MeaningChallenge user1ResultChallenge =
+        updatedUser1.getMeaningChallenges().stream()
+            .filter(meaningChallenge -> meaningChallenge.getId().equals(response.getData().getId()))
+            .findFirst().get();
+    assertThat(user1ResultChallenge.getMeanings().size(), is(3));
+    assertThat(user1ResultChallenge.getWords().size(), is(3));
+    assertThat(user1ResultChallenge.getWords().get(0), not(user1ResultChallenge.getWords().get(1)));
+    assertThat(user1ResultChallenge.getWords().get(1), not(user1ResultChallenge.getWords().get(2)));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(user1ResultChallenge, /*pairIdx=*/0));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(user1ResultChallenge, /*pairIdx=*/1));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(user1ResultChallenge, /*pairIdx=*/2));
+
+    User updatedUser2 = userRepo.findById(user2.getId()).get();
+    MeaningChallenge user2ResultChallenge =
+        updatedUser2.getMeaningChallenges().stream()
+            .filter(meaningChallenge -> meaningChallenge.getId().equals(response.getData().getId()))
+            .findFirst().get();
+    assertThat(user2ResultChallenge.getMeanings().size(), is(3));
+    assertThat(user2ResultChallenge.getWords().size(), is(3));
+    assertThat(user2ResultChallenge.getWords().get(0), not(user2ResultChallenge.getWords().get(1)));
+    assertThat(user2ResultChallenge.getWords().get(1), not(user2ResultChallenge.getWords().get(2)));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(user2ResultChallenge, /*pairIdx=*/0));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(user2ResultChallenge, /*pairIdx=*/1));
+    assertThat("The word-meaning pair is not valid",
+        isWordMeaningPairValid(user2ResultChallenge, /*pairIdx=*/2));
+
   }
 
-
   @Test
-  public void deleteChallenge_invalidChallengeId_shouldFail() throws Exception {
-    DeleteChallengeResponse notFoundResponse = new DeleteChallengeResponse();
-    notFoundResponse.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+  public void addMeaningChallenge_notFriend_shouldFail() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
 
-    azkarApi.deleteChallenge(user, "invalidChallengeId")
-        .andExpect(status().isNotFound())
+    AddMeaningChallengeRequest request = AddMeaningChallengeRequest.builder()
+        .friendsIds(ImmutableList.of(user2.getId()))
+        .expiryDate(Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET)
+        .build();
+    MvcResult mvcResult = httpClient.performPostRequest(user1, "/challenges/meaning",
+        JsonHandler.toJson(request))
+        .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
+        .andReturn();
+
+    AddMeaningChallengeResponse response = JsonHandler
+        .fromJson(mvcResult.getResponse().getContentAsString(), AddMeaningChallengeResponse.class);
+
+    assertThat(response.getStatus().code, equalTo(Status.ONE_OR_MORE_USERS_NOT_FRIENDS_ERROR));
   }
 
   @Test
-  public void deleteChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
-    AzkarChallenge challenge = ChallengeFactory.getNewChallenge(group.getId());
-    azkarApi.addAzkarChallenge(user, challenge).andExpect(status().isOk());
-    User nonGroupMember = UserFactory.getNewUser();
-    addNewUser(nonGroupMember);
-    DeleteChallengeResponse notFoundResponse = new DeleteChallengeResponse();
-    notFoundResponse.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+  public void getMeaningChallenge_normalScenario_shouldSucceed() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
+    User user3 = getNewRegisteredUser();
 
-    azkarApi.deleteChallenge(nonGroupMember, challenge.getId())
-        .andExpect(status().isNotFound())
+    azkarApi.makeFriends(user1, user2);
+    azkarApi.makeFriends(user1, user3);
+
+    AddMeaningChallengeRequest request = AddMeaningChallengeRequest.builder()
+        .friendsIds(ImmutableList.of(user2.getId(), user3.getId()))
+        .expiryDate(Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET)
+        .build();
+    MeaningChallenge meaningChallengeResponse =
+        azkarApi.addMeaningChallengeAndReturn(user1, request);
+
+    MvcResult mvcResult = httpClient
+        .performGetRequest(user1, String.format("/challenges/meaning/%s",
+            meaningChallengeResponse.getId()))
+        .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
+        .andReturn();
+    GetMeaningChallengeResponse response = JsonHandler
+        .fromJson(mvcResult.getResponse().getContentAsString(), GetMeaningChallengeResponse.class);
+
+    MeaningChallenge resultMeaningChallenge = response.getData();
+    assertThat(resultMeaningChallenge.getId(), equalTo(meaningChallengeResponse.getId()));
+    assertThat(resultMeaningChallenge.getMeanings().get(0),
+        equalTo(meaningChallengeResponse.getMeanings().get(0)));
+    assertThat(resultMeaningChallenge.getMeanings().get(1),
+        equalTo(meaningChallengeResponse.getMeanings().get(1)));
+    assertThat(resultMeaningChallenge.getMeanings().get(2),
+        equalTo(meaningChallengeResponse.getMeanings().get(2)));
   }
 
   @Test
-  public void getOriginalChallenge_normalScenario_shouldSucceed() throws Exception {
-    AzkarChallenge queriedChallenge = createMeaningGroupChallenge(user, group);
-    // Create irrelevant challenge
-    createMeaningGroupChallenge(user, group);
+  public void finishMeaningChallenge_normalScenario_shouldUpdateScore() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
+    User user3 = getNewRegisteredUser();
+    azkarApi.makeFriends(user1, user2);
+    azkarApi.makeFriends(user1, user3);
 
-    // Change the user's copy of the challenge
-    User updatedUser1 = userRepo.findById(user.getId()).get();
-    updatedUser1.getUserChallenges().stream().forEach(
-        userChallenge -> userChallenge.getSubChallenges().stream().forEach(
-            subChallenge -> subChallenge.setRepetitions(subChallenge.getRepetitions() + 1)
-        )
+    AddMeaningChallengeRequest request = AddMeaningChallengeRequest.builder()
+        .friendsIds(ImmutableList.of(user2.getId(), user3.getId()))
+        .expiryDate(Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET)
+        .build();
+    MeaningChallenge meaningChallengeResponse =
+        azkarApi.addMeaningChallengeAndReturn(user1, request);
+
+    httpClient
+        .performPutRequest(user1, String.format("/challenges/finish/meaning/%s",
+            meaningChallengeResponse.getId()), /*body=*/null)
+        .andExpect(status().isOk())
+        .andExpect(content().json(JsonHandler.toJson(new FinishMeaningChallengeResponse())));
+
+    GetFriendsLeaderboardV2Response expectedResponse = new GetFriendsLeaderboardV2Response();
+    User sabeq = userRepo.findById(User.SABEQ_ID).get();
+    List<Friend> expectedFriendshipScores = ImmutableList.of(
+        Friend.builder()
+            .userTotalScore(0)
+            .friendTotalScore(0)
+            .userId(sabeq.getId())
+            .firstName(sabeq.getFirstName())
+            .lastName(sabeq.getLastName())
+            .username(sabeq.getUsername())
+            .build(),
+
+        Friend.builder()
+            .userTotalScore(1)
+            .friendTotalScore(0)
+            .userId(user2.getId())
+            .groupId(getFriendshipGroupId(user1, user2))
+            .firstName(user2.getFirstName())
+            .lastName(user2.getLastName())
+            .username(user2.getUsername())
+            .build(),
+
+        Friend.builder()
+            .userTotalScore(1)
+            .friendTotalScore(0)
+            .userId(user3.getId())
+            .groupId(getFriendshipGroupId(user1, user3))
+            .firstName(user3.getFirstName())
+            .lastName(user3.getLastName())
+            .username(user3.getUsername())
+            .build()
+
     );
-    userRepo.save(updatedUser1);
 
-    GetChallengeResponse response = new GetChallengeResponse();
-    response.setData(queriedChallenge);
-
-    azkarApi.getOriginalChallenge(user, queriedChallenge.getId())
+    expectedResponse.setData(expectedFriendshipScores);
+    azkarApi.getFriendsLeaderboardV2WithApiVersion(user1, "1.4.0")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(response)));
-  }
-
-  @Test
-  public void getOriginalChallenge_invalidChallengeId_shouldFail() throws Exception {
-    GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
-
-    azkarApi.getOriginalChallenge(user, "invalidChallengeId")
-        .andExpect(status().isNotFound())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
-  }
-
-  @Test
-  public void getOriginalChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
-    AzkarChallenge challenge = ChallengeFactory.getNewChallenge(group.getId());
-    azkarApi.addAzkarChallenge(user, challenge).andExpect(status().isOk());
-    User nonGroupMember = UserFactory.getNewUser();
-    addNewUser(nonGroupMember);
-    GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
-
-    azkarApi.getOriginalChallenge(nonGroupMember, challenge.getId())
-        .andExpect(status().isNotFound())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
-  }
-
-  @Test
-  public void getChallenge_invalidChallengeId_shouldFail() throws Exception {
-    GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
-
-    azkarApi.getChallenge(user, "invalidChallengeId")
-        .andExpect(status().isNotFound())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
-  }
-
-  @Test
-  public void getChallenge_normalScenario_shouldSucceed() throws Exception {
-    AzkarChallenge queriedChallenge = createMeaningGroupChallenge(user, group);
-    AzkarChallenge anotherChallenge = createMeaningGroupChallenge(user, group);
-    GetChallengeResponse response = new GetChallengeResponse();
-    response.setData(queriedChallenge);
-
-    azkarApi.getChallenge(user, queriedChallenge.getId())
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse), /*strict=*/false));
+    azkarApi.getFriendsLeaderboardV2WithApiVersion(user1, "1.4.1")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(response)));
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse), /*strict=*/false));
   }
 
-  @Test
-  public void getChallenge_userDoesNotHaveChallenge_shouldFail() throws Exception {
-    AzkarChallenge challenge = ChallengeFactory.getNewChallenge(group.getId());
-    azkarApi.addAzkarChallenge(user, challenge).andExpect(status().isOk());
-    User nonGroupMember = UserFactory.getNewUser();
-    addNewUser(nonGroupMember);
-    GetChallengeResponse notFoundResponse = getGetChallengeNotFoundResponse();
-
-    azkarApi.getChallenge(nonGroupMember, challenge.getId())
-        .andExpect(status().isNotFound())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(notFoundResponse)));
+  private String getFriendshipGroupId(User user1, User user2) throws Exception {
+    return friendshipRepo.findAll().stream()
+        .filter(friendship -> friendship.getUserId().equals(user1.getId()))
+        .findFirst()
+        .get()
+        .getFriends()
+        .stream()
+        .filter(friend -> friend.getUserId().equals(user2.getId()))
+        .findFirst()
+        .get()
+        .getGroupId();
   }
 
-  private GetChallengeResponse getGetChallengeNotFoundResponse() {
-    GetChallengeResponse expectedResponse = new GetChallengeResponse();
-    expectedResponse.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
-    return expectedResponse;
+  private boolean isWordMeaningPairValid(MeaningChallenge challenge, int pairIdx) {
+    return tafseerCacher.getWordMeaningPairs().stream().anyMatch(
+        wordMeaningPair -> wordMeaningPair.getWord().equals(challenge.getWords().get(0))
+            && wordMeaningPair.getMeaning().equals(challenge.getMeanings().get(0)));
   }
 }
