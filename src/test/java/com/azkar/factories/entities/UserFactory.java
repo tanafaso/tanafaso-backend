@@ -12,7 +12,7 @@ public class UserFactory {
     return User.builder()
         .id("testId" + usersRequested)
         .email("testEmail" + usersRequested + "@example_domain.com")
-        .username("test_username" + usersRequested)
+        .username("testUsername" + usersRequested)
         .firstName("testFirstName" + usersRequested)
         .lastName("testLastName" + usersRequested)
         .build();
