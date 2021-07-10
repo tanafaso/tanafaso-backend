@@ -24,7 +24,7 @@ public class UserFactory {
         .id("testId" + usersRequested)
         .email(email)
         .encodedPassword(encodedPassword)
-        .username("test_username" + usersRequested)
+        .username("testUsername" + usersRequested)
         .firstName("testFirstName" + usersRequested)
         .lastName("testLastName" + usersRequested)
         .build();
