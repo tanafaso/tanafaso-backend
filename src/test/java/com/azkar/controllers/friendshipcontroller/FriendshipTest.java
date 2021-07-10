@@ -119,7 +119,7 @@ public class FriendshipTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    assertThat(groupRepo.count(), is(groupsCountBefore + 1));
+    assertThat(groupRepo.count(), is(groupsCountBefore));
   }
 
 
