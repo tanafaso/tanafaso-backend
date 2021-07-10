@@ -1,36 +1,29 @@
 package com.azkar.payload.challengecontroller.requests;
 
-import com.azkar.entities.Challenge;
+import com.azkar.payload.RequestBodyBase;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.exceptions.BadRequestException;
 import java.util.HashSet;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
-public class AddFriendsChallengeRequest extends AddChallengeRequest {
+@Builder(toBuilder = true)
+public class AddMeaningChallengeRequest extends RequestBodyBase {
 
   private List<String> friendsIds;
+  private long expiryDate;
 
-  @Builder(builderMethodName = "AddFriendsChallengeRequestBuilder")
-  public AddFriendsChallengeRequest(List<String> friendsIds, Challenge challenge) {
-    this.challenge = challenge;
-    this.friendsIds = friendsIds;
-  }
 
   @Override
   public void validate() throws BadRequestException {
-    // NOTE: The challenge group ID can be null in this case as the group will be auto-generated.
-    checkNotNull(challenge.getName(), challenge.getSubChallenges());
-
+    ChallengeValidationUtil.validateExpiryDate(expiryDate);
     validateFriendIds();
-    validateExpiryDate();
-    validateSubChallenges();
   }
 
   private void validateFriendIds() {

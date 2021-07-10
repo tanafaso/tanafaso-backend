@@ -1,14 +1,17 @@
 package com.azkar.controllers.utils;
 
-import com.azkar.entities.Challenge;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.entities.challenges.AzkarChallenge;
+import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.payload.authenticationcontroller.requests.ResetPasswordRequest;
+import com.azkar.payload.challengecontroller.requests.AddAzkarChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
-import com.azkar.payload.challengecontroller.requests.AddFriendsChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
-import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
@@ -70,7 +73,7 @@ public class AzkarApi {
         challengeId));
   }
 
-  public Challenge getChallengeAndReturn(User user, String challengeId) throws Exception {
+  public AzkarChallenge getChallengeAndReturn(User user, String challengeId) throws Exception {
     MvcResult result = httpClient.performGetRequest(user, String.format("/challenges/%s",
         challengeId)).andReturn();
     GetChallengeResponse response =
@@ -78,19 +81,37 @@ public class AzkarApi {
     return response.getData();
   }
 
-  public Challenge addChallengeAndReturn(User user, Challenge challenge) throws Exception {
-    MvcResult result = addChallenge(user, challenge).andReturn();
-    AddChallengeResponse response = JsonHandler.fromJson(result.getResponse().getContentAsString(),
-        AddChallengeResponse.class);
+  public AzkarChallenge addAzkarChallengeAndReturn(User user, AzkarChallenge challenge)
+      throws Exception {
+    MvcResult result = addAzkarChallenge(user, challenge).andReturn();
+    AddAzkarChallengeResponse response =
+        JsonHandler.fromJson(result.getResponse().getContentAsString(),
+            AddAzkarChallengeResponse.class);
     return response.getData();
   }
 
-  public ResultActions addChallenge(User user, Challenge challenge) throws Exception {
+  public ResultActions addAzkarChallenge(User user, AzkarChallenge challenge) throws Exception {
     return httpClient.performPostRequest(user, "/challenges",
         JsonHandler.toJson(new AddChallengeRequest(challenge)));
   }
 
-  public ResultActions addFriendsChallenge(User user, AddFriendsChallengeRequest request)
+  public MeaningChallenge addMeaningChallengeAndReturn(User user,
+      AddMeaningChallengeRequest request)
+      throws Exception {
+    MvcResult result = addMeaningChallenge(user, request).andReturn();
+    AddMeaningChallengeResponse response =
+        JsonHandler.fromJson(result.getResponse().getContentAsString(),
+            AddMeaningChallengeResponse.class);
+    return response.getData();
+  }
+
+  public ResultActions addMeaningChallenge(User user, AddMeaningChallengeRequest request)
+      throws Exception {
+    return httpClient.performPostRequest(user, "/challenges/meaning",
+        JsonHandler.toJson(request));
+  }
+
+  public ResultActions addFriendsChallenge(User user, AddAzkarChallengeRequest request)
       throws Exception {
     return httpClient.performPostRequest(user, "/challenges/friends", JsonHandler.toJson(request));
   }

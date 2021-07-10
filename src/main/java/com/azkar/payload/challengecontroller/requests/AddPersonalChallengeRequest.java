@@ -1,17 +1,18 @@
 package com.azkar.payload.challengecontroller.requests;
 
-import com.azkar.entities.Challenge;
+import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.payload.exceptions.BadRequestException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+@Deprecated
 @Getter
 @AllArgsConstructor
 public class AddPersonalChallengeRequest extends AddChallengeRequest {
 
   @Builder(builderMethodName = "addPersonalChallengeRequestBuilder")
-  public AddPersonalChallengeRequest(Challenge challenge) {
+  public AddPersonalChallengeRequest(AzkarChallenge challenge) {
     this.challenge = challenge;
   }
 

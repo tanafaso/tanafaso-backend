@@ -1,11 +1,11 @@
 package com.azkar.configs;
 
-import com.azkar.entities.Challenge;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
+import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.payload.utils.UserScore;
 import com.github.mongobee.changeset.ChangeLog;
 import com.github.mongobee.changeset.ChangeSet;
@@ -74,8 +74,8 @@ public class DbMigrations {
             .groupName("")
             .build();
         otherUser.getPersonalChallenges().stream().forEach(personalChallenge -> {
-          Challenge originalPersonalChallenge =
-              mongoTemplate.findById(personalChallenge.getId(), Challenge.class);
+          AzkarChallenge originalPersonalChallenge =
+              mongoTemplate.findById(personalChallenge.getId(), AzkarChallenge.class);
           if (originalPersonalChallenge == null) {
             return;
           }
@@ -194,10 +194,10 @@ public class DbMigrations {
           .build();
       try {
         otherUser.getPersonalChallenges().stream().forEach(personalChallenge -> {
-          Challenge originalPersonalChallenge;
+          AzkarChallenge originalPersonalChallenge;
           try {
             originalPersonalChallenge =
-                mongoTemplate.findById(personalChallenge.getId(), Challenge.class);
+                mongoTemplate.findById(personalChallenge.getId(), AzkarChallenge.class);
           } catch (Exception e) {
             logger.error("Couldn't find personal challenge with ID: " + personalChallenge.getId());
             return;
@@ -300,10 +300,10 @@ public class DbMigrations {
           if (!personalChallenge.finished()) {
             return;
           }
-          Challenge originalPersonalChallenge = null;
+          AzkarChallenge originalPersonalChallenge = null;
           try {
             originalPersonalChallenge =
-                mongoTemplate.findById(personalChallenge.getId(), Challenge.class);
+                mongoTemplate.findById(personalChallenge.getId(), AzkarChallenge.class);
           } catch (Exception e) {
             logger.info("Mongotemplate failed to find an original challenge for user: %s",
                 user.getId());
@@ -334,6 +334,14 @@ public class DbMigrations {
         logger.warn("Something wrong happened while updating score for user with ID: %s",
             user.getId());
       }
+    });
+  }
+
+  @ChangeSet(order = "0007", id = "populateUserAzkarChallenges", author = "")
+  public void populateUserAzkarChallenges(MongoTemplate mongoTemplate) {
+    mongoTemplate.findAll(User.class).stream().forEach(user -> {
+      user.setAzkarChallenges(user.getUserChallenges());
+      mongoTemplate.save(user);
     });
   }
 

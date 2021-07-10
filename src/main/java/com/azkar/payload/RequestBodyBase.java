@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public abstract class RequestBodyBase {
 
-  protected static void checkNotNull(Object... arguments) throws BadRequestException {
+  public static void checkNotNull(Object... arguments) throws BadRequestException {
     if (Arrays.stream(arguments).anyMatch(Objects::isNull)) {
       throw new BadRequestException(new Status(Status.REQUIRED_FIELDS_NOT_GIVEN_ERROR));
     }

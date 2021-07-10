@@ -1,36 +1,48 @@
 package com.azkar.controllers;
 
-import com.azkar.entities.Challenge;
-import com.azkar.entities.Challenge.SubChallenge;
+import com.azkar.configs.TafseerCacher;
+import com.azkar.configs.TafseerCacher.WordMeaningPair;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
+import com.azkar.entities.challenges.AzkarChallenge;
+import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
+import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.payload.ResponseBase.Status;
+import com.azkar.payload.challengecontroller.requests.AddAzkarChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
-import com.azkar.payload.challengecontroller.requests.AddFriendsChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
-import com.azkar.payload.challengecontroller.responses.AddChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.FinishMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
+import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
+import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.Challenge;
+import com.azkar.payload.challengecontroller.responses.GetMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.payload.utils.FeaturesVersions;
 import com.azkar.payload.utils.VersionComparator;
-import com.azkar.repos.ChallengeRepo;
+import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
+import com.azkar.repos.MeaningChallengeRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
+import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.bson.types.ObjectId;
@@ -56,16 +68,23 @@ public class ChallengeController extends BaseController {
 
   private static final Logger logger = LoggerFactory.getLogger(ChallengeController.class);
 
+  private static final int RANDOMLY_CHOSEN_WORDS_INDEX_DIFF = 100;
+  private static final int MAX_RETURNED_CHALLENGES = 60;
+
   @Autowired
   NotificationsService notificationsService;
   @Autowired
   UserRepo userRepo;
   @Autowired
-  ChallengeRepo challengeRepo;
+  AzkarChallengeRepo azkarChallengeRepo;
+  @Autowired
+  MeaningChallengeRepo meaningChallengeRepo;
   @Autowired
   GroupRepo groupRepo;
   @Autowired
   FriendshipRepo friendshipRepo;
+  @Autowired
+  TafseerCacher tafseerCacher;
 
   // Note: This function may modify oldSubChallenges.
   private static Optional<ResponseEntity<UpdateChallengeResponse>> updateOldSubChallenges(
@@ -178,6 +197,8 @@ public class ChallengeController extends BaseController {
     });
   }
 
+  // This is not used anymore after introducing Sabeq.
+  @Deprecated
   @PostMapping(path = "/personal", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddPersonalChallengeResponse> addPersonalChallenge(
       @RequestBody AddPersonalChallengeRequest request) {
@@ -190,10 +211,10 @@ public class ChallengeController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
-    Challenge challenge = request.getChallenge();
+    AzkarChallenge challenge = request.getChallenge();
     challenge = challenge.toBuilder()
         .id(new ObjectId().toString())
-        .groupId(Challenge.PERSONAL_CHALLENGES_NON_EXISTING_GROUP_ID)
+        .groupId(AzkarChallenge.PERSONAL_CHALLENGES_NON_EXISTING_GROUP_ID)
         .creatingUserId(getCurrentUser().getUserId())
         .createdAt(Instant.now().getEpochSecond())
         .modifiedAt(Instant.now().getEpochSecond())
@@ -201,12 +222,15 @@ public class ChallengeController extends BaseController {
 
     User loggedInUser = getCurrentUser(userRepo);
     loggedInUser.getPersonalChallenges().add(challenge);
-    challengeRepo.save(challenge);
+    azkarChallengeRepo.save(challenge);
     userRepo.save(loggedInUser);
     response.setData(challenge);
     return ResponseEntity.ok(response);
   }
 
+
+  // This is not used anymore after introducing Sabeq.
+  @Deprecated
   @GetMapping(path = "/personal")
   public ResponseEntity<GetChallengesResponse> getPersonalChallenges() {
     GetChallengesResponse response = new GetChallengesResponse();
@@ -215,12 +239,14 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  // This is not used anymore after introducing Sabeq.
+  @Deprecated
   @PutMapping(path = "/personal/{challengeId}", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<UpdateChallengeResponse> updatePersonalChallenge(
       @PathVariable(value = "challengeId") String challengeId,
       @RequestBody UpdateChallengeRequest request) {
     User currentUser = getCurrentUser(userRepo);
-    Optional<Challenge> personalChallenge = currentUser.getPersonalChallenges().stream()
+    Optional<AzkarChallenge> personalChallenge = currentUser.getPersonalChallenges().stream()
         .filter(
             personalChallengeItem -> personalChallengeItem
                 .getId().equals(challengeId))
@@ -253,7 +279,7 @@ public class ChallengeController extends BaseController {
   public ResponseEntity<GetChallengeResponse> getChallenge(
       @PathVariable(value = "challengeId") String challengeId) {
     GetChallengeResponse response = new GetChallengeResponse();
-    Optional<Challenge> userChallenge = getCurrentUser(userRepo).getUserChallenges()
+    Optional<AzkarChallenge> userChallenge = getCurrentUser(userRepo).getAzkarChallenges()
         .stream()
         .filter(
             challenge -> challenge.getId()
@@ -265,6 +291,26 @@ public class ChallengeController extends BaseController {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     response.setData(userChallenge.get());
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/meaning/{challengeId}")
+  public ResponseEntity<GetMeaningChallengeResponse> getMeaningChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    GetMeaningChallengeResponse response = new GetMeaningChallengeResponse();
+    Optional<MeaningChallenge> userMeaningChallenge =
+        getCurrentUser(userRepo).getMeaningChallenges()
+            .stream()
+            .filter(
+                challenge -> challenge.getId()
+                    .equals(
+                        challengeId))
+            .findFirst();
+    if (!userMeaningChallenge.isPresent()) {
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+    response.setData(userMeaningChallenge.get());
     return ResponseEntity.ok(response);
   }
 
@@ -273,29 +319,43 @@ public class ChallengeController extends BaseController {
       @PathVariable(value = "challengeId") String challengeId) {
     DeleteChallengeResponse response = new DeleteChallengeResponse();
     User user = getCurrentUser(userRepo);
-    Optional<Challenge> userChallenge = user.getUserChallenges()
+    Optional<AzkarChallenge> azkarChallenge = user.getAzkarChallenges()
         .stream()
         .filter(
             challenge -> challenge.getId()
                 .equals(
                     challengeId))
         .findFirst();
-    if (!userChallenge.isPresent()) {
+    Optional<MeaningChallenge> meaningChallenge = user.getMeaningChallenges()
+        .stream()
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
+    if (!azkarChallenge.isPresent() && !meaningChallenge.isPresent()) {
       response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
-    user.getUserChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+    if (azkarChallenge.isPresent()) {
+      user.getAzkarChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+      response.setData(azkarChallenge.get());
+    } else {
+      user.getMeaningChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+      response.setData(meaningChallenge.get());
+    }
     userRepo.save(user);
-    response.setData(userChallenge.get());
     return ResponseEntity.ok(response);
   }
 
+  // This is not used anymore after introducing Sabeq.
+  @Deprecated
   @DeleteMapping("/personal/{challengeId}")
   public ResponseEntity<DeleteChallengeResponse> deletePersonalChallenge(
       @PathVariable(value = "challengeId") String challengeId) {
     DeleteChallengeResponse response = new DeleteChallengeResponse();
     User user = getCurrentUser(userRepo);
-    Optional<Challenge> userPersonalChallenge = user.getPersonalChallenges()
+    Optional<AzkarChallenge> userPersonalChallenge = user.getPersonalChallenges()
         .stream()
         .filter(
             challenge -> challenge.getId()
@@ -309,7 +369,7 @@ public class ChallengeController extends BaseController {
     user.getPersonalChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
     userRepo.save(user);
     // Also delete the original copy of it.
-    challengeRepo.deleteById(challengeId);
+    azkarChallengeRepo.deleteById(challengeId);
     response.setData(userPersonalChallenge.get());
     return ResponseEntity.ok(response);
   }
@@ -318,21 +378,21 @@ public class ChallengeController extends BaseController {
   public ResponseEntity<GetChallengeResponse> getOriginalChallenge(
       @PathVariable(value = "challengeId") String challengeId) {
     GetChallengeResponse response = new GetChallengeResponse();
-    Optional<Challenge> userChallenge = getCurrentUser(userRepo).getUserChallenges()
+    Optional<AzkarChallenge> userChallenge = getCurrentUser(userRepo).getAzkarChallenges()
         .stream()
         .filter(
             challenge -> challenge.getId()
                 .equals(
                     challengeId))
         .findFirst();
-    Optional<Challenge> personalChallenge = getCurrentUser(userRepo).getPersonalChallenges()
+    Optional<AzkarChallenge> personalChallenge = getCurrentUser(userRepo).getPersonalChallenges()
         .stream()
         .filter(
             challenge -> challenge.getId()
                 .equals(
                     challengeId))
         .findFirst();
-    Optional<Challenge> originalChallenge = challengeRepo.findById(challengeId);
+    Optional<AzkarChallenge> originalChallenge = azkarChallengeRepo.findById(challengeId);
     if ((!userChallenge.isPresent() && !personalChallenge.isPresent())
         || !originalChallenge.isPresent()) {
       response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
@@ -343,9 +403,9 @@ public class ChallengeController extends BaseController {
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<AddChallengeResponse> addGroupChallenge(
+  public ResponseEntity<AddAzkarChallengeResponse> addGroupChallenge(
       @RequestBody AddChallengeRequest req) {
-    AddChallengeResponse response = new AddChallengeResponse();
+    AddAzkarChallengeResponse response = new AddAzkarChallengeResponse();
     try {
       req.validate();
     } catch (BadRequestException e) {
@@ -362,17 +422,17 @@ public class ChallengeController extends BaseController {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
     User currentUser = getCurrentUser(userRepo);
-    Challenge challenge = req.getChallenge().toBuilder()
+    AzkarChallenge challenge = req.getChallenge().toBuilder()
         .creatingUserId(currentUser.getId())
         .build();
-    challengeRepo.save(challenge);
+    azkarChallengeRepo.save(challenge);
 
     group.get().getChallengesIds().add(challenge.getId());
     groupRepo.save(group.get());
 
     List<String> groupUsersIds = group.get().getUsersIds();
     Iterable<User> affectedUsers = userRepo.findAllById(groupUsersIds);
-    affectedUsers.forEach(user -> user.getUserChallenges().add(challenge));
+    affectedUsers.forEach(user -> user.getAzkarChallenges().add(challenge));
     affectedUsers.forEach(affectedUser -> {
       if (!affectedUser.getId().equals(currentUser.getId())) {
         // Fire emoji 🔥
@@ -398,9 +458,9 @@ public class ChallengeController extends BaseController {
   // This endpoint can be used to challenge a set of friends without creating a group.
   // This endpoint is not allowed to be used with only one friend.
   @PostMapping("/friends")
-  public ResponseEntity<AddChallengeResponse> addFriendsChallenge(
-      @RequestBody AddFriendsChallengeRequest request) {
-    AddChallengeResponse response = new AddChallengeResponse();
+  public ResponseEntity<AddAzkarChallengeResponse> addAzkarChallenge(
+      @RequestBody AddAzkarChallengeRequest request) {
+    AddAzkarChallengeResponse response = new AddAzkarChallengeResponse();
 
     try {
       request.validate();
@@ -440,7 +500,7 @@ public class ChallengeController extends BaseController {
         .totalScore(0)
         .build();
 
-    Challenge challenge = request.getChallenge().toBuilder()
+    AzkarChallenge challenge = request.getChallenge().toBuilder()
         .id(new ObjectId().toString())
         .creatingUserId(currentUser.getId())
         .groupId(newGroup.getId())
@@ -450,13 +510,13 @@ public class ChallengeController extends BaseController {
 
     Iterable<User> affectedUsers = userRepo.findAllById(groupMembers);
     affectedUsers.forEach(user -> {
-      user.getUserChallenges().add(challenge);
+      user.getAzkarChallenges().add(challenge);
       user.getUserGroups().add(userGroup);
     });
 
     userRepo.saveAll(affectedUsers);
     groupRepo.save(newGroup);
-    challengeRepo.save(challenge);
+    azkarChallengeRepo.save(challenge);
 
     affectedUsers.forEach(affectedUser -> {
       if (!affectedUser.getId().equals(currentUser.getId())) {
@@ -479,6 +539,118 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  @PostMapping("/meaning")
+  public ResponseEntity<AddMeaningChallengeResponse> addMeaningChallenge(
+      @RequestBody AddMeaningChallengeRequest request) {
+    AddMeaningChallengeResponse response = new AddMeaningChallengeResponse();
+
+    try {
+      request.validate();
+    } catch (BadRequestException e) {
+      response.setStatus(e.error);
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    User currentUser = getCurrentUser(userRepo);
+
+    // TODO(issue#328): Reuse the friend group to associate new MeaningChallenges
+    HashSet<String> friendsIds = getUserFriends(currentUser);
+    boolean allValidFriends =
+        request.getFriendsIds().stream().allMatch(id -> friendsIds.contains(id));
+    if (!allValidFriends) {
+      response.setStatus(new Status(Status.ONE_OR_MORE_USERS_NOT_FRIENDS_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    List<String> groupMembers = new ArrayList<>(request.getFriendsIds());
+    groupMembers.add(currentUser.getId());
+
+    Group newGroup = Group.builder()
+        .id(new ObjectId().toString())
+        .creatorId(currentUser.getId())
+        .usersIds(groupMembers)
+        .build();
+
+    UserGroup userGroup = UserGroup.builder()
+        .groupId(newGroup.getId())
+        .invitingUserId(currentUser.getId())
+        .monthScore(0)
+        .totalScore(0)
+        .build();
+
+    ArrayList<WordMeaningPair> wordMeaningPairs = getWordMeaningPairs();
+    MeaningChallenge challenge = MeaningChallenge.builder()
+        .id(new ObjectId().toString())
+        .creatingUserId(currentUser.getId())
+        .groupId(newGroup.getId())
+        .expiryDate(request.getExpiryDate())
+        .words(extractWords(wordMeaningPairs))
+        .meanings(extractMeanings(wordMeaningPairs))
+        .build();
+
+    newGroup.getChallengesIds().add(challenge.getId());
+
+    Iterable<User> affectedUsers = userRepo.findAllById(groupMembers);
+    affectedUsers.forEach(user -> {
+      user.getMeaningChallenges().add(challenge);
+      user.getUserGroups().add(userGroup);
+    });
+
+    userRepo.saveAll(affectedUsers);
+    groupRepo.save(newGroup);
+    meaningChallengeRepo.save(challenge);
+
+    affectedUsers.forEach(affectedUser -> {
+      if (!affectedUser.getId().equals(currentUser.getId())) {
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += currentUser.getFirstName();
+        body += " ";
+        body += currentUser.getLastName();
+        body += " (";
+
+        body += "معاني كلمات القرآن";
+        body += ")";
+        notificationsService.sendNotificationToUser(affectedUser, "لديك تحدٍ جديد",
+            body);
+      }
+    });
+
+    response.setData(challenge);
+    return ResponseEntity.ok(response);
+  }
+
+  private List<String> extractWords(ArrayList<WordMeaningPair> wordMeaningPairs) {
+    return ImmutableList.of(
+        wordMeaningPairs.get(0).getWord(),
+        wordMeaningPairs.get(1).getWord(),
+        wordMeaningPairs.get(2).getWord());
+  }
+
+  private List<String> extractMeanings(ArrayList<WordMeaningPair> wordMeaningPairs) {
+    return ImmutableList.of(
+        wordMeaningPairs.get(0).getMeaning(),
+        wordMeaningPairs.get(1).getMeaning(),
+        wordMeaningPairs.get(2).getMeaning());
+  }
+
+  private ArrayList<WordMeaningPair> getWordMeaningPairs() {
+    Random random = new Random();
+    int randomIndex1 = random.nextInt(tafseerCacher.getWordMeaningPairs().size());
+    int randomIndex2 =
+        (randomIndex1 + RANDOMLY_CHOSEN_WORDS_INDEX_DIFF) % tafseerCacher.getWordMeaningPairs()
+            .size();
+    int randomIndex3 =
+        (randomIndex2 + RANDOMLY_CHOSEN_WORDS_INDEX_DIFF) % tafseerCacher.getWordMeaningPairs()
+            .size();
+    ArrayList<WordMeaningPair> wordMeaningPairs = new ArrayList<>();
+    wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex1));
+    wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex2));
+    wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex3));
+    return wordMeaningPairs;
+  }
+
   private HashSet<String> getUserFriends(User user) {
     Friendship friendship = friendshipRepo.findByUserId(user.getId());
     HashSet<String> friends = new HashSet<>();
@@ -491,13 +663,14 @@ public class ChallengeController extends BaseController {
   }
 
   // Returns all non-personal challenges.
+  @Deprecated
   @GetMapping(path = "/")
   public ResponseEntity<GetChallengesResponse> getAllChallenges(
       @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
     if (apiVersion != null) {
       logger.info("API version requested is " + apiVersion);
     }
-    List<Challenge> userChallenges = getCurrentUser(userRepo).getUserChallenges();
+    List<AzkarChallenge> userChallenges = getCurrentUser(userRepo).getAzkarChallenges();
     if (apiVersion == null
         || VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
       userChallenges = filterOutSabeqChallenges(userChallenges);
@@ -509,8 +682,36 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private List<Challenge> filterOutSabeqChallenges(List<Challenge> challenges) {
-    List<Challenge> filtered = challenges.stream().filter(challenge -> {
+  // Returns all challenges with all types.
+  @GetMapping(path = "/v2")
+  public ResponseEntity<GetChallengesV2Response> getAllChallengesV2(
+      @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
+    if (apiVersion != null) {
+      logger.info("API version requested is " + apiVersion);
+    }
+    List<AzkarChallenge> userAzkarChallenges = getCurrentUser(userRepo).getAzkarChallenges();
+    List<MeaningChallenge> userMeaningChallenges = getCurrentUser(userRepo).getMeaningChallenges();
+
+    List<Challenge> challenges = new ArrayList<>();
+    for (int i = 0; i < Math.min(MAX_RETURNED_CHALLENGES / 2, userAzkarChallenges.size()); i++) {
+      Challenge challenge = Challenge.builder().azkarChallenge(userAzkarChallenges.get(i)).build();
+      challenges.add(challenge);
+    }
+    for (int i = 0; i < Math.min(MAX_RETURNED_CHALLENGES / 2, userMeaningChallenges.size()); i++) {
+      Challenge challenge =
+          Challenge.builder().meaningChallenge(userMeaningChallenges.get(i)).build();
+      challenges.add(challenge);
+    }
+    Collections.sort(challenges);
+
+    GetChallengesV2Response response = new GetChallengesV2Response();
+    response.setData(challenges);
+    Collections.reverse(response.getData());
+    return ResponseEntity.ok(response);
+  }
+
+  private List<AzkarChallenge> filterOutSabeqChallenges(List<AzkarChallenge> challenges) {
+    List<AzkarChallenge> filtered = challenges.stream().filter(challenge -> {
       Optional<Group> group = groupRepo.findById(challenge.getGroupId());
       if (!group.isPresent()) {
         return false;
@@ -530,8 +731,8 @@ public class ChallengeController extends BaseController {
       return error;
     }
 
-    List<Challenge> challengesInGroup =
-        getCurrentUser(userRepo).getUserChallenges().stream()
+    List<AzkarChallenge> challengesInGroup =
+        getCurrentUser(userRepo).getAzkarChallenges().stream()
             .filter((challenge -> challenge.getGroupId().equals(groupId)))
             .collect(
                 Collectors.toList());
@@ -561,11 +762,11 @@ public class ChallengeController extends BaseController {
   //  something wrong happened in the middle of handling a request, the state will remain the
   //  same as before doing the request.
   @PutMapping(path = "/{challengeId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<UpdateChallengeResponse> updateChallenge(
+  public ResponseEntity<UpdateChallengeResponse> updateAzkarChallenge(
       @PathVariable(value = "challengeId") String challengeId,
       @RequestBody UpdateChallengeRequest request) {
     User currentUser = getCurrentUser(userRepo);
-    Optional<Challenge> currentUserChallenge = currentUser.getUserChallenges()
+    Optional<AzkarChallenge> currentUserChallenge = currentUser.getAzkarChallenges()
         .stream()
         .filter(challenge -> challenge.getId()
             .equals(
@@ -598,28 +799,68 @@ public class ChallengeController extends BaseController {
       updateScoreInFriendships(currentUser, currentUserChallenge.get().getGroupId());
       userRepo.save(currentUser);
 
-      Challenge challenge = challengeRepo.findById(challengeId).get();
-      updateChallengeOnUserFinished(challenge, currentUser);
+      AzkarChallenge challenge = azkarChallengeRepo.findById(challengeId).get();
+      updateAzkarChallengeOnUserFinished(challenge, currentUser);
       // Invalidate current user because it may have changed indirectly (by changing only the
       // database instance) after calling updateChallengeOnUserFinished.
       currentUser = userRepo.findById(currentUser.getId()).get();
 
-      sendNotificationOnFinishedChallenge(getCurrentUser(userRepo), challenge);
-      challengeRepo.save(challenge);
+      sendNotificationOnFinishedAzkarChallenge(getCurrentUser(userRepo), challenge);
+      azkarChallengeRepo.save(challenge);
     }
     userRepo.save(currentUser);
 
     return ResponseEntity.ok(new UpdateChallengeResponse());
   }
 
-  private void updateChallengeOnUserFinished(Challenge challenge, User currentUser) {
+  @PutMapping(path = "/finish/meaning/{challengeId}")
+  public ResponseEntity<FinishMeaningChallengeResponse> finishMeaningChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    User currentUser = getCurrentUser(userRepo);
+    Optional<MeaningChallenge> currentUserChallenge = currentUser.getMeaningChallenges()
+        .stream()
+        .filter(challenge -> challenge.getId()
+            .equals(
+                challengeId))
+        .findFirst();
+    if (!currentUserChallenge.isPresent()) {
+      FinishMeaningChallengeResponse response = new FinishMeaningChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+    // TODO(issue#170): Time should be supplied by a bean to allow easier testing
+    if (currentUserChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
+      FinishMeaningChallengeResponse response = new FinishMeaningChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_EXPIRED_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    currentUserChallenge.get().setFinished(true);
+    updateScoreInUserGroup(currentUser, currentUserChallenge.get().getGroupId());
+    updateScoreInFriendships(currentUser, currentUserChallenge.get().getGroupId());
+    userRepo.save(currentUser);
+
+    MeaningChallenge challenge = meaningChallengeRepo.findById(challengeId).get();
+    updateMeaningChallengeOnUserFinished(challenge, currentUser);
+    // Invalidate current user because it may have changed indirectly (by changing only the
+    // database instance) after calling updateChallengeOnUserFinished.
+    currentUser = userRepo.findById(currentUser.getId()).get();
+
+    sendNotificationOnFinishedMeaningChallenge(getCurrentUser(userRepo), challenge);
+    meaningChallengeRepo.save(challenge);
+    userRepo.save(currentUser);
+
+    return ResponseEntity.ok(new FinishMeaningChallengeResponse());
+  }
+
+  private void updateAzkarChallengeOnUserFinished(AzkarChallenge challenge, User currentUser) {
     // Update the original copy of the challenge
     challenge.getUsersFinished().add(currentUser.getId());
 
     // Update users copies of the challenge
     groupRepo.findById(challenge.getGroupId()).get().getUsersIds().forEach(groupMember -> {
       User user = userRepo.findById(groupMember).get();
-      user.getUserChallenges().forEach(userChallenge -> {
+      user.getAzkarChallenges().forEach(userChallenge -> {
         if (userChallenge.getId().equals(challenge.getId())) {
           userChallenge.getUsersFinished().add(currentUser.getId());
         }
@@ -628,8 +869,24 @@ public class ChallengeController extends BaseController {
     });
   }
 
-  private void sendNotificationOnFinishedChallenge(User userFinishedChallenge,
-      Challenge challenge) {
+  private void updateMeaningChallengeOnUserFinished(MeaningChallenge challenge, User currentUser) {
+    // Update the original copy of the challenge
+    challenge.getUsersFinished().add(currentUser.getId());
+
+    // Update users copies of the challenge
+    groupRepo.findById(challenge.getGroupId()).get().getUsersIds().forEach(groupMember -> {
+      User user = userRepo.findById(groupMember).get();
+      user.getMeaningChallenges().forEach(userChallenge -> {
+        if (userChallenge.getId().equals(challenge.getId())) {
+          userChallenge.getUsersFinished().add(currentUser.getId());
+        }
+      });
+      userRepo.save(user);
+    });
+  }
+
+  private void sendNotificationOnFinishedAzkarChallenge(User userFinishedChallenge,
+      AzkarChallenge challenge) {
     Group group = groupRepo.findById(challenge.getGroupId()).get();
     group.getUsersIds().stream().forEach(userId -> {
       if (!userId.equals(userFinishedChallenge.getId())) {
@@ -643,6 +900,29 @@ public class ChallengeController extends BaseController {
         body += " (";
 
         body += challenge.getName();
+        body += ")";
+        notificationsService
+            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
+                body);
+      }
+    });
+  }
+
+  private void sendNotificationOnFinishedMeaningChallenge(User userFinishedChallenge,
+      MeaningChallenge challenge) {
+    Group group = groupRepo.findById(challenge.getGroupId()).get();
+    group.getUsersIds().stream().forEach(userId -> {
+      if (!userId.equals(userFinishedChallenge.getId())) {
+
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += userFinishedChallenge.getFirstName();
+        body += " ";
+        body += userFinishedChallenge.getLastName();
+        body += " (";
+
+        body += "معاني كلمات القرآن";
         body += ")";
         notificationsService
             .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",

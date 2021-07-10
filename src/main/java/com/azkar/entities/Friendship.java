@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 public class Friendship extends EntityBase {
 
+  @Indexed
   @Id
   private String id;
   @NotNull

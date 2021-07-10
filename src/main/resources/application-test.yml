@@ -9,3 +9,4 @@ spring:
 files:
   azkar: test-azkar.csv
   categories: test-categories.csv
+  tafseer: tafseer.txt

@@ -13,7 +13,7 @@ import com.azkar.payload.groupcontroller.responses.GetGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
 import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
 import com.azkar.payload.utils.UserScore;
-import com.azkar.repos.ChallengeRepo;
+import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
@@ -48,7 +48,7 @@ public class GroupController extends BaseController {
   private GroupRepo groupRepo;
 
   @Autowired
-  private ChallengeRepo challengeRepo;
+  private AzkarChallengeRepo challengeRepo;
 
   @Autowired
   private UserRepo userRepo;
