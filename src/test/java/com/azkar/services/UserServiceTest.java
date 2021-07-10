@@ -1,4 +1,3 @@
-/*
 package com.azkar.services;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -137,4 +136,3 @@ public class UserServiceTest extends TestBase {
         username.matches("[a-zA-Z0-9_-]*"));
   }
 }
-*/
