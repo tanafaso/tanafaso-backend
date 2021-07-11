@@ -279,6 +279,81 @@ public class MeaningChallengeTest extends TestBase {
         .andExpect(content().json(JsonHandler.toJson(expectedResponse), /*strict=*/false));
   }
 
+  @Test
+  public void finishMeaningChallenge_alreadyFinished_shouldFail() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
+    User user3 = getNewRegisteredUser();
+    azkarApi.makeFriends(user1, user2);
+    azkarApi.makeFriends(user1, user3);
+
+    AddMeaningChallengeRequest request = AddMeaningChallengeRequest.builder()
+        .friendsIds(ImmutableList.of(user2.getId(), user3.getId()))
+        .expiryDate(Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET)
+        .build();
+    MeaningChallenge meaningChallengeResponse =
+        azkarApi.addMeaningChallengeAndReturn(user1, request);
+
+    httpClient
+        .performPutRequest(user1, String.format("/challenges/finish/meaning/%s",
+            meaningChallengeResponse.getId()), /*body=*/null)
+        .andExpect(status().isOk())
+        .andExpect(content().json(JsonHandler.toJson(new FinishMeaningChallengeResponse())));
+
+    FinishMeaningChallengeResponse expectedFinishChallengeResponse =
+        new FinishMeaningChallengeResponse();
+    expectedFinishChallengeResponse.setStatus(new Status(Status.CHALLENGE_HAS_ALREADY_BEEN_FINISHED));
+    httpClient
+        .performPutRequest(user1, String.format("/challenges/finish/meaning/%s",
+            meaningChallengeResponse.getId()), /*body=*/null)
+        .andExpect(status().isBadRequest())
+        .andExpect(content().json(JsonHandler.toJson(expectedFinishChallengeResponse)));
+
+    GetFriendsLeaderboardV2Response expectedResponse = new GetFriendsLeaderboardV2Response();
+    User sabeq = userRepo.findById(User.SABEQ_ID).get();
+    List<Friend> expectedFriendshipScores = ImmutableList.of(
+        Friend.builder()
+            .userTotalScore(0)
+            .friendTotalScore(0)
+            .userId(sabeq.getId())
+            .firstName(sabeq.getFirstName())
+            .lastName(sabeq.getLastName())
+            .username(sabeq.getUsername())
+            .build(),
+
+        Friend.builder()
+            .userTotalScore(1)
+            .friendTotalScore(0)
+            .userId(user2.getId())
+            .groupId(getFriendshipGroupId(user1, user2))
+            .firstName(user2.getFirstName())
+            .lastName(user2.getLastName())
+            .username(user2.getUsername())
+            .build(),
+
+        Friend.builder()
+            .userTotalScore(1)
+            .friendTotalScore(0)
+            .userId(user3.getId())
+            .groupId(getFriendshipGroupId(user1, user3))
+            .firstName(user3.getFirstName())
+            .lastName(user3.getLastName())
+            .username(user3.getUsername())
+            .build()
+
+    );
+
+    expectedResponse.setData(expectedFriendshipScores);
+    azkarApi.getFriendsLeaderboardV2WithApiVersion(user1, "1.4.0")
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse), /*strict=*/false));
+    azkarApi.getFriendsLeaderboardV2WithApiVersion(user1, "1.4.1")
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse), /*strict=*/false));
+  }
+
   private String getFriendshipGroupId(User user1, User user2) throws Exception {
     return friendshipRepo.findAll().stream()
         .filter(friendship -> friendship.getUserId().equals(user1.getId()))
