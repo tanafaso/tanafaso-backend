@@ -302,7 +302,8 @@ public class MeaningChallengeTest extends TestBase {
 
     FinishMeaningChallengeResponse expectedFinishChallengeResponse =
         new FinishMeaningChallengeResponse();
-    expectedFinishChallengeResponse.setStatus(new Status(Status.CHALLENGE_HAS_ALREADY_BEEN_FINISHED));
+    expectedFinishChallengeResponse
+        .setStatus(new Status(Status.CHALLENGE_HAS_ALREADY_BEEN_FINISHED));
     httpClient
         .performPutRequest(user1, String.format("/challenges/finish/meaning/%s",
             meaningChallengeResponse.getId()), /*body=*/null)
