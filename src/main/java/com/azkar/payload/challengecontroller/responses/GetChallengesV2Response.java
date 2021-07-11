@@ -24,13 +24,13 @@ public class GetChallengesV2Response extends ResponseBase<List<Challenge>> {
     AzkarChallenge azkarChallenge;
     MeaningChallenge meaningChallenge;
 
-    // Sorts in the descending order of modifiedAt.
+    // Sorts in the descending order of expiry date.
     @Override public int compareTo(Challenge o) {
-      long firstModifiedAt = azkarChallenge != null ? azkarChallenge.getModifiedAt()
-          : meaningChallenge.getModifiedAt();
-      long secondModifiedAt = o.azkarChallenge != null ? o.azkarChallenge.getModifiedAt()
-          : o.meaningChallenge.getModifiedAt();
-      return -Long.compare(firstModifiedAt, secondModifiedAt);
+      long firstExpiryDate = azkarChallenge != null ? azkarChallenge.getExpiryDate()
+          : meaningChallenge.getExpiryDate();
+      long secondExpiryDate = o.azkarChallenge != null ? o.azkarChallenge.getExpiryDate()
+          : o.meaningChallenge.getExpiryDate();
+      return Long.compare(firstExpiryDate, secondExpiryDate);
     }
   }
 }

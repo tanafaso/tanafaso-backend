@@ -691,6 +691,9 @@ public class ChallengeController extends BaseController {
     }
     List<AzkarChallenge> userAzkarChallenges = getCurrentUser(userRepo).getAzkarChallenges();
     List<MeaningChallenge> userMeaningChallenges = getCurrentUser(userRepo).getMeaningChallenges();
+    // Get the most recent ones.
+    Collections.reverse(userAzkarChallenges);
+    Collections.reverse(userMeaningChallenges);
 
     List<Challenge> challenges = new ArrayList<>();
     for (int i = 0; i < Math.min(MAX_RETURNED_CHALLENGES / 2, userAzkarChallenges.size()); i++) {
@@ -832,6 +835,12 @@ public class ChallengeController extends BaseController {
     if (currentUserChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
       FinishMeaningChallengeResponse response = new FinishMeaningChallengeResponse();
       response.setStatus(new Status(Status.CHALLENGE_EXPIRED_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    if (currentUserChallenge.get().isFinished()) {
+      FinishMeaningChallengeResponse response = new FinishMeaningChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_HAS_ALREADY_BEEN_FINISHED));
       return ResponseEntity.badRequest().body(response);
     }
 

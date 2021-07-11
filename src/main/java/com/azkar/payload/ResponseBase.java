@@ -68,6 +68,7 @@ public abstract class ResponseBase<T> {
     public static final int ONE_OR_MORE_USERS_NOT_FRIENDS_ERROR = 48;
     public static final int LESS_THAN_TWO_FRIENDS_ARE_PROVIDED_ERROR = 49;
     public static final int DUPLICATE_FRIEND_IDS_PROVIDED_ERROR = 50;
+    public static final int CHALLENGE_HAS_ALREADY_BEEN_FINISHED = 51;
 
     public int code;
 
