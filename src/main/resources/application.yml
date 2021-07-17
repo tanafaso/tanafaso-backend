@@ -18,7 +18,6 @@ server:
     key-store: classpath:tanafaso.p12
     enabled: true
 
-
 spring:
   main:
     lazy-initialization: true
