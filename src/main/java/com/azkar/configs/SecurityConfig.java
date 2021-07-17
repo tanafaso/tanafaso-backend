@@ -2,6 +2,7 @@ package com.azkar.configs;
 
 import com.azkar.configs.authentication.JwtAuthenticationFilter;
 import com.azkar.configs.authentication.OAuthSuccessHandler;
+import com.azkar.controllers.AppLinkController;
 import com.azkar.controllers.authenticationcontroller.ApiAuthenticationController;
 import com.azkar.controllers.authenticationcontroller.WebAuthenticationController;
 import java.util.Arrays;
@@ -32,7 +33,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       WebAuthenticationController.VERIFY_EMAIL_V2_PATH,
       ApiAuthenticationController.LOGIN_WITH_EMAIL_PATH,
       ApiAuthenticationController.LOGIN_WITH_FACEBOOK_PATH,
-      ApiAuthenticationController.RESET_PASSWORD_PATH
+      ApiAuthenticationController.RESET_PASSWORD_PATH,
+      AppLinkController.STORE_LINK_ANDROID_PATH,
+      AppLinkController.STORE_LINK_IOS_PATH,
   };
   @Autowired
   JwtAuthenticationFilter jwtAuthenticationFilter;
