@@ -8,8 +8,8 @@ import org.springframework.web.servlet.view.RedirectView;
 @Controller
 public class AppLinkController {
 
-  public final static String STORE_LINK_ANDROID_PATH = "/store-link/android";
-  public final static String STORE_LINK_IOS_PATH = "/store-link/ios";
+  public static final String STORE_LINK_ANDROID_PATH = "/store-link/android";
+  public static final String STORE_LINK_IOS_PATH = "/store-link/ios";
 
   @GetMapping(STORE_LINK_ANDROID_PATH)
   public RedirectView getAndroidStoreLink(
