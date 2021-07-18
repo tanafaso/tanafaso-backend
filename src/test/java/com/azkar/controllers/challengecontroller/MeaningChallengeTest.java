@@ -205,7 +205,8 @@ public class MeaningChallengeTest extends TestBase {
     azkarApi.makeFriends(user1, user2);
 
     AddMeaningChallengeResponse expectedResponse = new AddMeaningChallengeResponse();
-    expectedResponse.setStatus(new Status(Status.TAFSEER_CHALLENGE_INCORRECT_NUMBER_OF_WORDS_ERROR));
+    expectedResponse
+        .setStatus(new Status(Status.TAFSEER_CHALLENGE_INCORRECT_NUMBER_OF_WORDS_ERROR));
 
     AddMeaningChallengeRequest request = getMeaningChallengeWithFriendAndNumberOfWords(user2, 2);
     httpClient.performPostRequest(user1, "/challenges/meaning",

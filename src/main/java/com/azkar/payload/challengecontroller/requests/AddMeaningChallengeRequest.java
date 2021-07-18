@@ -40,7 +40,8 @@ public class AddMeaningChallengeRequest extends RequestBodyBase {
       return;
     }
     if (numberOfWords.intValue() < 3 || numberOfWords.intValue() > 9) {
-      throw new BadRequestException(new Status(Status.TAFSEER_CHALLENGE_INCORRECT_NUMBER_OF_WORDS_ERROR));
+      throw new BadRequestException(
+          new Status(Status.TAFSEER_CHALLENGE_INCORRECT_NUMBER_OF_WORDS_ERROR));
     }
   }
 }
