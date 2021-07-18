@@ -709,7 +709,6 @@ public class ChallengeController extends BaseController {
 
     GetChallengesV2Response response = new GetChallengesV2Response();
     response.setData(challenges);
-    Collections.reverse(response.getData());
     return ResponseEntity.ok(response);
   }
 

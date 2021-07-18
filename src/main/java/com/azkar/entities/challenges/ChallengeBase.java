@@ -1,6 +1,7 @@
 package com.azkar.entities.challenges;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -36,4 +37,9 @@ public class ChallengeBase {
   @JsonIgnore
   @LastModifiedDate
   private long modifiedAt;
+
+
+  public boolean expired() {
+    return getExpiryDate() < Instant.now().getEpochSecond();
+  }
 }
