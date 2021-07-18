@@ -24,8 +24,22 @@ public class GetChallengesV2Response extends ResponseBase<List<Challenge>> {
     AzkarChallenge azkarChallenge;
     MeaningChallenge meaningChallenge;
 
-    // Sorts in the descending order of expiry date.
+    private boolean unFinishedAndUnExpired() {
+      return azkarChallenge != null ? !azkarChallenge.finished() && !azkarChallenge.expired() :
+          !meaningChallenge.isFinished() && !meaningChallenge.expired();
+    }
+
+    // Sorts such that unfinished challenges are first and resolved ties in the descending order of
+    // expiry date.
     @Override public int compareTo(Challenge o) {
+      if (unFinishedAndUnExpired() && !o.unFinishedAndUnExpired()) {
+        return -1;
+      }
+
+      if (!unFinishedAndUnExpired() && o.unFinishedAndUnExpired()) {
+        return 1;
+      }
+
       long firstExpiryDate = azkarChallenge != null ? azkarChallenge.getExpiryDate()
           : meaningChallenge.getExpiryDate();
       long secondExpiryDate = o.azkarChallenge != null ? o.azkarChallenge.getExpiryDate()

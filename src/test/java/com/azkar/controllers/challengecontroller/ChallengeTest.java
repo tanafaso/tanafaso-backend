@@ -107,16 +107,20 @@ public class ChallengeTest extends TestBase {
     azkarApi.makeFriends(user1, user2);
     azkarApi.makeFriends(user1, user3);
 
+    long meaningChallengeExpiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
+    long azkarChallengeExpiryDate = meaningChallengeExpiryDate + EXPIRY_DATE_OFFSET;
+
     // Add one meaning challenge.
     AddMeaningChallengeRequest addMeaningChallengeRequest = AddMeaningChallengeRequest.builder()
         .friendsIds(ImmutableList.of(user2.getId()))
-        .expiryDate(Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET)
+        .expiryDate(meaningChallengeExpiryDate)
         .build();
     MeaningChallenge meaningChallengeResponse =
         azkarApi.addMeaningChallengeAndReturn(user1, addMeaningChallengeRequest);
 
     // Add one azkar challenge.
     AzkarChallenge challenge = ChallengeFactory.getNewChallenge("groupId").toBuilder()
+        .expiryDate(azkarChallengeExpiryDate)
         .groupId(null)
         .build();
     AddAzkarChallengeRequest addAzkarChallengeRequest =
@@ -130,7 +134,6 @@ public class ChallengeTest extends TestBase {
     AddAzkarChallengeResponse addAzkarChallengeResponse =
         JsonHandler.fromJson(result.getResponse().getContentAsString(),
             AddAzkarChallengeResponse.class);
-    AzkarChallenge resultChallenge = addAzkarChallengeResponse.getData();
 
     MvcResult mvcResult = httpClient
         .performGetRequest(user1, "/challenges/v2")

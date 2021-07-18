@@ -5,7 +5,6 @@ import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
 import com.azkar.payload.RequestBodyBase;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.exceptions.BadRequestException;
-import java.time.Instant;
 import java.util.HashSet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,7 +32,7 @@ public class AddChallengeRequest extends RequestBodyBase {
   }
 
   protected void validateExpiryDate() {
-    if (challenge.getExpiryDate() < Instant.now().getEpochSecond()) {
+    if (challenge.expired()) {
       throw new BadRequestException(new Status(Status.PAST_EXPIRY_DATE_ERROR));
     }
   }
