@@ -101,6 +101,46 @@ public class MeaningChallengeTest extends TestBase {
   }
 
   @Test
+  public void addMeaningChallenge_nineWords_shouldSucceed() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
+    User user3 = getNewRegisteredUser();
+
+    azkarApi.makeFriends(user1, user2);
+    azkarApi.makeFriends(user1, user3);
+
+    int meaningChallengesCountBefore = user1.getMeaningChallenges().size();
+
+    AddMeaningChallengeRequest request = AddMeaningChallengeRequest.builder()
+        .friendsIds(ImmutableList.of(user2.getId(), user3.getId()))
+        .expiryDate(Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET)
+        .numberOfWords(9)
+        .build();
+    MvcResult mvcResult = httpClient.performPostRequest(user1, "/challenges/meaning",
+        JsonHandler.toJson(request))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
+
+    AddMeaningChallengeResponse response = JsonHandler
+        .fromJson(mvcResult.getResponse().getContentAsString(), AddMeaningChallengeResponse.class);
+
+    User updatedUser = userRepo.findById(user1.getId()).get();
+    assertThat(updatedUser.getMeaningChallenges().size(), is(meaningChallengesCountBefore + 1));
+    MeaningChallenge resultChallenge =
+        updatedUser.getMeaningChallenges().stream()
+            .filter(meaningChallenge -> meaningChallenge.getId().equals(response.getData().getId()))
+            .findFirst().get();
+
+    assertThat(resultChallenge.getMeanings().size(), is(9));
+    assertThat(resultChallenge.getWords().size(), is(9));
+    for (int i = 0; i < 8; i++) {
+      assertThat(String.format("Words %d and %d must not be the same", i, i + 1),
+          !resultChallenge.getWords().get(i).equals(resultChallenge.getWords().get(i + 1)));
+    }
+  }
+
+  @Test
   public void addMeaningChallenge_withOneUser_shouldSucceed() throws Exception {
     User user1 = getNewRegisteredUser();
     User user2 = getNewRegisteredUser();
@@ -155,6 +195,82 @@ public class MeaningChallengeTest extends TestBase {
     assertThat("The word-meaning pair is not valid",
         isWordMeaningPairValid(user2ResultChallenge, /*pairIdx=*/2));
 
+  }
+
+  @Test
+  public void addMeaningChallenge_invalidNumberOfWords_shouldFail() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
+
+    azkarApi.makeFriends(user1, user2);
+
+    AddMeaningChallengeResponse expectedResponse = new AddMeaningChallengeResponse();
+    expectedResponse.setStatus(new Status(Status.TAFSEER_CHALLENGE_INCORRECT_NUMBER_OF_WORDS_ERROR));
+
+    AddMeaningChallengeRequest request = getMeaningChallengeWithFriendAndNumberOfWords(user2, 2);
+    httpClient.performPostRequest(user1, "/challenges/meaning",
+        JsonHandler.toJson(request))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+
+    request = getMeaningChallengeWithFriendAndNumberOfWords(user2, 1);
+    httpClient.performPostRequest(user1, "/challenges/meaning",
+        JsonHandler.toJson(request))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+
+    request = getMeaningChallengeWithFriendAndNumberOfWords(user2, 10);
+    httpClient.performPostRequest(user1, "/challenges/meaning",
+        JsonHandler.toJson(request))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+
+  }
+
+  @Test
+  public void addMeaningChallenge_validNumberOfWords_shouldSucceed() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
+
+    azkarApi.makeFriends(user1, user2);
+
+    AddMeaningChallengeRequest request = getMeaningChallengeWithFriendAndNumberOfWords(user2, null);
+    httpClient.performPostRequest(user1, "/challenges/meaning",
+        JsonHandler.toJson(request))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+    request = getMeaningChallengeWithFriendAndNumberOfWords(user2, 3);
+    httpClient.performPostRequest(user1, "/challenges/meaning",
+        JsonHandler.toJson(request))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+    request = getMeaningChallengeWithFriendAndNumberOfWords(user2, 5);
+    httpClient.performPostRequest(user1, "/challenges/meaning",
+        JsonHandler.toJson(request))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+    request = getMeaningChallengeWithFriendAndNumberOfWords(user2, 9);
+    httpClient.performPostRequest(user1, "/challenges/meaning",
+        JsonHandler.toJson(request))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+  }
+
+  private AddMeaningChallengeRequest getMeaningChallengeWithFriendAndNumberOfWords(
+      User friend,
+      Integer numberOfWords) {
+    return AddMeaningChallengeRequest.builder()
+        .friendsIds(ImmutableList.of(friend.getId()))
+        .expiryDate(Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET)
+        .numberOfWords(numberOfWords)
+        .build();
   }
 
   @Test
