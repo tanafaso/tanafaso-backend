@@ -1,7 +1,6 @@
 package com.azkar.entities.challenges;
 
 import com.azkar.entities.Zekr;
-import java.time.Instant;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

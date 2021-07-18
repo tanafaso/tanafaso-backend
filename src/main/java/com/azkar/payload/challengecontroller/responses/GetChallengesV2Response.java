@@ -25,7 +25,7 @@ public class GetChallengesV2Response extends ResponseBase<List<Challenge>> {
     MeaningChallenge meaningChallenge;
 
     private boolean unFinishedAndUnExpired() {
-      return azkarChallenge != null ? !azkarChallenge.finished() && !azkarChallenge.expired():
+      return azkarChallenge != null ? !azkarChallenge.finished() && !azkarChallenge.expired() :
           !meaningChallenge.isFinished() && !meaningChallenge.expired();
     }
 
@@ -33,7 +33,7 @@ public class GetChallengesV2Response extends ResponseBase<List<Challenge>> {
     // expiry date.
     @Override public int compareTo(Challenge o) {
       if (unFinishedAndUnExpired() && !o.unFinishedAndUnExpired()) {
-       return -1;
+        return -1;
       }
 
       if (!unFinishedAndUnExpired() && o.unFinishedAndUnExpired()) {
