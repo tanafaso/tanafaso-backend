@@ -35,7 +35,6 @@ import com.azkar.repos.GroupRepo;
 import com.azkar.repos.MeaningChallengeRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
-import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -578,7 +577,8 @@ public class ChallengeController extends BaseController {
         .totalScore(0)
         .build();
 
-    ArrayList<WordMeaningPair> wordMeaningPairs = getWordMeaningPairs();
+    int numberOfWords = request.getNumberOfWords() == null ? 3 : request.getNumberOfWords();
+    ArrayList<WordMeaningPair> wordMeaningPairs = getWordMeaningPairs(numberOfWords);
     MeaningChallenge challenge = MeaningChallenge.builder()
         .id(new ObjectId().toString())
         .creatingUserId(currentUser.getId())
@@ -622,32 +622,32 @@ public class ChallengeController extends BaseController {
   }
 
   private List<String> extractWords(ArrayList<WordMeaningPair> wordMeaningPairs) {
-    return ImmutableList.of(
-        wordMeaningPairs.get(0).getWord(),
-        wordMeaningPairs.get(1).getWord(),
-        wordMeaningPairs.get(2).getWord());
+    return wordMeaningPairs.stream()
+        .map(wordMeaningPair -> wordMeaningPair.getWord())
+        .collect(Collectors.toList());
   }
 
   private List<String> extractMeanings(ArrayList<WordMeaningPair> wordMeaningPairs) {
-    return ImmutableList.of(
-        wordMeaningPairs.get(0).getMeaning(),
-        wordMeaningPairs.get(1).getMeaning(),
-        wordMeaningPairs.get(2).getMeaning());
+    return wordMeaningPairs.stream()
+        .map(wordMeaningPair -> wordMeaningPair.getMeaning())
+        .collect(Collectors.toList());
   }
 
-  private ArrayList<WordMeaningPair> getWordMeaningPairs() {
+  private ArrayList<WordMeaningPair> getWordMeaningPairs(int numberOfWords) {
     Random random = new Random();
-    int randomIndex1 = random.nextInt(tafseerCacher.getWordMeaningPairs().size());
-    int randomIndex2 =
-        (randomIndex1 + RANDOMLY_CHOSEN_WORDS_INDEX_DIFF) % tafseerCacher.getWordMeaningPairs()
-            .size();
-    int randomIndex3 =
-        (randomIndex2 + RANDOMLY_CHOSEN_WORDS_INDEX_DIFF) % tafseerCacher.getWordMeaningPairs()
-            .size();
     ArrayList<WordMeaningPair> wordMeaningPairs = new ArrayList<>();
+    int randomIndex1 = random.nextInt(tafseerCacher.getWordMeaningPairs().size());
     wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex1));
-    wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex2));
-    wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex3));
+
+    int lastRandomIndex = randomIndex1;
+    for (int i = 0; i < numberOfWords - 1; i++) {
+      int randomIndex =
+          (lastRandomIndex + RANDOMLY_CHOSEN_WORDS_INDEX_DIFF) % tafseerCacher.getWordMeaningPairs()
+              .size();
+      wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex));
+
+      lastRandomIndex = randomIndex;
+    }
     return wordMeaningPairs;
   }
 
