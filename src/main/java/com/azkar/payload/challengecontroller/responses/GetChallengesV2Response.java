@@ -24,19 +24,22 @@ public class GetChallengesV2Response extends ResponseBase<List<Challenge>> {
     AzkarChallenge azkarChallenge;
     MeaningChallenge meaningChallenge;
 
-    private boolean unFinishedAndUnExpired() {
+    private boolean pending() {
       return azkarChallenge != null ? !azkarChallenge.finished() && !azkarChallenge.expired() :
           !meaningChallenge.isFinished() && !meaningChallenge.expired();
     }
 
-    // Sorts such that unfinished challenges are first and resolved ties in the descending order of
-    // expiry date.
+    /*
+    - Puts pending challenges at the beginning.
+    - Pending challenges are sorted such that the ones that will expire first show first.
+    - Unpending challenges are sorted in descending order of expiry date.
+     */
     @Override public int compareTo(Challenge o) {
-      if (unFinishedAndUnExpired() && !o.unFinishedAndUnExpired()) {
+      if (pending() && !o.pending()) {
         return -1;
       }
 
-      if (!unFinishedAndUnExpired() && o.unFinishedAndUnExpired()) {
+      if (!pending() && o.pending()) {
         return 1;
       }
 
@@ -44,7 +47,11 @@ public class GetChallengesV2Response extends ResponseBase<List<Challenge>> {
           : meaningChallenge.getExpiryDate();
       long secondExpiryDate = o.azkarChallenge != null ? o.azkarChallenge.getExpiryDate()
           : o.meaningChallenge.getExpiryDate();
-      return Long.compare(firstExpiryDate, secondExpiryDate);
+
+      if (pending()) {
+        return Long.compare(firstExpiryDate, secondExpiryDate);
+      }
+      return -Long.compare(firstExpiryDate, secondExpiryDate);
     }
   }
 }
