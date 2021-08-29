@@ -374,7 +374,31 @@ public class FriendshipTest extends TestBase {
             .fromJson(mvcResult.getResponse().getContentAsString(), GetFriendsResponse.class);
 
     compareFriendshipList(getUser5FriendsResponse.getData().getFriends(), expectedUser5Friends);
+  }
 
+  @Test
+  public void deleteFriend_deleteSabeq_shouldFail() throws Exception {
+    long groupsCountBefore = groupRepo.count();
+    int user1GroupsCountBefore = userRepo.findById(USER1.getId()).get().getUserGroups().size();
+
+    DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
+    expectedResponse.setStatus(new Status(Status.CANNOT_REMOVE_SABEQ__FROM_FRIENDS_ERROR));
+    azkarApi.deleteFriend(USER1, userRepo.findById(User.SABEQ_ID).get())
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+
+    Friendship user1Friendship = friendshipRepo.findByUserId(USER1.getId());
+
+    // Sabeq is still a friend.
+    assertThat(user1Friendship.getFriends().size(), is(1));
+    assertThat("Removing sabeq was expected to fail",
+        user1Friendship.getFriends().stream()
+            .anyMatch(friend -> friend.getUserId().equals(User.SABEQ_ID)));
+
+    assertThat(groupRepo.count(), equalTo(groupsCountBefore));
+    User updatedUser1 = userRepo.findById(USER1.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), equalTo(user1GroupsCountBefore));
   }
 
   @Test

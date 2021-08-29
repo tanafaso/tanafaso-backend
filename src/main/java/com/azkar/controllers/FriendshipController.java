@@ -304,6 +304,11 @@ public class FriendshipController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
+    if (otherUser.get().getId().equals(User.SABEQ_ID)) {
+      response.setStatus(new Status(Status.CANNOT_REMOVE_SABEQ__FROM_FRIENDS_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
     Friendship currentUserFriendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
     Friendship otherUserFriendship = friendshipRepo.findByUserId(otherUserId);
 
@@ -322,7 +327,7 @@ public class FriendshipController extends BaseController {
     currentUserFriendship.getFriends().remove(otherUserAsFriendIndex);
     otherUserFriendship.getFriends().remove(currentUserAsFriendIndex);
 
-    // Remove Group
+    // Remove their binary group
     User currentUser = userRepo.findById(getCurrentUser().getUserId()).get();
     currentUser.getUserGroups().removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
     otherUser.get().getUserGroups().removeIf(userGroup -> userGroup.getGroupId().equals(groupId));

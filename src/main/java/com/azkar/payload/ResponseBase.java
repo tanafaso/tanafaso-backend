@@ -70,6 +70,7 @@ public abstract class ResponseBase<T> {
     public static final int DUPLICATE_FRIEND_IDS_PROVIDED_ERROR = 50;
     public static final int CHALLENGE_HAS_ALREADY_BEEN_FINISHED = 51;
     public static final int TAFSEER_CHALLENGE_INCORRECT_NUMBER_OF_WORDS_ERROR = 52;
+    public static final int CANNOT_REMOVE_SABEQ__FROM_FRIENDS_ERROR = 53;
 
     public int code;
 

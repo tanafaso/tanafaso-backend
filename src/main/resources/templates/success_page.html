@@ -1,8 +1,8 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ar" class="h-100">
+<html class="h-100" lang="ar" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
   <title>Tanafaso</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300&display=swap"
         rel="stylesheet">
@@ -43,17 +43,21 @@
          .text-center{
          text-align:center
          }
-      </style>
+
+  </style>
 </head>
 <body class="text-center">
 <main class="body-style">
-  <svg id="Layer_1" width="144" height="114" style="enable-background:new 0 0 612 792;" version="1.1"
-       viewBox="0 0 612 792" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <svg height="114" id="Layer_1" style="enable-background:new 0 0 612 792;" version="1.1"
+       viewBox="0 0 612 792"
+       width="144" xml:space="preserve" xmlns="http://www.w3.org/2000/svg"
+  >
             <style type="text/css">
                .st0{fill:#41AD49;}
             </style>
     <g>
-               <path class="st0" d="M562,396c0-141.4-114.6-256-256-256S50,254.6,50,396s114.6,256,256,256S562,537.4,562,396L562,396z    M501.7,296.3l-241,241l0,0l-17.2,17.2L110.3,421.3l58.8-58.8l74.5,74.5l199.4-199.4L501.7,296.3L501.7,296.3z"/>
+               <path class="st0"
+                     d="M562,396c0-141.4-114.6-256-256-256S50,254.6,50,396s114.6,256,256,256S562,537.4,562,396L562,396z    M501.7,296.3l-241,241l0,0l-17.2,17.2L110.3,421.3l58.8-58.8l74.5,74.5l199.4-199.4L501.7,296.3L501.7,296.3z"/>
             </g>
          </svg>
   <h2 th:text="${successMessage}"></h2>
