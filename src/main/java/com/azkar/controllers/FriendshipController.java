@@ -327,14 +327,8 @@ public class FriendshipController extends BaseController {
     currentUserFriendship.getFriends().remove(otherUserAsFriendIndex);
     otherUserFriendship.getFriends().remove(currentUserAsFriendIndex);
 
-    // Remove their binary group
-    User currentUser = userRepo.findById(getCurrentUser().getUserId()).get();
-    currentUser.getUserGroups().removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
-    otherUser.get().getUserGroups().removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
-    groupRepo.deleteById(groupId);
+    // Don't remove their binary group so as we don't need to remove their previous challenges too.
 
-    userRepo.save(currentUser);
-    userRepo.save(otherUser.get());
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);
     return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);

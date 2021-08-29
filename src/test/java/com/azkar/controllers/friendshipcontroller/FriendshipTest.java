@@ -403,15 +403,12 @@ public class FriendshipTest extends TestBase {
 
   @Test
   public void deleteFriend_normalScenario_shouldSucceed() throws Exception {
-    long groupsCountBefore = groupRepo.count();
-    int user1GroupsCountBefore = userRepo.findById(USER1.getId()).get().getUserGroups().size();
-    int user2GroupsCountBefore = userRepo.findById(USER2.getId()).get().getUserGroups().size();
     azkarApi.makeFriends(USER1, USER2);
-    assertThat(groupRepo.count(), equalTo(groupsCountBefore + 1));
-    User updatedUser1 = userRepo.findById(USER1.getId()).get();
-    User updatedUser2 = userRepo.findById(USER2.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsCountBefore + 1));
-    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsCountBefore + 1));
+    long groupsCountAfterFriendship = groupRepo.count();
+    int user1GroupsCountAfterFriendship =
+        userRepo.findById(USER1.getId()).get().getUserGroups().size();
+    int user2GroupsCountAfterFriendship =
+        userRepo.findById(USER2.getId()).get().getUserGroups().size();
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     azkarApi.deleteFriend(USER1, USER2)
@@ -426,11 +423,11 @@ public class FriendshipTest extends TestBase {
     assertThat(user1Friendship.getFriends().size(), is(1));
     assertThat(user2Friendship.getFriends().size(), is(1));
 
-    assertThat(groupRepo.count(), equalTo(groupsCountBefore));
-    updatedUser1 = userRepo.findById(USER1.getId()).get();
-    updatedUser2 = userRepo.findById(USER2.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), equalTo(user1GroupsCountBefore));
-    assertThat(updatedUser2.getUserGroups().size(), equalTo(user2GroupsCountBefore));
+    assertThat(groupRepo.count(), equalTo(groupsCountAfterFriendship));
+    User updatedUser1 = userRepo.findById(USER1.getId()).get();
+    User updatedUser2 = userRepo.findById(USER2.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), equalTo(user1GroupsCountAfterFriendship));
+    assertThat(updatedUser2.getUserGroups().size(), equalTo(user2GroupsCountAfterFriendship));
   }
 
   @Test
