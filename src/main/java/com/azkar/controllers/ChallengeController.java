@@ -23,7 +23,7 @@ import com.azkar.payload.challengecontroller.responses.FinishMeaningChallengeRes
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
-import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.Challenge;
+import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
 import com.azkar.payload.challengecontroller.responses.GetMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
@@ -35,6 +35,7 @@ import com.azkar.repos.GroupRepo;
 import com.azkar.repos.MeaningChallengeRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
+import com.azkar.services.ReturnedChallengeComparator;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -84,6 +85,8 @@ public class ChallengeController extends BaseController {
   FriendshipRepo friendshipRepo;
   @Autowired
   TafseerCacher tafseerCacher;
+  @Autowired
+  ReturnedChallengeComparator returnedChallengeComparator;
 
   // Note: This function may modify oldSubChallenges.
   private static Optional<ResponseEntity<UpdateChallengeResponse>> updateOldSubChallenges(
@@ -689,23 +692,26 @@ public class ChallengeController extends BaseController {
     if (apiVersion != null) {
       logger.info("API version requested is " + apiVersion);
     }
-    List<AzkarChallenge> userAzkarChallenges = getCurrentUser(userRepo).getAzkarChallenges();
-    List<MeaningChallenge> userMeaningChallenges = getCurrentUser(userRepo).getMeaningChallenges();
-    // Get the most recent ones.
-    Collections.reverse(userAzkarChallenges);
-    Collections.reverse(userMeaningChallenges);
+    List<AzkarChallenge> allUserAzkarChallenges = getCurrentUser(userRepo).getAzkarChallenges();
+    List<MeaningChallenge> allUserMeaningChallenges =
+        getCurrentUser(userRepo).getMeaningChallenges();
 
-    List<Challenge> challenges = new ArrayList<>();
-    for (int i = 0; i < Math.min(MAX_RETURNED_CHALLENGES / 2, userAzkarChallenges.size()); i++) {
-      Challenge challenge = Challenge.builder().azkarChallenge(userAzkarChallenges.get(i)).build();
-      challenges.add(challenge);
-    }
-    for (int i = 0; i < Math.min(MAX_RETURNED_CHALLENGES / 2, userMeaningChallenges.size()); i++) {
-      Challenge challenge =
-          Challenge.builder().meaningChallenge(userMeaningChallenges.get(i)).build();
-      challenges.add(challenge);
-    }
-    Collections.sort(challenges);
+    List<AzkarChallenge> recentUserAzkarChallenges =
+        allUserAzkarChallenges.subList(Math.max(0, allUserAzkarChallenges.size() - 30),
+            allUserAzkarChallenges.size());
+    List<MeaningChallenge> recentUserMeaningChallenges =
+        getCurrentUser(userRepo).getMeaningChallenges()
+            .subList(Math.max(0, allUserMeaningChallenges.size() - 30),
+                allUserMeaningChallenges.size());
+
+    List<ReturnedChallenge> challenges = new ArrayList<>();
+    recentUserAzkarChallenges.forEach(azkarChallenge -> {
+      challenges.add(ReturnedChallenge.builder().azkarChallenge(azkarChallenge).build());
+    });
+    recentUserMeaningChallenges.forEach(meaningChallenge ->
+        challenges.add(ReturnedChallenge.builder().meaningChallenge(meaningChallenge).build()));
+
+    challenges.sort(returnedChallengeComparator);
 
     GetChallengesV2Response response = new GetChallengesV2Response();
     response.setData(challenges);

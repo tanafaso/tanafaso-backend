@@ -111,6 +111,12 @@ public class AzkarApi {
         JsonHandler.toJson(request));
   }
 
+  public ResultActions finishMeaningChallenge(User user, String meaningChallengeId)
+      throws Exception {
+    return httpClient.performPutRequest(user, String.format("/challenges/finish/meaning/%s",
+        meaningChallengeId));
+  }
+
   public ResultActions addFriendsChallenge(User user, AddAzkarChallengeRequest request)
       throws Exception {
     return httpClient.performPostRequest(user, "/challenges/friends", JsonHandler.toJson(request));
