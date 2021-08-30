@@ -143,13 +143,30 @@ public class ChallengeTest extends TestBase {
         .fromJson(mvcResult.getResponse().getContentAsString(), GetChallengesV2Response.class);
     assertThat(response.getData().size(), is(2));
 
-    assertThat(response.getData().get(0).getAzkarChallenge(), is(nullValue()));
-    assertThat(response.getData().get(1).getMeaningChallenge(), is(nullValue()));
+    assertThat(response.getData().get(0).getMeaningChallenge(), is(nullValue()));
+    assertThat(response.getData().get(1).getAzkarChallenge(), is(nullValue()));
 
-    assertThat(response.getData().get(0).getMeaningChallenge().getId(),
+    // Recently modified first.
+    assertThat(response.getData().get(0).getAzkarChallenge().getId(),
+        is(addAzkarChallengeResponse.getData().getId()));
+    assertThat(response.getData().get(1).getMeaningChallenge().getId(),
         is(meaningChallengeResponse.getId()));
+
+    azkarApi.finishMeaningChallenge(user1, meaningChallengeResponse.getId());
+
+    mvcResult = httpClient
+        .performGetRequest(user1, "/challenges/v2")
+        .andExpect(status().isOk())
+        .andReturn();
+    response = JsonHandler
+        .fromJson(mvcResult.getResponse().getContentAsString(), GetChallengesV2Response.class);
+
+    // Recently modified first.
     assertThat(response.getData().get(1).getAzkarChallenge().getId(),
         is(addAzkarChallengeResponse.getData().getId()));
+    assertThat(response.getData().get(0).getMeaningChallenge().getId(),
+        is(meaningChallengeResponse.getId()));
+
   }
 
   private AzkarChallenge createGroupChallenge(User user, Group group)

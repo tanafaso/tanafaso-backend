@@ -91,6 +91,13 @@ public class HttpClient {
     return mockMvc.perform(requestBuilder);
   }
 
+  public ResultActions performPutRequest(User user, String path) throws Exception {
+    MockHttpServletRequestBuilder requestBuilder = put(path);
+    addAuthenticationToken(requestBuilder, user);
+    addRequestBody(requestBuilder, /*body=*/null);
+    return mockMvc.perform(requestBuilder);
+  }
+
   public ResultActions performDeleteRequest(User user, String path) throws Exception {
     MockHttpServletRequestBuilder requestBuilder = delete(path);
     addAuthenticationToken(requestBuilder, user);
