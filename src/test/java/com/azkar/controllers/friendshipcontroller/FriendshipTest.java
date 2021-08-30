@@ -412,7 +412,7 @@ public class FriendshipTest extends TestBase {
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     azkarApi.deleteFriend(USER1, USER2)
-        .andExpect(status().isNoContent())
+        .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 

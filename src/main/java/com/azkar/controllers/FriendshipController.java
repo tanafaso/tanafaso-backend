@@ -322,8 +322,6 @@ public class FriendshipController extends BaseController {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    String groupId = currentUserFriendship.getFriends().get(otherUserAsFriendIndex).getGroupId();
-
     currentUserFriendship.getFriends().remove(otherUserAsFriendIndex);
     otherUserFriendship.getFriends().remove(currentUserAsFriendIndex);
 
@@ -331,7 +329,7 @@ public class FriendshipController extends BaseController {
 
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);
-    return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+    return ResponseEntity.ok(response);
   }
 
   private int findFriendIndexInList(String userId, List<Friend> friends) {
