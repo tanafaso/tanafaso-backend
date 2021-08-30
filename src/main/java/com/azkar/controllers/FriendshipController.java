@@ -304,6 +304,11 @@ public class FriendshipController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
+    if (otherUser.get().getId().equals(User.SABEQ_ID)) {
+      response.setStatus(new Status(Status.CANNOT_REMOVE_SABEQ__FROM_FRIENDS_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
     Friendship currentUserFriendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
     Friendship otherUserFriendship = friendshipRepo.findByUserId(otherUserId);
 
@@ -317,22 +322,14 @@ public class FriendshipController extends BaseController {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    String groupId = currentUserFriendship.getFriends().get(otherUserAsFriendIndex).getGroupId();
-
     currentUserFriendship.getFriends().remove(otherUserAsFriendIndex);
     otherUserFriendship.getFriends().remove(currentUserAsFriendIndex);
 
-    // Remove Group
-    User currentUser = userRepo.findById(getCurrentUser().getUserId()).get();
-    currentUser.getUserGroups().removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
-    otherUser.get().getUserGroups().removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
-    groupRepo.deleteById(groupId);
+    // Don't remove their binary group so as we don't need to remove their previous challenges too.
 
-    userRepo.save(currentUser);
-    userRepo.save(otherUser.get());
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);
-    return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+    return ResponseEntity.ok(response);
   }
 
   private int findFriendIndexInList(String userId, List<Friend> friends) {

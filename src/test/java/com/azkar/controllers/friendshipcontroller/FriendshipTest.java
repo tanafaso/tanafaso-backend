@@ -374,24 +374,45 @@ public class FriendshipTest extends TestBase {
             .fromJson(mvcResult.getResponse().getContentAsString(), GetFriendsResponse.class);
 
     compareFriendshipList(getUser5FriendsResponse.getData().getFriends(), expectedUser5Friends);
+  }
 
+  @Test
+  public void deleteFriend_deleteSabeq_shouldFail() throws Exception {
+    long groupsCountBefore = groupRepo.count();
+    int user1GroupsCountBefore = userRepo.findById(USER1.getId()).get().getUserGroups().size();
+
+    DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
+    expectedResponse.setStatus(new Status(Status.CANNOT_REMOVE_SABEQ__FROM_FRIENDS_ERROR));
+    azkarApi.deleteFriend(USER1, userRepo.findById(User.SABEQ_ID).get())
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+
+    Friendship user1Friendship = friendshipRepo.findByUserId(USER1.getId());
+
+    // Sabeq is still a friend.
+    assertThat(user1Friendship.getFriends().size(), is(1));
+    assertThat("Removing sabeq was expected to fail",
+        user1Friendship.getFriends().stream()
+            .anyMatch(friend -> friend.getUserId().equals(User.SABEQ_ID)));
+
+    assertThat(groupRepo.count(), equalTo(groupsCountBefore));
+    User updatedUser1 = userRepo.findById(USER1.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), equalTo(user1GroupsCountBefore));
   }
 
   @Test
   public void deleteFriend_normalScenario_shouldSucceed() throws Exception {
-    long groupsCountBefore = groupRepo.count();
-    int user1GroupsCountBefore = userRepo.findById(USER1.getId()).get().getUserGroups().size();
-    int user2GroupsCountBefore = userRepo.findById(USER2.getId()).get().getUserGroups().size();
     azkarApi.makeFriends(USER1, USER2);
-    assertThat(groupRepo.count(), equalTo(groupsCountBefore + 1));
-    User updatedUser1 = userRepo.findById(USER1.getId()).get();
-    User updatedUser2 = userRepo.findById(USER2.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsCountBefore + 1));
-    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsCountBefore + 1));
+    long groupsCountAfterFriendship = groupRepo.count();
+    int user1GroupsCountAfterFriendship =
+        userRepo.findById(USER1.getId()).get().getUserGroups().size();
+    int user2GroupsCountAfterFriendship =
+        userRepo.findById(USER2.getId()).get().getUserGroups().size();
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     azkarApi.deleteFriend(USER1, USER2)
-        .andExpect(status().isNoContent())
+        .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -402,11 +423,11 @@ public class FriendshipTest extends TestBase {
     assertThat(user1Friendship.getFriends().size(), is(1));
     assertThat(user2Friendship.getFriends().size(), is(1));
 
-    assertThat(groupRepo.count(), equalTo(groupsCountBefore));
-    updatedUser1 = userRepo.findById(USER1.getId()).get();
-    updatedUser2 = userRepo.findById(USER2.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), equalTo(user1GroupsCountBefore));
-    assertThat(updatedUser2.getUserGroups().size(), equalTo(user2GroupsCountBefore));
+    assertThat(groupRepo.count(), equalTo(groupsCountAfterFriendship));
+    User updatedUser1 = userRepo.findById(USER1.getId()).get();
+    User updatedUser2 = userRepo.findById(USER2.getId()).get();
+    assertThat(updatedUser1.getUserGroups().size(), equalTo(user1GroupsCountAfterFriendship));
+    assertThat(updatedUser2.getUserGroups().size(), equalTo(user2GroupsCountAfterFriendship));
   }
 
   @Test
