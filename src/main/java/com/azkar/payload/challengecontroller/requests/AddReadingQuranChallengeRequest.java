@@ -1,7 +1,6 @@
 package com.azkar.payload.challengecontroller.requests;
 
 import com.azkar.entities.challenges.ReadingQuranChallenge;
-import com.azkar.entities.challenges.ReadingQuranChallenge.SurahSubChallenge;
 import com.azkar.payload.RequestBodyBase;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.exceptions.BadRequestException;

@@ -24,6 +24,7 @@ import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddReadingQuranChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
@@ -32,6 +33,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 public class ReadingQuranChallengeTest extends TestBase {
@@ -127,7 +129,8 @@ public class ReadingQuranChallengeTest extends TestBase {
         equalTo(user1AddedGroup.getGroupId()));
 
     assertThat(
-        updatedUser1.getReadingQuranChallenges().get(0).getSurahSubChallenges().get(0).getSurahName(),
+        updatedUser1.getReadingQuranChallenges().get(0).getSurahSubChallenges().get(0)
+            .getSurahName(),
         equalTo(expectedFirstSurahSubChallenge.getSurahName()));
 
     Group updatedGroup = groupRepo.findById(user1AddedGroup.getGroupId()).get();
@@ -180,14 +183,10 @@ public class ReadingQuranChallengeTest extends TestBase {
   }
 
   @Test
-  public void addReadingQuranChallenge_oneFriendProvided_shouldFail() throws Exception {
+  public void addReadingQuranChallenge_oneFriendProvided_shouldSucceed() throws Exception {
     User user2 = getNewRegisteredUser();
 
     azkarApi.makeFriends(user1, user2);
-
-    int user1GroupsNumBefore = userRepo.findById(user1.getId()).get().getUserGroups().size();
-    int user2GroupsNumBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
-    long groupsNumBefore = groupRepo.count();
 
     List<String> friendsIds = ImmutableList.of(user2.getId());
     ReadingQuranChallenge challenge =
@@ -203,18 +202,7 @@ public class ReadingQuranChallengeTest extends TestBase {
     AddReadingQuranChallengeResponse expectedResponse = new AddReadingQuranChallengeResponse();
     expectedResponse.setStatus(new Status(Status.LESS_THAN_TWO_FRIENDS_ARE_PROVIDED_ERROR));
     azkarApi.addReadingQuranChallenge(user1, request)
-        .andExpect(status().isBadRequest())
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-
-    assertThat(groupRepo.count(), is(groupsNumBefore));
-
-    User updatedUser1 = userRepo.findById(user1.getId()).get();
-    User updatedUser2 = userRepo.findById(user2.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore));
-    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
-
-    assertThat(updatedUser1.getReadingQuranChallenges().size(), is(0));
-    assertThat(updatedUser2.getReadingQuranChallenges().size(), is(0));
+        .andExpect(status().isOk());
   }
 
   @Test
@@ -318,5 +306,37 @@ public class ReadingQuranChallengeTest extends TestBase {
     azkarApi.addReadingQuranChallenge(user1, request)
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+  }
+
+  @Test
+  public void deleteChallenge_normalScenario_shouldSucceed() throws Exception {
+    User user2 = getNewRegisteredUser();
+
+    azkarApi.makeFriends(user1, user2);
+
+    ReadingQuranChallenge challenge =
+        ChallengeFactory.getNewReadingChallenge("groupId").toBuilder()
+            .groupId(null)
+            .build();
+
+    AddReadingQuranChallengeRequest request =
+        AddReadingQuranChallengeRequest.AddReadingQuranChallengeRequestBuilder().
+            friendsIds(ImmutableList.of(user2.getId()))
+            .challenge(challenge)
+            .build();
+    ReadingQuranChallenge returnedChallenge = azkarApi.addReadingQuranChallengeAndReturn(user1,
+        request);
+
+    List<ReadingQuranChallenge> userChallenges =
+        userRepo.findById(user1.getId()).get().getReadingQuranChallenges();
+    assertThat(userChallenges.size(), is(1));
+
+    azkarApi.deleteChallenge(user1, returnedChallenge.getId())
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json(JsonHandler.toJson(new DeleteChallengeResponse())));
+
+    userChallenges = userRepo.findById(user1.getId()).get().getReadingQuranChallenges();
+    assertThat(userChallenges.size(), is(0));
   }
 }

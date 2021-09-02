@@ -323,11 +323,15 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  /*
+  Can be used for all types of challenges.
+   */
   @DeleteMapping("{challengeId}")
   public ResponseEntity<DeleteChallengeResponse> deleteChallenge(
       @PathVariable(value = "challengeId") String challengeId) {
     DeleteChallengeResponse response = new DeleteChallengeResponse();
     User user = getCurrentUser(userRepo);
+
     Optional<AzkarChallenge> azkarChallenge = user.getAzkarChallenges()
         .stream()
         .filter(
@@ -335,23 +339,38 @@ public class ChallengeController extends BaseController {
                 .equals(
                     challengeId))
         .findFirst();
+
     Optional<MeaningChallenge> meaningChallenge = user.getMeaningChallenges()
+        .stream(
+
+        )
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
+
+    Optional<ReadingQuranChallenge> readingQuranChallenge = user.getReadingQuranChallenges()
         .stream()
         .filter(
             challenge -> challenge.getId()
                 .equals(
                     challengeId))
         .findFirst();
-    if (!azkarChallenge.isPresent() && !meaningChallenge.isPresent()) {
+    if (!azkarChallenge.isPresent() && !meaningChallenge.isPresent() && !readingQuranChallenge
+        .isPresent()) {
       response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     if (azkarChallenge.isPresent()) {
       user.getAzkarChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
       response.setData(azkarChallenge.get());
-    } else {
+    } else if (meaningChallenge.isPresent()) {
       user.getMeaningChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
       response.setData(meaningChallenge.get());
+    } else {
+      user.getReadingQuranChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+      response.setData(readingQuranChallenge.get());
     }
     userRepo.save(user);
     return ResponseEntity.ok(response);
@@ -645,12 +664,6 @@ public class ChallengeController extends BaseController {
     }
 
     User currentUser = getCurrentUser(userRepo);
-
-    if (request.getFriendsIds().size() < 2) {
-      response.setStatus(new Status(Status.LESS_THAN_TWO_FRIENDS_ARE_PROVIDED_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
-
     HashSet<String> friendsIds = getUserFriends(currentUser);
     boolean allValidFriends =
         request.getFriendsIds().stream().allMatch(id -> friendsIds.contains(id));
