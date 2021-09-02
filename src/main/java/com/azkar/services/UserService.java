@@ -122,7 +122,7 @@ public class UserService {
       String randomUsernameSuffix;
       if (nameCanBePrefix) {
         usernamePrefix = firstName + "-" + lastName + "-";
-        randomUsernameSuffix = generateRandomString(4);
+        randomUsernameSuffix = generateRandomString(5);
       } else {
         randomUsernameSuffix = generateRandomString(8);
       }
