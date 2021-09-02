@@ -78,7 +78,7 @@ public class UserServiceTest extends TestBase {
     String lastName = "Example Last Name";
 
     for (int i = 0; i < 1000; i++) {
-      userService.addNewUser(userService.buildNewUser(email + "i", firstName, lastName));
+      userService.addNewUser(userService.buildNewUser(email + i, firstName, lastName));
     }
 
     assertThat(userRepo.count(), is(usersCountBefore + 1000));
@@ -86,7 +86,7 @@ public class UserServiceTest extends TestBase {
     HashSet<String> usernames = new HashSet<>();
     for (User user : users) {
       assertThat("Usernames are unique", !usernames.contains(user.getUsername()));
-      assertThat("usernames shouldn't be null", !user.getUsername().equals(nullValue()));
+      assertThat("Usernames shouldn't be null", !user.getUsername().equals(nullValue()));
       assertThatUsernameIsValid(user.getUsername());
 
       usernames.add(user.getUsername());
