@@ -820,9 +820,15 @@ public class ChallengeController extends BaseController {
     });
     recentUserMeaningChallenges.forEach(meaningChallenge ->
         challenges.add(ReturnedChallenge.builder().meaningChallenge(meaningChallenge).build()));
-    recentReadingQuranChallenges.forEach(readingQuranChallenge ->
-        challenges
-            .add(ReturnedChallenge.builder().readingQuranChallenge(readingQuranChallenge).build()));
+
+    if (apiVersion != null
+        && VersionComparator.compare(apiVersion, FeaturesVersions.READING_QURAN_CHALLENGE_VERSION)
+        >= 0) {
+      recentReadingQuranChallenges.forEach(readingQuranChallenge ->
+          challenges
+              .add(ReturnedChallenge.builder().readingQuranChallenge(readingQuranChallenge)
+                  .build()));
+    }
 
     challenges.sort(returnedChallengeComparator);
 
