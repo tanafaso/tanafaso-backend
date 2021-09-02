@@ -2,10 +2,12 @@ package com.azkar.services;
 
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
+import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
 import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.MeaningChallengeRepo;
+import com.azkar.repos.ReadingQuranChallengeRepo;
 import java.util.Comparator;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -23,6 +25,9 @@ public class ReturnedChallengeComparator implements Comparator<ReturnedChallenge
 
   @Autowired
   MeaningChallengeRepo meaningChallengeRepo;
+
+  @Autowired
+  ReadingQuranChallengeRepo readingQuranChallengeRepo;
 
   @Override public int compare(ReturnedChallenge o1, ReturnedChallenge o2) {
     return Long.compare(getModifiedDateFromDbForChallenge(o2),
@@ -49,6 +54,15 @@ public class ReturnedChallengeComparator implements Comparator<ReturnedChallenge
         return 0;
       }
       return meaningChallengeFromDb.get().getModifiedAt();
+    } else if (o.getReadingQuranChallenge() != null) {
+      Optional<ReadingQuranChallenge> readingQuranChallengeFromDb =
+          readingQuranChallengeRepo.findById(o.getReadingQuranChallenge().getId());
+      if (!readingQuranChallengeFromDb.isPresent()) {
+        logger.error("Could not find meaning challenge with ID {} in DB",
+            o.getReadingQuranChallenge().getId());
+        return 0;
+      }
+      return readingQuranChallengeFromDb.get().getModifiedAt();
     } else {
       logger
           .error("Could not find neither an azkar challenge nor a meaning challenge.");

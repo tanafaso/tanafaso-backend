@@ -2,6 +2,7 @@ package com.azkar.payload.challengecontroller.responses;
 
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
+import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.payload.ResponseBase;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
 import java.util.List;
@@ -23,5 +24,6 @@ public class GetChallengesV2Response extends ResponseBase<List<ReturnedChallenge
 
     AzkarChallenge azkarChallenge;
     MeaningChallenge meaningChallenge;
+    ReadingQuranChallenge readingQuranChallenge;
   }
 }

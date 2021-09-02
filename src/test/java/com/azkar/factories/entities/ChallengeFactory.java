@@ -3,8 +3,10 @@ package com.azkar.factories.entities;
 import com.azkar.entities.Zekr;
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
+import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
+import org.bson.types.ObjectId;
 
 public class ChallengeFactory {
 
@@ -13,17 +15,33 @@ public class ChallengeFactory {
   public final static long EXPIRY_DATE_OFFSET = 60 * 60;
   private static int challengesRequested = 0;
 
-  public static SubChallenge subChallenge1() {
+  public static SubChallenge azkarSubChallenge1() {
     return SubChallenge.builder()
         .zekr(Zekr.builder().id(1).zekr("zekr").build())
         .repetitions(3)
         .build();
   }
 
-  public static SubChallenge subChallenge2() {
+  public static SubChallenge azkarSubChallenge2() {
     return SubChallenge.builder()
         .zekr(Zekr.builder().id(2).zekr("zekr2").build())
         .repetitions(5)
+        .build();
+  }
+
+  public static ReadingQuranChallenge.SubChallenge quranSubChallenge1() {
+    return ReadingQuranChallenge.SubChallenge.builder()
+        .surahName("name1")
+        .startingVerseNumber(1)
+        .endingVerseNumber(3)
+        .build();
+  }
+
+  public static ReadingQuranChallenge.SubChallenge quranSubChallenge2() {
+    return ReadingQuranChallenge.SubChallenge.builder()
+        .surahName("name2")
+        .startingVerseNumber(3)
+        .endingVerseNumber(5)
         .build();
   }
 
@@ -39,7 +57,17 @@ public class ChallengeFactory {
         .name(challengeFullName)
         .motivation(CHALLENGE_MOTIVATION)
         .expiryDate(expiryDate)
-        .subChallenges(ImmutableList.of(subChallenge1(), subChallenge2()))
+        .subChallenges(ImmutableList.of(azkarSubChallenge1(), azkarSubChallenge2()))
+        .groupId(groupId)
+        .build();
+  }
+
+  public static ReadingQuranChallenge getNewReadingChallenge(String groupId) {
+    long expiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
+    return ReadingQuranChallenge.builder()
+        .id(new ObjectId().toString())
+        .expiryDate(expiryDate)
+        .subChallenges(ImmutableList.of(quranSubChallenge1(), quranSubChallenge2()))
         .groupId(groupId)
         .build();
   }

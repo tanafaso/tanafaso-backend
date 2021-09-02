@@ -9,6 +9,7 @@ import com.azkar.payload.challengecontroller.requests.AddAzkarChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.AddReadingQuranChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
@@ -95,6 +96,12 @@ public class AzkarApi {
         JsonHandler.toJson(new AddChallengeRequest(challenge)));
   }
 
+  public ResultActions addReadingQuranChallenge(User user,
+      AddReadingQuranChallengeRequest request) throws Exception {
+    return httpClient.performPostRequest(user, "/challenges/reading_quran",
+        JsonHandler.toJson(request));
+  }
+
   public MeaningChallenge addMeaningChallengeAndReturn(User user,
       AddMeaningChallengeRequest request)
       throws Exception {
@@ -115,6 +122,12 @@ public class AzkarApi {
       throws Exception {
     return httpClient.performPutRequest(user, String.format("/challenges/finish/meaning/%s",
         meaningChallengeId));
+  }
+
+  public ResultActions finishReadingQuranChallenge(User user, String readingQuranChallengeId)
+      throws Exception {
+    return httpClient.performPutRequest(user, String.format("/challenges/finish/reading_quran/%s",
+        readingQuranChallengeId));
   }
 
   public ResultActions addFriendsChallenge(User user, AddAzkarChallengeRequest request)

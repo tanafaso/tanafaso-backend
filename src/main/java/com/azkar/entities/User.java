@@ -2,6 +2,7 @@ package com.azkar.entities;
 
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
+import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +61,8 @@ public class User extends EntityBase {
   private List<AzkarChallenge> azkarChallenges = new ArrayList();
   @Default
   private List<MeaningChallenge> meaningChallenges = new ArrayList();
+  @Default
+  private List<ReadingQuranChallenge> readingQuranChallenges = new ArrayList();
   @JsonIgnore
   @Default
   private String resetPasswordToken = "";

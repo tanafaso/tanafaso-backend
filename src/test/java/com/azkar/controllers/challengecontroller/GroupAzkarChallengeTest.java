@@ -399,7 +399,7 @@ public class GroupAzkarChallengeTest extends TestBase {
         .name(ChallengeFactory.CHALLENGE_NAME_BASE)
         .expiryDate(expiryDate)
         .subChallenges(
-            ImmutableList.of(ChallengeFactory.subChallenge1()))
+            ImmutableList.of(ChallengeFactory.azkarSubChallenge1()))
         .groupId(validGroup.getId())
         .build();
     AddAzkarChallengeResponse expectedResponse = new AddAzkarChallengeResponse();
@@ -424,7 +424,7 @@ public class GroupAzkarChallengeTest extends TestBase {
         .motivation(ChallengeFactory.CHALLENGE_MOTIVATION)
         .expiryDate(pastExpiryDate)
         .subChallenges(
-            ImmutableList.of(ChallengeFactory.subChallenge1()))
+            ImmutableList.of(ChallengeFactory.azkarSubChallenge1()))
         .groupId(validGroup.getId())
         .build();
     AddAzkarChallengeResponse expectedResponse = new AddAzkarChallengeResponse();
