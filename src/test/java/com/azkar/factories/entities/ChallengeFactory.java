@@ -4,6 +4,7 @@ import com.azkar.entities.Zekr;
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
+import com.azkar.entities.challenges.ReadingQuranChallenge.SurahSubChallenge;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import org.bson.types.ObjectId;
@@ -29,16 +30,16 @@ public class ChallengeFactory {
         .build();
   }
 
-  public static ReadingQuranChallenge.SubChallenge quranSubChallenge1() {
-    return ReadingQuranChallenge.SubChallenge.builder()
+  public static SurahSubChallenge quranSubChallenge1() {
+    return SurahSubChallenge.builder()
         .surahName("name1")
         .startingVerseNumber(1)
         .endingVerseNumber(3)
         .build();
   }
 
-  public static ReadingQuranChallenge.SubChallenge quranSubChallenge2() {
-    return ReadingQuranChallenge.SubChallenge.builder()
+  public static SurahSubChallenge quranSubChallenge2() {
+    return SurahSubChallenge.builder()
         .surahName("name2")
         .startingVerseNumber(3)
         .endingVerseNumber(5)
@@ -67,7 +68,7 @@ public class ChallengeFactory {
     return ReadingQuranChallenge.builder()
         .id(new ObjectId().toString())
         .expiryDate(expiryDate)
-        .subChallenges(ImmutableList.of(quranSubChallenge1(), quranSubChallenge2()))
+        .surahSubChallenges(ImmutableList.of(quranSubChallenge1(), quranSubChallenge2()))
         .groupId(groupId)
         .build();
   }

@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class ReadingQuranChallenge extends ChallengeBase {
 
   @NotNull
-  private List<SubChallenge> subChallenges;
+  private List<SurahSubChallenge> surahSubChallenges;
   private boolean finished = false;
 
   @Getter
@@ -27,7 +27,7 @@ public class ReadingQuranChallenge extends ChallengeBase {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder(toBuilder = true)
-  public static class SubChallenge {
+  public static class SurahSubChallenge {
 
     private String surahName;
     private int startingVerseNumber;

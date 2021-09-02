@@ -17,7 +17,7 @@ import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
-import com.azkar.entities.challenges.ReadingQuranChallenge.SubChallenge;
+import com.azkar.entities.challenges.ReadingQuranChallenge.SurahSubChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
@@ -86,15 +86,15 @@ public class ReadingQuranChallengeTest extends TestBase {
     assertThat(groupRepo.count(), is(groupsNumBefore + 1));
 
     assertThat(resultChallenge.getGroupId(), notNullValue());
-    assertThat(resultChallenge.getSubChallenges().size(), greaterThan(0));
-    SubChallenge resultFirstSubChallenge = resultChallenge.getSubChallenges().get(0);
-    SubChallenge expectedFirstSubChallenge = challenge.getSubChallenges().get(0);
-    assertThat(resultFirstSubChallenge.getSurahName(),
-        equalTo(expectedFirstSubChallenge.getSurahName()));
-    assertThat(resultFirstSubChallenge.getStartingVerseNumber(),
-        equalTo(expectedFirstSubChallenge.getStartingVerseNumber()));
-    assertThat(resultFirstSubChallenge.getEndingVerseNumber(),
-        equalTo(expectedFirstSubChallenge.getEndingVerseNumber()));
+    assertThat(resultChallenge.getSurahSubChallenges().size(), greaterThan(0));
+    SurahSubChallenge resultFirstSurahSubChallenge = resultChallenge.getSurahSubChallenges().get(0);
+    SurahSubChallenge expectedFirstSurahSubChallenge = challenge.getSurahSubChallenges().get(0);
+    assertThat(resultFirstSurahSubChallenge.getSurahName(),
+        equalTo(expectedFirstSurahSubChallenge.getSurahName()));
+    assertThat(resultFirstSurahSubChallenge.getStartingVerseNumber(),
+        equalTo(expectedFirstSurahSubChallenge.getStartingVerseNumber()));
+    assertThat(resultFirstSurahSubChallenge.getEndingVerseNumber(),
+        equalTo(expectedFirstSurahSubChallenge.getEndingVerseNumber()));
 
     User updatedUser1 = userRepo.findById(user1.getId()).get();
     User updatedUser2 = userRepo.findById(user2.getId()).get();
@@ -127,8 +127,8 @@ public class ReadingQuranChallengeTest extends TestBase {
         equalTo(user1AddedGroup.getGroupId()));
 
     assertThat(
-        updatedUser1.getReadingQuranChallenges().get(0).getSubChallenges().get(0).getSurahName(),
-        equalTo(expectedFirstSubChallenge.getSurahName()));
+        updatedUser1.getReadingQuranChallenges().get(0).getSurahSubChallenges().get(0).getSurahName(),
+        equalTo(expectedFirstSurahSubChallenge.getSurahName()));
 
     Group updatedGroup = groupRepo.findById(user1AddedGroup.getGroupId()).get();
     assertThat(updatedGroup.getUsersIds().size(), is(3));
@@ -264,7 +264,7 @@ public class ReadingQuranChallengeTest extends TestBase {
     long pastExpiryDate = Instant.now().getEpochSecond() - ChallengeFactory.EXPIRY_DATE_OFFSET;
     ReadingQuranChallenge challenge = ReadingQuranChallenge.builder()
         .expiryDate(pastExpiryDate)
-        .subChallenges(
+        .surahSubChallenges(
             ImmutableList.of(ChallengeFactory.quranSubChallenge1()))
         .groupId(validGroup.getId())
         .build();
@@ -289,42 +289,6 @@ public class ReadingQuranChallengeTest extends TestBase {
   }
 
   @Test
-  public void addReadingQuranChallenge_duplicateSurah_shouldFail() throws Exception {
-    User user2 = getNewRegisteredUser();
-
-    azkarApi.makeFriends(user1, user2);
-
-    ReadingQuranChallenge challenge =
-        ChallengeFactory.getNewReadingChallenge("toBeRemovedGroupId").toBuilder()
-            .groupId(null)
-            .build();
-
-    // Duplicate subChallenge
-    challenge.setSubChallenges(
-        ImmutableList.of(
-            SubChallenge.builder()
-                .surahName("surahName")
-                .startingVerseNumber(2)
-                .endingVerseNumber(4)
-                .build(), SubChallenge.builder()
-                .surahName("surahName")
-                .startingVerseNumber(2)
-                .endingVerseNumber(3)
-                .build()));
-    AddReadingQuranChallengeRequest request =
-        AddReadingQuranChallengeRequest.AddReadingQuranChallengeRequestBuilder().
-            friendsIds(ImmutableList.of(user2.getId()))
-            .challenge(challenge)
-            .build();
-
-    AddReadingQuranChallengeResponse expectedResponse = new AddReadingQuranChallengeResponse();
-    expectedResponse.setStatus(new Status(Status.CHALLENGE_CREATION_DUPLICATE_SURAH_NAME_ERROR));
-    azkarApi.addReadingQuranChallenge(user1, request)
-        .andExpect(status().isBadRequest())
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-  }
-
-  @Test
   public void addReadingQuranChallenge_inconsistentStartAndEndVerseNumbers_shouldFail()
       throws Exception {
     User user2 = getNewRegisteredUser();
@@ -336,8 +300,8 @@ public class ReadingQuranChallengeTest extends TestBase {
             .groupId(null)
             .build();
 
-    challenge.setSubChallenges(
-        ImmutableList.of(SubChallenge.builder()
+    challenge.setSurahSubChallenges(
+        ImmutableList.of(SurahSubChallenge.builder()
             .surahName("surahName")
             .startingVerseNumber(3)
             .endingVerseNumber(2)

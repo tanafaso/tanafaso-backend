@@ -1,7 +1,7 @@
 package com.azkar.payload.challengecontroller.requests;
 
 import com.azkar.entities.challenges.ReadingQuranChallenge;
-import com.azkar.entities.challenges.ReadingQuranChallenge.SubChallenge;
+import com.azkar.entities.challenges.ReadingQuranChallenge.SurahSubChallenge;
 import com.azkar.payload.RequestBodyBase;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.exceptions.BadRequestException;
@@ -42,19 +42,10 @@ public class AddReadingQuranChallengeRequest extends RequestBodyBase {
   }
 
   protected void validateSubChallenges() {
-    challenge.getSubChallenges().forEach(subChallenges -> {
+    challenge.getSurahSubChallenges().forEach(subChallenges -> {
       if (subChallenges.getStartingVerseNumber() > subChallenges.getEndingVerseNumber()) {
         throw new BadRequestException(new Status(Status.STARTING_VERSE_AFTER_ENDING_VERSE_ERROR));
       }
     });
-
-    HashSet<String> foundSurahs = new HashSet<>();
-    for (SubChallenge subChallenge : challenge.getSubChallenges()) {
-      if (foundSurahs.contains(subChallenge.getSurahName())) {
-        throw new BadRequestException(
-            new Status(Status.CHALLENGE_CREATION_DUPLICATE_SURAH_NAME_ERROR));
-      }
-      foundSurahs.add(subChallenge.getSurahName());
-    }
   }
 }
