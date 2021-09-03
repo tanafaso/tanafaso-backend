@@ -75,7 +75,7 @@ public class ReadingQuranChallengeTest extends TestBase {
     AddReadingQuranChallengeRequest request =
         AddReadingQuranChallengeRequest.AddReadingQuranChallengeRequestBuilder().
             friendsIds(friendsIds)
-            .challenge(challenge)
+            .readingQuranChallenge(challenge)
             .build();
     MvcResult result = azkarApi.addReadingQuranChallenge(user1, request)
         .andExpect(status().isOk())
@@ -160,7 +160,7 @@ public class ReadingQuranChallengeTest extends TestBase {
     AddReadingQuranChallengeRequest request =
         AddReadingQuranChallengeRequest.AddReadingQuranChallengeRequestBuilder().
             friendsIds(friendsIds)
-            .challenge(challenge)
+            .readingQuranChallenge(challenge)
             .build();
     AddReadingQuranChallengeResponse expectedResponse = new AddReadingQuranChallengeResponse();
     expectedResponse.setStatus(new Status(Status.ONE_OR_MORE_USERS_NOT_FRIENDS_ERROR));
@@ -197,7 +197,7 @@ public class ReadingQuranChallengeTest extends TestBase {
     AddReadingQuranChallengeRequest request =
         AddReadingQuranChallengeRequest.AddReadingQuranChallengeRequestBuilder().
             friendsIds(friendsIds)
-            .challenge(challenge)
+            .readingQuranChallenge(challenge)
             .build();
     AddReadingQuranChallengeResponse expectedResponse = new AddReadingQuranChallengeResponse();
     expectedResponse.setStatus(new Status(Status.LESS_THAN_TWO_FRIENDS_ARE_PROVIDED_ERROR));
@@ -224,7 +224,7 @@ public class ReadingQuranChallengeTest extends TestBase {
     AddReadingQuranChallengeRequest request =
         AddReadingQuranChallengeRequest.AddReadingQuranChallengeRequestBuilder().
             friendsIds(friendsIds)
-            .challenge(challenge)
+            .readingQuranChallenge(challenge)
             .build();
     AddReadingQuranChallengeResponse expectedResponse = new AddReadingQuranChallengeResponse();
     expectedResponse.setStatus(new Status(Status.DUPLICATE_FRIEND_IDS_PROVIDED_ERROR));
@@ -262,7 +262,7 @@ public class ReadingQuranChallengeTest extends TestBase {
     AddReadingQuranChallengeRequest request =
         AddReadingQuranChallengeRequest.AddReadingQuranChallengeRequestBuilder().
             friendsIds(ImmutableList.of(user2.getId()))
-            .challenge(challenge)
+            .readingQuranChallenge(challenge)
             .build();
     azkarApi.addReadingQuranChallenge(user1, request)
         .andExpect(status().isBadRequest())
@@ -298,7 +298,7 @@ public class ReadingQuranChallengeTest extends TestBase {
     AddReadingQuranChallengeRequest request =
         AddReadingQuranChallengeRequest.AddReadingQuranChallengeRequestBuilder().
             friendsIds(ImmutableList.of(user2.getId()))
-            .challenge(challenge)
+            .readingQuranChallenge(challenge)
             .build();
 
     AddReadingQuranChallengeResponse expectedResponse = new AddReadingQuranChallengeResponse();
@@ -322,7 +322,7 @@ public class ReadingQuranChallengeTest extends TestBase {
     AddReadingQuranChallengeRequest request =
         AddReadingQuranChallengeRequest.AddReadingQuranChallengeRequestBuilder().
             friendsIds(ImmutableList.of(user2.getId()))
-            .challenge(challenge)
+            .readingQuranChallenge(challenge)
             .build();
     ReadingQuranChallenge returnedChallenge = azkarApi.addReadingQuranChallengeAndReturn(user1,
         request);

@@ -688,7 +688,7 @@ public class ChallengeController extends BaseController {
         .totalScore(0)
         .build();
 
-    ReadingQuranChallenge challenge = request.getChallenge().toBuilder()
+    ReadingQuranChallenge challenge = request.getReadingQuranChallenge().toBuilder()
         .id(new ObjectId().toString())
         .creatingUserId(currentUser.getId())
         .groupId(newGroup.getId())

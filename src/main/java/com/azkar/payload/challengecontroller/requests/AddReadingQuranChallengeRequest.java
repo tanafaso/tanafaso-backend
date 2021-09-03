@@ -17,18 +17,18 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class AddReadingQuranChallengeRequest extends RequestBodyBase {
 
-  protected ReadingQuranChallenge challenge;
+  protected ReadingQuranChallenge readingQuranChallenge;
   private List<String> friendsIds;
 
   @Builder(builderMethodName = "AddReadingQuranChallengeRequestBuilder")
   public AddReadingQuranChallengeRequest(List<String> friendsIds, ReadingQuranChallenge challenge) {
-    this.challenge = challenge;
+    this.readingQuranChallenge = challenge;
     this.friendsIds = friendsIds;
   }
 
   @Override
   public void validate() throws BadRequestException {
-    ChallengeValidationUtil.validateExpiryDate(challenge.getExpiryDate());
+    ChallengeValidationUtil.validateExpiryDate(readingQuranChallenge.getExpiryDate());
 
     validateFriendIds();
     validateSubChallenges();
@@ -41,7 +41,7 @@ public class AddReadingQuranChallengeRequest extends RequestBodyBase {
   }
 
   protected void validateSubChallenges() {
-    challenge.getSurahSubChallenges().forEach(subChallenges -> {
+    readingQuranChallenge.getSurahSubChallenges().forEach(subChallenges -> {
       if (subChallenges.getStartingVerseNumber() > subChallenges.getEndingVerseNumber()) {
         throw new BadRequestException(new Status(Status.STARTING_VERSE_AFTER_ENDING_VERSE_ERROR));
       }

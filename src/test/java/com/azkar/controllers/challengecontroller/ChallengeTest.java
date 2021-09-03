@@ -123,7 +123,7 @@ public class ChallengeTest extends TestBase {
     AddReadingQuranChallengeRequest addReadingQuranChallengeRequest =
         AddReadingQuranChallengeRequest.AddReadingQuranChallengeRequestBuilder().
             friendsIds(ImmutableList.of(user2.getId(), user3.getId()))
-            .challenge(readingQuranChallenge)
+            .readingQuranChallenge(readingQuranChallenge)
             .build();
 
     MvcResult result = azkarApi.addReadingQuranChallenge(user1, addReadingQuranChallengeRequest)
