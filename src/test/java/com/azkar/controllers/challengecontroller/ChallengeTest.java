@@ -26,6 +26,7 @@ import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse
 import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
+import com.azkar.payload.utils.FeaturesVersions;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
@@ -159,10 +160,10 @@ public class ChallengeTest extends TestBase {
         JsonHandler.fromJson(result.getResponse().getContentAsString(),
             AddAzkarChallengeResponse.class);
 
-    MvcResult mvcResult = httpClient
-        .performGetRequest(user1, "/challenges/v2")
-        .andExpect(status().isOk())
-        .andReturn();
+    MvcResult mvcResult =
+        azkarApi.getAllChallengesV2(user1, FeaturesVersions.READING_QURAN_CHALLENGE_VERSION)
+            .andExpect(status().isOk())
+            .andReturn();
     GetChallengesV2Response response = JsonHandler
         .fromJson(mvcResult.getResponse().getContentAsString(), GetChallengesV2Response.class);
     assertThat(response.getData().size(), is(3));
@@ -187,8 +188,7 @@ public class ChallengeTest extends TestBase {
     // Finish meaning challenge
     azkarApi.finishMeaningChallenge(user1, meaningChallengeResponse.getId());
 
-    mvcResult = httpClient
-        .performGetRequest(user1, "/challenges/v2")
+    mvcResult = azkarApi.getAllChallengesV2(user1, FeaturesVersions.READING_QURAN_CHALLENGE_VERSION)
         .andExpect(status().isOk())
         .andReturn();
     response = JsonHandler
@@ -205,8 +205,7 @@ public class ChallengeTest extends TestBase {
     // Finish readingQuranChallenge challenge
     azkarApi.finishReadingQuranChallenge(user1, addReadingQuranChallengeResponse.getData().getId());
 
-    mvcResult = httpClient
-        .performGetRequest(user1, "/challenges/v2")
+    mvcResult = azkarApi.getAllChallengesV2(user1, FeaturesVersions.READING_QURAN_CHALLENGE_VERSION)
         .andExpect(status().isOk())
         .andReturn();
     response = JsonHandler

@@ -270,6 +270,11 @@ public class AzkarApi {
     return httpClient.performGetRequestWithApiVersion(user, "/friends/leaderboard/v2", apiVersion);
   }
 
+  public ResultActions getAllChallengesV2(User user, String apiVersion)
+      throws Exception {
+    return httpClient.performGetRequestWithApiVersion(user, "/challenges/v2", apiVersion);
+  }
+
   public void makeFriends(User user1, User user2) throws Exception {
     sendFriendRequest(user1, user2);
     acceptFriendRequest(user2, user1);
