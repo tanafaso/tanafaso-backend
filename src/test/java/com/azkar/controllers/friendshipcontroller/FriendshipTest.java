@@ -898,7 +898,7 @@ public class FriendshipTest extends TestBase {
 
   private AzkarChallenge createChallengeInGroup(User user, String groupId) throws Exception {
     AzkarChallenge challenge = ChallengeFactory.getNewChallenge(groupId);
-    challenge.setSubChallenges(ImmutableList.of(ChallengeFactory.subChallenge1()));
+    challenge.setSubChallenges(ImmutableList.of(ChallengeFactory.azkarSubChallenge1()));
     challenge.getSubChallenges().get(0).setRepetitions(SUB_CHALLENGES_REPETITIONS);
     azkarApi.addAzkarChallenge(user, challenge).andExpect(status().isOk());
     return challenge;

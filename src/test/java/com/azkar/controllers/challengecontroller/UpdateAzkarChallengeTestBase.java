@@ -29,12 +29,14 @@ import org.springframework.test.web.servlet.ResultActions;
 
 public abstract class UpdateAzkarChallengeTestBase extends TestBase {
 
-  public static final int OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS = ChallengeFactory.subChallenge1()
-      .getRepetitions();
+  public static final int OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS =
+      ChallengeFactory.azkarSubChallenge1()
+          .getRepetitions();
   public static final int NEW_SUB_CHALLENGE_1_LEFT_REPETITIONS =
       OLD_SUB_CHALLENGE_1_LEFT_REPETITIONS - 1;
-  public static final int OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS = ChallengeFactory.subChallenge2()
-      .getRepetitions();
+  public static final int OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS =
+      ChallengeFactory.azkarSubChallenge2()
+          .getRepetitions();
   public static final int NEW_SUB_CHALLENGE_2_LEFT_REPETITIONS =
       OLD_SUB_CHALLENGE_2_LEFT_REPETITIONS - 2;
   protected User user;

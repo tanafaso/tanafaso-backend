@@ -9,17 +9,21 @@ import com.azkar.entities.User.UserGroup;
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
+import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddAzkarChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.AddReadingQuranChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.FinishMeaningChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.FinishReadingQuranChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
@@ -33,6 +37,7 @@ import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.MeaningChallengeRepo;
+import com.azkar.repos.ReadingQuranChallengeRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
 import com.azkar.services.ReturnedChallengeComparator;
@@ -79,6 +84,8 @@ public class ChallengeController extends BaseController {
   AzkarChallengeRepo azkarChallengeRepo;
   @Autowired
   MeaningChallengeRepo meaningChallengeRepo;
+  @Autowired
+  ReadingQuranChallengeRepo readingQuranChallengeRepo;
   @Autowired
   GroupRepo groupRepo;
   @Autowired
@@ -316,11 +323,15 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  /*
+  Can be used for all types of challenges.
+   */
   @DeleteMapping("{challengeId}")
   public ResponseEntity<DeleteChallengeResponse> deleteChallenge(
       @PathVariable(value = "challengeId") String challengeId) {
     DeleteChallengeResponse response = new DeleteChallengeResponse();
     User user = getCurrentUser(userRepo);
+
     Optional<AzkarChallenge> azkarChallenge = user.getAzkarChallenges()
         .stream()
         .filter(
@@ -328,23 +339,38 @@ public class ChallengeController extends BaseController {
                 .equals(
                     challengeId))
         .findFirst();
+
     Optional<MeaningChallenge> meaningChallenge = user.getMeaningChallenges()
+        .stream(
+
+        )
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
+
+    Optional<ReadingQuranChallenge> readingQuranChallenge = user.getReadingQuranChallenges()
         .stream()
         .filter(
             challenge -> challenge.getId()
                 .equals(
                     challengeId))
         .findFirst();
-    if (!azkarChallenge.isPresent() && !meaningChallenge.isPresent()) {
+    if (!azkarChallenge.isPresent() && !meaningChallenge.isPresent() && !readingQuranChallenge
+        .isPresent()) {
       response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     if (azkarChallenge.isPresent()) {
       user.getAzkarChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
       response.setData(azkarChallenge.get());
-    } else {
+    } else if (meaningChallenge.isPresent()) {
       user.getMeaningChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
       response.setData(meaningChallenge.get());
+    } else {
+      user.getReadingQuranChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+      response.setData(readingQuranChallenge.get());
     }
     userRepo.save(user);
     return ResponseEntity.ok(response);
@@ -589,6 +615,7 @@ public class ChallengeController extends BaseController {
         .expiryDate(request.getExpiryDate())
         .words(extractWords(wordMeaningPairs))
         .meanings(extractMeanings(wordMeaningPairs))
+        .finished(false)
         .build();
 
     newGroup.getChallengesIds().add(challenge.getId());
@@ -614,6 +641,83 @@ public class ChallengeController extends BaseController {
         body += " (";
 
         body += "معاني كلمات القرآن";
+        body += ")";
+        notificationsService.sendNotificationToUser(affectedUser, "لديك تحدٍ جديد",
+            body);
+      }
+    });
+
+    response.setData(challenge);
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/reading_quran")
+  public ResponseEntity<AddReadingQuranChallengeResponse> addReadingQuranChallenge(
+      @RequestBody AddReadingQuranChallengeRequest request) {
+    AddReadingQuranChallengeResponse response = new AddReadingQuranChallengeResponse();
+
+    try {
+      request.validate();
+    } catch (BadRequestException e) {
+      response.setStatus(e.error);
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    User currentUser = getCurrentUser(userRepo);
+    HashSet<String> friendsIds = getUserFriends(currentUser);
+    boolean allValidFriends =
+        request.getFriendsIds().stream().allMatch(id -> friendsIds.contains(id));
+    if (!allValidFriends) {
+      response.setStatus(new Status(Status.ONE_OR_MORE_USERS_NOT_FRIENDS_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    List<String> groupMembers = new ArrayList<>(request.getFriendsIds());
+    groupMembers.add(currentUser.getId());
+
+    Group newGroup = Group.builder()
+        .id(new ObjectId().toString())
+        .creatorId(currentUser.getId())
+        .usersIds(groupMembers)
+        .build();
+
+    UserGroup userGroup = UserGroup.builder()
+        .groupId(newGroup.getId())
+        .invitingUserId(currentUser.getId())
+        .monthScore(0)
+        .totalScore(0)
+        .build();
+
+    ReadingQuranChallenge challenge = request.getReadingQuranChallenge().toBuilder()
+        .id(new ObjectId().toString())
+        .creatingUserId(currentUser.getId())
+        .groupId(newGroup.getId())
+        .finished(false)
+        .build();
+
+    newGroup.getChallengesIds().add(challenge.getId());
+
+    Iterable<User> affectedUsers = userRepo.findAllById(groupMembers);
+    affectedUsers.forEach(user -> {
+      user.getReadingQuranChallenges().add(challenge);
+      user.getUserGroups().add(userGroup);
+    });
+
+    userRepo.saveAll(affectedUsers);
+    groupRepo.save(newGroup);
+    readingQuranChallengeRepo.save(challenge);
+
+    affectedUsers.forEach(affectedUser -> {
+      if (!affectedUser.getId().equals(currentUser.getId())) {
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += currentUser.getFirstName();
+        body += " ";
+        body += currentUser.getLastName();
+        body += " (";
+
+        body += "قراءة قرآن";
         body += ")";
         notificationsService.sendNotificationToUser(affectedUser, "لديك تحدٍ جديد",
             body);
@@ -695,14 +799,20 @@ public class ChallengeController extends BaseController {
     List<AzkarChallenge> allUserAzkarChallenges = getCurrentUser(userRepo).getAzkarChallenges();
     List<MeaningChallenge> allUserMeaningChallenges =
         getCurrentUser(userRepo).getMeaningChallenges();
+    List<ReadingQuranChallenge> allUserReadingQuranChallenges =
+        getCurrentUser(userRepo).getReadingQuranChallenges();
 
     List<AzkarChallenge> recentUserAzkarChallenges =
         allUserAzkarChallenges.subList(Math.max(0, allUserAzkarChallenges.size() - 30),
             allUserAzkarChallenges.size());
     List<MeaningChallenge> recentUserMeaningChallenges =
-        getCurrentUser(userRepo).getMeaningChallenges()
+        allUserMeaningChallenges
             .subList(Math.max(0, allUserMeaningChallenges.size() - 30),
                 allUserMeaningChallenges.size());
+    List<ReadingQuranChallenge> recentReadingQuranChallenges =
+        allUserReadingQuranChallenges
+            .subList(Math.max(0, allUserReadingQuranChallenges.size() - 30),
+                allUserReadingQuranChallenges.size());
 
     List<ReturnedChallenge> challenges = new ArrayList<>();
     recentUserAzkarChallenges.forEach(azkarChallenge -> {
@@ -710,6 +820,15 @@ public class ChallengeController extends BaseController {
     });
     recentUserMeaningChallenges.forEach(meaningChallenge ->
         challenges.add(ReturnedChallenge.builder().meaningChallenge(meaningChallenge).build()));
+
+    if (apiVersion != null
+        && VersionComparator.compare(apiVersion, FeaturesVersions.READING_QURAN_CHALLENGE_VERSION)
+        >= 0) {
+      recentReadingQuranChallenges.forEach(readingQuranChallenge ->
+          challenges
+              .add(ReturnedChallenge.builder().readingQuranChallenge(readingQuranChallenge)
+                  .build()));
+    }
 
     challenges.sort(returnedChallengeComparator);
 
@@ -867,6 +986,52 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(new FinishMeaningChallengeResponse());
   }
 
+  @PutMapping(path = "/finish/reading_quran/{challengeId}")
+  public ResponseEntity<FinishReadingQuranChallengeResponse> finishReadingQuranChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    User currentUser = getCurrentUser(userRepo);
+    Optional<ReadingQuranChallenge> currentUserChallenge = currentUser.getReadingQuranChallenges()
+        .stream()
+        .filter(challenge -> challenge.getId()
+            .equals(
+                challengeId))
+        .findFirst();
+    if (!currentUserChallenge.isPresent()) {
+      FinishReadingQuranChallengeResponse response = new FinishReadingQuranChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+    // TODO(issue#170): Time should be supplied by a bean to allow easier testing
+    if (currentUserChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
+      FinishReadingQuranChallengeResponse response = new FinishReadingQuranChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_EXPIRED_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    if (currentUserChallenge.get().isFinished()) {
+      FinishReadingQuranChallengeResponse response = new FinishReadingQuranChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_HAS_ALREADY_BEEN_FINISHED));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    currentUserChallenge.get().setFinished(true);
+    updateScoreInUserGroup(currentUser, currentUserChallenge.get().getGroupId());
+    updateScoreInFriendships(currentUser, currentUserChallenge.get().getGroupId());
+    userRepo.save(currentUser);
+
+    ReadingQuranChallenge challenge = readingQuranChallengeRepo.findById(challengeId).get();
+    updateReadingQuranChallengeOnUserFinished(challenge, currentUser);
+    // Invalidate current user because it may have changed indirectly (by changing only the
+    // database instance) after calling updateChallengeOnUserFinished.
+    currentUser = userRepo.findById(currentUser.getId()).get();
+
+    sendNotificationOnFinishedReadingQuranChallenge(getCurrentUser(userRepo), challenge);
+    readingQuranChallengeRepo.save(challenge);
+    userRepo.save(currentUser);
+
+    return ResponseEntity.ok(new FinishReadingQuranChallengeResponse());
+  }
+
   private void updateAzkarChallengeOnUserFinished(AzkarChallenge challenge, User currentUser) {
     // Update the original copy of the challenge
     challenge.getUsersFinished().add(currentUser.getId());
@@ -891,6 +1056,23 @@ public class ChallengeController extends BaseController {
     groupRepo.findById(challenge.getGroupId()).get().getUsersIds().forEach(groupMember -> {
       User user = userRepo.findById(groupMember).get();
       user.getMeaningChallenges().forEach(userChallenge -> {
+        if (userChallenge.getId().equals(challenge.getId())) {
+          userChallenge.getUsersFinished().add(currentUser.getId());
+        }
+      });
+      userRepo.save(user);
+    });
+  }
+
+  private void updateReadingQuranChallengeOnUserFinished(ReadingQuranChallenge challenge,
+      User currentUser) {
+    // Update the original copy of the challenge
+    challenge.getUsersFinished().add(currentUser.getId());
+
+    // Update users copies of the challenge
+    groupRepo.findById(challenge.getGroupId()).get().getUsersIds().forEach(groupMember -> {
+      User user = userRepo.findById(groupMember).get();
+      user.getReadingQuranChallenges().forEach(userChallenge -> {
         if (userChallenge.getId().equals(challenge.getId())) {
           userChallenge.getUsersFinished().add(currentUser.getId());
         }
@@ -937,6 +1119,29 @@ public class ChallengeController extends BaseController {
         body += " (";
 
         body += "معاني كلمات القرآن";
+        body += ")";
+        notificationsService
+            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
+                body);
+      }
+    });
+  }
+
+  private void sendNotificationOnFinishedReadingQuranChallenge(User userFinishedChallenge,
+      ReadingQuranChallenge challenge) {
+    Group group = groupRepo.findById(challenge.getGroupId()).get();
+    group.getUsersIds().stream().forEach(userId -> {
+      if (!userId.equals(userFinishedChallenge.getId())) {
+
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += userFinishedChallenge.getFirstName();
+        body += " ";
+        body += userFinishedChallenge.getLastName();
+        body += " (";
+
+        body += "قراءة قرآن";
         body += ")";
         notificationsService
             .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
