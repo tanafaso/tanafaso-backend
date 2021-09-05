@@ -4,7 +4,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
 
 import com.azkar.TestBase;
 import com.azkar.entities.User;
@@ -86,7 +85,7 @@ public class UserServiceTest extends TestBase {
     HashSet<String> usernames = new HashSet<>();
     for (User user : users) {
       assertThat("Usernames are unique", !usernames.contains(user.getUsername()));
-      assertThat("Usernames shouldn't be null", !user.getUsername().equals(nullValue()));
+      assertThat("Usernames shouldn't be null", user.getUsername() != null);
       assertThatUsernameIsValid(user.getUsername());
 
       usernames.add(user.getUsername());
