@@ -1,16 +1,34 @@
 package com.azkar.services;
 
+import com.azkar.configs.TafseerCacher;
+import com.azkar.configs.TafseerCacher.WordMeaningPair;
+import com.azkar.controllers.ChallengeController;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
+import com.azkar.entities.Zekr;
+import com.azkar.entities.challenges.AzkarChallenge;
+import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
+import com.azkar.entities.challenges.MeaningChallenge;
+import com.azkar.entities.challenges.ReadingQuranChallenge;
+import com.azkar.entities.challenges.ReadingQuranChallenge.SurahSubChallenge;
+import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
+import com.azkar.repos.MeaningChallengeRepo;
+import com.azkar.repos.ReadingQuranChallengeRepo;
 import com.azkar.repos.UserRepo;
+import com.google.common.collect.ImmutableList;
+import com.sun.tools.javac.util.List;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +42,14 @@ public class UserService {
   private FriendshipRepo friendshipRepo;
   @Autowired
   private GroupRepo groupRepo;
+  @Autowired
+  private AzkarChallengeRepo azkarChallengeRepo;
+  @Autowired
+  private MeaningChallengeRepo meaningChallengeRepo;
+  @Autowired
+  private ReadingQuranChallengeRepo readingQuranChallengeRepo;
+  @Autowired
+  private TafseerCacher tafseerCacher;
 
   public User loadUserById(String id) {
     Optional<User> user = userRepo.findById(id);
@@ -55,11 +81,12 @@ public class UserService {
   */
   public User addNewUser(User user) {
     userRepo.save(user);
-    addSabeqAsFriend(user);
+    Group userAndSabeqGroup = addSabeqAsFriend(user);
+    addStartingChallengesWithSabeq(user, userAndSabeqGroup);
     return user;
   }
 
-  private void addSabeqAsFriend(User user) {
+  private Group addSabeqAsFriend(User user) {
     Friendship friendship = Friendship.builder().userId(user.getId()).build();
     User sabeq = userRepo.findById(User.SABEQ_ID).get();
 
@@ -105,6 +132,91 @@ public class UserService {
         .build();
     user.getUserGroups().add(userGroup);
     userRepo.save(user);
+
+    return binaryGroup;
+  }
+
+  private void addStartingChallengesWithSabeq(User user, Group userAndSabeqGroup) {
+    addReadingQuranChallengeWithSabeq(user, userAndSabeqGroup);
+    addMeaningChallengeWithSabeq(user, userAndSabeqGroup);
+    addAzkarChallengeWithSabeq(user, userAndSabeqGroup);
+  }
+
+  private void addAzkarChallengeWithSabeq(User user, Group userAndSabeqGroup) {
+    AzkarChallenge challenge = AzkarChallenge.builder()
+        .id(new ObjectId().toString())
+        .creatingUserId(user.getId())
+        .groupId(userAndSabeqGroup.getId())
+        .name("تحدي أذكار تجريبي")
+        .subChallenges(ImmutableList.of(
+            SubChallenge.builder().zekr(Zekr.builder().zekr("سبحان الله وبحمده").id(17).build())
+                .repetitions(3).build(),
+            SubChallenge.builder().zekr(Zekr.builder().zekr("أستغفر الله").id(18).build())
+                .repetitions(10).build()
+        ))
+        .motivation("")
+        .expiryDate(Instant.now().getEpochSecond() + /*hours=*/12 * 60 * 60)
+        .build();
+
+    userAndSabeqGroup.getChallengesIds().add(challenge.getId());
+
+    User sabeq = userRepo.findById(User.SABEQ_ID).get();
+    user.getAzkarChallenges().add(challenge);
+    sabeq.getAzkarChallenges().add(challenge);
+
+    userRepo.save(user);
+    userRepo.save(sabeq);
+    azkarChallengeRepo.save(challenge);
+  }
+
+  private void addMeaningChallengeWithSabeq(User user, Group userAndSabeqGroup) {
+    ArrayList<WordMeaningPair> wordMeaningPairs =
+        ChallengeController.getWordMeaningPairs(tafseerCacher, 3);
+    MeaningChallenge challenge = MeaningChallenge.builder()
+        .id(new ObjectId().toString())
+        .creatingUserId(user.getId())
+        .groupId(userAndSabeqGroup.getId())
+        .meanings(wordMeaningPairs.stream().map(p -> p.getMeaning()).collect(Collectors.toList()))
+        .words(wordMeaningPairs.stream().map(p -> p.getWord()).collect(Collectors.toList()))
+        .finished(false)
+        .expiryDate(Instant.now().getEpochSecond() + /*hours=*/12 * 60 * 60)
+        .build();
+
+    userAndSabeqGroup.getChallengesIds().add(challenge.getId());
+
+    User sabeq = userRepo.findById(User.SABEQ_ID).get();
+    user.getMeaningChallenges().add(challenge);
+    sabeq.getMeaningChallenges().add(challenge);
+
+    userRepo.save(user);
+    userRepo.save(sabeq);
+    meaningChallengeRepo.save(challenge);
+  }
+
+  private void addReadingQuranChallengeWithSabeq(User user,
+      Group userAndSabeqGroup) {
+    ReadingQuranChallenge challenge = ReadingQuranChallenge.builder()
+        .id(new ObjectId().toString())
+        .creatingUserId(user.getId())
+        .groupId(userAndSabeqGroup.getId())
+        .surahSubChallenges(List.of(
+            SurahSubChallenge.builder().surahName("البَقَرَةِ").startingVerseNumber(284)
+                .endingVerseNumber(286).build(),
+            SurahSubChallenge.builder().surahName("يسٓ").startingVerseNumber(1)
+                .endingVerseNumber(83).build()))
+        .finished(false)
+        .expiryDate(Instant.now().getEpochSecond() + /*hours=*/12 * 60 * 60)
+        .build();
+
+    userAndSabeqGroup.getChallengesIds().add(challenge.getId());
+
+    User sabeq = userRepo.findById(User.SABEQ_ID).get();
+    user.getReadingQuranChallenges().add(challenge);
+    sabeq.getReadingQuranChallenges().add(challenge);
+
+    userRepo.save(user);
+    userRepo.save(sabeq);
+    readingQuranChallengeRepo.save(challenge);
   }
 
   // Note: Only this generator should be able to create usernames with the special character '-',

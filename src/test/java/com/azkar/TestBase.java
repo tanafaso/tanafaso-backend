@@ -43,6 +43,16 @@ public abstract class TestBase {
   // static which doesn't work with Autowired objects.
   public static boolean BEFORE_ALL_DONE = false;
 
+  // After a new user is created, some starting challenges are added to them automatically to get
+  // them started. As these are integration tests, so as we are testing some controllers, we will
+  // be creating the user in the same way they will be created by in production. So these counts
+  // need to be taken in consideration. Honestly, I don't like this so much as these introduce
+  // non-interesting info to some tests.
+  public static int STARTING_AZKAR_CHALLENGES_COUNT = 1;
+  public static int STARTING_MEANING_CHALLENGES_COUNT = 1;
+  public static int STARTING_READING_QURAN_CHALLENGES_COUNT = 1;
+  public static int STARTING_CHALLENGES_COUNT = 3;
+
   @Autowired
   public AzkarApi azkarApi;
   @Autowired

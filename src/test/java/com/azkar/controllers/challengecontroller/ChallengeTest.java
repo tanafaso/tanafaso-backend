@@ -63,7 +63,7 @@ public class ChallengeTest extends TestBase {
     response.setData(queriedChallenge);
     List<AzkarChallenge> userChallenges =
         userRepo.findById(user.getId()).get().getAzkarChallenges();
-    assertThat(userChallenges.size(), is(2));
+    assertThat(userChallenges.size(), is(/*new=*/2 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
 
     azkarApi.deleteChallenge(user, queriedChallenge.getId())
         .andExpect(status().isOk())
@@ -71,8 +71,8 @@ public class ChallengeTest extends TestBase {
         .andExpect(content().json(JsonHandler.toJson(response)));
 
     userChallenges = userRepo.findById(user.getId()).get().getAzkarChallenges();
-    assertThat(userChallenges.size(), is(1));
-    assertThat(userChallenges.get(0).getId(), equalTo(anotherChallenge.getId()));
+    assertThat(userChallenges.size(), is(1 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
+    assertThat(userChallenges.get(1).getId(), equalTo(anotherChallenge.getId()));
   }
 
 
@@ -166,7 +166,7 @@ public class ChallengeTest extends TestBase {
             .andReturn();
     GetChallengesV2Response response = JsonHandler
         .fromJson(mvcResult.getResponse().getContentAsString(), GetChallengesV2Response.class);
-    assertThat(response.getData().size(), is(3));
+    assertThat(response.getData().size(), is(/*new=*/3 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
 
     assertThat(response.getData().get(0).getMeaningChallenge(), is(nullValue()));
     assertThat(response.getData().get(0).getReadingQuranChallenge(), is(nullValue()));

@@ -81,15 +81,18 @@ public class GroupAzkarChallengeTest extends TestBase {
 
     List<AzkarChallenge> challengesProgress = userRepo.findById(user1.getId()).get()
         .getAzkarChallenges();
-    assertThat(challengesProgress.size(), is(1));
+    assertThat(challengesProgress.size(), is(1 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(groupChallenges.size(), is(1));
     User updatedUser1 = userRepo.findById(user1.getId()).get();
     User updatedAnotherGroupMember = userRepo.findById(anotherGroupMember.getId()).get();
     User updatedNonGroupMember = userRepo.findById(nonGroupMember.getId()).get();
-    assertThat(updatedUser1.getAzkarChallenges().size(), is(1));
-    assertThat(updatedAnotherGroupMember.getAzkarChallenges().size(), is(1));
-    assertThat(updatedNonGroupMember.getAzkarChallenges().size(), is(0));
+    assertThat(updatedUser1.getAzkarChallenges().size(),
+        is(1 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
+    assertThat(updatedAnotherGroupMember.getAzkarChallenges().size(),
+        is(1 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
+    assertThat(updatedNonGroupMember.getAzkarChallenges().size(),
+        is(0 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
   }
 
   @Test
@@ -147,18 +150,25 @@ public class GroupAzkarChallengeTest extends TestBase {
 
     assertThat(user1AddedGroup.getGroupName(), nullValue());
 
-    assertThat(updatedUser1.getAzkarChallenges().size(), is(1));
-    assertThat(updatedUser2.getAzkarChallenges().size(), is(1));
-    assertThat(updatedUser3.getAzkarChallenges().size(), is(1));
+    assertThat(updatedUser1.getAzkarChallenges().size(),
+        is(1 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
+    assertThat(updatedUser2.getAzkarChallenges().size(),
+        is(1 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
+    assertThat(updatedUser3.getAzkarChallenges().size(),
+        is(1 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
 
-    assertThat(updatedUser1.getAzkarChallenges().get(0).getGroupId(),
+    assertThat(updatedUser1.getAzkarChallenges().get(TestBase.STARTING_AZKAR_CHALLENGES_COUNT)
+            .getGroupId(),
         equalTo(user1AddedGroup.getGroupId()));
-    assertThat(updatedUser2.getAzkarChallenges().get(0).getGroupId(),
+    assertThat(updatedUser2.getAzkarChallenges().get(TestBase.STARTING_AZKAR_CHALLENGES_COUNT)
+            .getGroupId(),
         equalTo(user1AddedGroup.getGroupId()));
-    assertThat(updatedUser3.getAzkarChallenges().get(0).getGroupId(),
+    assertThat(updatedUser3.getAzkarChallenges().get(TestBase.STARTING_AZKAR_CHALLENGES_COUNT)
+            .getGroupId(),
         equalTo(user1AddedGroup.getGroupId()));
 
-    assertThat(updatedUser1.getAzkarChallenges().get(0).getName(),
+    assertThat(
+        updatedUser1.getAzkarChallenges().get(TestBase.STARTING_AZKAR_CHALLENGES_COUNT).getName(),
         equalTo(challenge.getName()));
 
     Group updatedGroup = groupRepo.findById(user1AddedGroup.getGroupId()).get();
@@ -204,9 +214,12 @@ public class GroupAzkarChallengeTest extends TestBase {
     assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
     assertThat(updatedUser3.getUserGroups().size(), is(user3GroupsNumBefore));
 
-    assertThat(updatedUser1.getAzkarChallenges().size(), is(0));
-    assertThat(updatedUser2.getAzkarChallenges().size(), is(0));
-    assertThat(updatedUser3.getAzkarChallenges().size(), is(0));
+    assertThat(updatedUser1.getAzkarChallenges().size(),
+        is(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
+    assertThat(updatedUser2.getAzkarChallenges().size(),
+        is(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
+    assertThat(updatedUser3.getAzkarChallenges().size(),
+        is(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
   }
 
   @Test
@@ -242,8 +255,10 @@ public class GroupAzkarChallengeTest extends TestBase {
     assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore));
     assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
 
-    assertThat(updatedUser1.getAzkarChallenges().size(), is(0));
-    assertThat(updatedUser2.getAzkarChallenges().size(), is(0));
+    assertThat(updatedUser1.getAzkarChallenges().size(),
+        is(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
+    assertThat(updatedUser2.getAzkarChallenges().size(),
+        is(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
   }
 
   @Test
@@ -279,8 +294,10 @@ public class GroupAzkarChallengeTest extends TestBase {
     assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore));
     assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
 
-    assertThat(updatedUser1.getAzkarChallenges().size(), is(0));
-    assertThat(updatedUser2.getAzkarChallenges().size(), is(0));
+    assertThat(updatedUser1.getAzkarChallenges().size(),
+        is(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
+    assertThat(updatedUser2.getAzkarChallenges().size(),
+        is(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
   }
 
   @Test
@@ -300,7 +317,7 @@ public class GroupAzkarChallengeTest extends TestBase {
     List<AzkarChallenge> challengesProgress = userRepo.findById(user1.getId()).get()
         .getAzkarChallenges();
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
-    assertThat(challengesProgress.size(), is(1));
+    assertThat(challengesProgress.size(), is(1 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
     assertThat(groupChallenges.size(), is(1));
   }
 
@@ -326,7 +343,7 @@ public class GroupAzkarChallengeTest extends TestBase {
 
     List<AzkarChallenge> challengesProgress = userRepo.findById(user1.getId()).get()
         .getAzkarChallenges();
-    assertTrue("Challenges progress list is not empty.", challengesProgress.isEmpty());
+    assertThat(challengesProgress.size(), equalTo(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
   }
 
   @Test
@@ -354,7 +371,7 @@ public class GroupAzkarChallengeTest extends TestBase {
 
     List<AzkarChallenge> challengesProgress = userRepo.findById(user1.getId()).get()
         .getAzkarChallenges();
-    assertTrue("Challenges progress list is not empty.", challengesProgress.isEmpty());
+    assertThat(challengesProgress.size(), equalTo(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
   }
 
   @Test
@@ -369,7 +386,7 @@ public class GroupAzkarChallengeTest extends TestBase {
 
     List<AzkarChallenge> challengesProgress = userRepo.findById(user1.getId()).get()
         .getAzkarChallenges();
-    assertTrue("UserChallenges list is not empty.", challengesProgress.isEmpty());
+    assertThat(challengesProgress.size(), equalTo(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
   }
 
   @Test
@@ -387,7 +404,7 @@ public class GroupAzkarChallengeTest extends TestBase {
     List<AzkarChallenge> userChallenges = userRepo.findById(nonGroupMember.getId())
         .get()
         .getAzkarChallenges();
-    assertThat(userChallenges, empty());
+    assertThat(userChallenges.size(), equalTo(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertThat(groupChallenges, empty());
   }
@@ -412,7 +429,7 @@ public class GroupAzkarChallengeTest extends TestBase {
     List<AzkarChallenge> challengesProgress = userRepo.findById(user1.getId()).get()
         .getAzkarChallenges();
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
-    assertThat(challengesProgress.size(), is(1));
+    assertThat(challengesProgress.size(), is(1 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
     assertThat(groupChallenges.size(), is(1));
   }
 
@@ -436,7 +453,7 @@ public class GroupAzkarChallengeTest extends TestBase {
 
     List<AzkarChallenge> challengesProgress = userRepo.findById(user1.getId()).get()
         .getAzkarChallenges();
-    assertTrue("UserChallenges list is not empty.", challengesProgress.isEmpty());
+    assertThat(challengesProgress.size(), equalTo(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertTrue("GroupChallenges list is expected to be empty but it is not.",
         groupChallenges.isEmpty());

@@ -27,6 +27,7 @@ public class ChallengeBase {
   private String groupId;
   @NotNull
   private String creatingUserId;
+  // In seconds since epoch
   private long expiryDate;
   @Default
   private List<String> usersFinished = new ArrayList<>();

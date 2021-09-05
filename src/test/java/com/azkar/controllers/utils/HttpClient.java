@@ -27,6 +27,7 @@ public class HttpClient {
 
   @Value("${app.jwtSecret}")
   String jwtSecret;
+
   @Autowired
   private MockMvc mockMvc;
 
