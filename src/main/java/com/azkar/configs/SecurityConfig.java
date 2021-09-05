@@ -3,6 +3,7 @@ package com.azkar.configs;
 import com.azkar.configs.authentication.JwtAuthenticationFilter;
 import com.azkar.configs.authentication.OAuthSuccessHandler;
 import com.azkar.controllers.AppLinkController;
+import com.azkar.controllers.PrivacyLinkController;
 import com.azkar.controllers.authenticationcontroller.ApiAuthenticationController;
 import com.azkar.controllers.authenticationcontroller.WebAuthenticationController;
 import java.util.Arrays;
@@ -36,6 +37,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       ApiAuthenticationController.RESET_PASSWORD_PATH,
       AppLinkController.STORE_LINK_ANDROID_PATH,
       AppLinkController.STORE_LINK_IOS_PATH,
+      PrivacyLinkController.PRIVACY_POLICY_PATH,
   };
   @Autowired
   JwtAuthenticationFilter jwtAuthenticationFilter;
