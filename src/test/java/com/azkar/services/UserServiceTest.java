@@ -9,8 +9,8 @@ import com.azkar.TestBase;
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
 import com.google.common.collect.Iterators;
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -76,14 +76,17 @@ public class UserServiceTest extends TestBase {
     String firstName = "Example First Name";
     String lastName = "Example Last Name";
 
-    for (int i = 0; i < 1000; i++) {
-      userService.addNewUser(userService.buildNewUser(email + i, firstName, lastName));
+    ArrayList<User> addedUsers = new ArrayList<>();
+    for (int i = 0; i < 100; i++) {
+      addedUsers.add(
+          userService.addNewUser(
+              userService.buildNewUser(email + i, firstName, lastName)));
     }
 
-    assertThat(userRepo.count(), is(usersCountBefore + 1000));
-    List<User> users = userRepo.findAll();
+    assertThat(userRepo.count(), is(usersCountBefore + 100));
     HashSet<String> usernames = new HashSet<>();
-    for (User user : users) {
+    for (User addedUser : addedUsers) {
+      User user = userRepo.findById(addedUser.getId()).get();
       assertThat("Usernames are unique", !usernames.contains(user.getUsername()));
       assertThat("Usernames shouldn't be null", user.getUsername() != null);
       assertThatUsernameIsValid(user.getUsername());

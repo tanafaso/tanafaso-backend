@@ -171,6 +171,25 @@ public class ChallengeController extends BaseController {
     return Optional.empty();
   }
 
+  public static ArrayList<WordMeaningPair> getWordMeaningPairs(TafseerCacher tafseerCacher,
+      int numberOfWords) {
+    Random random = new Random();
+    ArrayList<WordMeaningPair> wordMeaningPairs = new ArrayList<>();
+    int randomIndex1 = random.nextInt(tafseerCacher.getWordMeaningPairs().size());
+    wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex1));
+
+    int lastRandomIndex = randomIndex1;
+    for (int i = 0; i < numberOfWords - 1; i++) {
+      int randomIndex =
+          (lastRandomIndex + RANDOMLY_CHOSEN_WORDS_INDEX_DIFF) % tafseerCacher.getWordMeaningPairs()
+              .size();
+      wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex));
+
+      lastRandomIndex = randomIndex;
+    }
+    return wordMeaningPairs;
+  }
+
   private void updateScoreInFriendships(User user, String groupId) {
     Group group = groupRepo.findById(groupId).orElse(null);
     if (group == null) {
@@ -236,7 +255,6 @@ public class ChallengeController extends BaseController {
     response.setData(challenge);
     return ResponseEntity.ok(response);
   }
-
 
   // This is not used anymore after introducing Sabeq.
   @Deprecated
@@ -607,7 +625,7 @@ public class ChallengeController extends BaseController {
         .build();
 
     int numberOfWords = request.getNumberOfWords() == null ? 3 : request.getNumberOfWords();
-    ArrayList<WordMeaningPair> wordMeaningPairs = getWordMeaningPairs(numberOfWords);
+    ArrayList<WordMeaningPair> wordMeaningPairs = getWordMeaningPairs(tafseerCacher, numberOfWords);
     MeaningChallenge challenge = MeaningChallenge.builder()
         .id(new ObjectId().toString())
         .creatingUserId(currentUser.getId())
@@ -738,24 +756,6 @@ public class ChallengeController extends BaseController {
     return wordMeaningPairs.stream()
         .map(wordMeaningPair -> wordMeaningPair.getMeaning())
         .collect(Collectors.toList());
-  }
-
-  private ArrayList<WordMeaningPair> getWordMeaningPairs(int numberOfWords) {
-    Random random = new Random();
-    ArrayList<WordMeaningPair> wordMeaningPairs = new ArrayList<>();
-    int randomIndex1 = random.nextInt(tafseerCacher.getWordMeaningPairs().size());
-    wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex1));
-
-    int lastRandomIndex = randomIndex1;
-    for (int i = 0; i < numberOfWords - 1; i++) {
-      int randomIndex =
-          (lastRandomIndex + RANDOMLY_CHOSEN_WORDS_INDEX_DIFF) % tafseerCacher.getWordMeaningPairs()
-              .size();
-      wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex));
-
-      lastRandomIndex = randomIndex;
-    }
-    return wordMeaningPairs;
   }
 
   private HashSet<String> getUserFriends(User user) {

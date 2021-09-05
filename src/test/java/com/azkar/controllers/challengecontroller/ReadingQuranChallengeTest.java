@@ -117,19 +117,26 @@ public class ReadingQuranChallengeTest extends TestBase {
 
     assertThat(user1AddedGroup.getGroupName(), nullValue());
 
-    assertThat(updatedUser1.getReadingQuranChallenges().size(), is(1));
-    assertThat(updatedUser2.getReadingQuranChallenges().size(), is(1));
-    assertThat(updatedUser3.getReadingQuranChallenges().size(), is(1));
+    assertThat(updatedUser1.getReadingQuranChallenges().size(),
+        is(1 + TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT));
+    assertThat(updatedUser2.getReadingQuranChallenges().size(),
+        is(1 + TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT));
+    assertThat(updatedUser3.getReadingQuranChallenges().size(),
+        is(1 + TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT));
 
-    assertThat(updatedUser1.getReadingQuranChallenges().get(0).getGroupId(),
+    assertThat(updatedUser1.getReadingQuranChallenges()
+            .get(TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT).getGroupId(),
         equalTo(user1AddedGroup.getGroupId()));
-    assertThat(updatedUser2.getReadingQuranChallenges().get(0).getGroupId(),
+    assertThat(updatedUser2.getReadingQuranChallenges()
+            .get(TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT).getGroupId(),
         equalTo(user1AddedGroup.getGroupId()));
-    assertThat(updatedUser3.getReadingQuranChallenges().get(0).getGroupId(),
+    assertThat(updatedUser3.getReadingQuranChallenges()
+            .get(TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT).getGroupId(),
         equalTo(user1AddedGroup.getGroupId()));
 
     assertThat(
-        updatedUser1.getReadingQuranChallenges().get(0).getSurahSubChallenges().get(0)
+        updatedUser1.getReadingQuranChallenges()
+            .get(TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT).getSurahSubChallenges().get(0)
             .getSurahName(),
         equalTo(expectedFirstSurahSubChallenge.getSurahName()));
 
@@ -177,9 +184,12 @@ public class ReadingQuranChallengeTest extends TestBase {
     assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
     assertThat(updatedUser3.getUserGroups().size(), is(user3GroupsNumBefore));
 
-    assertThat(updatedUser1.getReadingQuranChallenges().size(), is(0));
-    assertThat(updatedUser2.getReadingQuranChallenges().size(), is(0));
-    assertThat(updatedUser3.getReadingQuranChallenges().size(), is(0));
+    assertThat(updatedUser1.getReadingQuranChallenges().size(),
+        is(TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT));
+    assertThat(updatedUser2.getReadingQuranChallenges().size(),
+        is(TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT));
+    assertThat(updatedUser3.getReadingQuranChallenges().size(),
+        is(TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT));
   }
 
   @Test
@@ -239,8 +249,10 @@ public class ReadingQuranChallengeTest extends TestBase {
     assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore));
     assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
 
-    assertThat(updatedUser1.getReadingQuranChallenges().size(), is(0));
-    assertThat(updatedUser2.getReadingQuranChallenges().size(), is(0));
+    assertThat(updatedUser1.getReadingQuranChallenges().size(),
+        is(TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT));
+    assertThat(updatedUser2.getReadingQuranChallenges().size(),
+        is(TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT));
   }
 
   @Test
@@ -270,7 +282,8 @@ public class ReadingQuranChallengeTest extends TestBase {
 
     List<ReadingQuranChallenge> challengesProgress = userRepo.findById(user1.getId()).get()
         .getReadingQuranChallenges();
-    assertTrue("UserChallenges list is not empty.", challengesProgress.isEmpty());
+    assertThat(challengesProgress.size(),
+        equalTo(TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT));
     List<String> groupChallenges = groupRepo.findById(validGroup.getId()).get().getChallengesIds();
     assertTrue("GroupChallenges list is expected to be empty but it is not.",
         groupChallenges.isEmpty());
@@ -329,7 +342,7 @@ public class ReadingQuranChallengeTest extends TestBase {
 
     List<ReadingQuranChallenge> userChallenges =
         userRepo.findById(user1.getId()).get().getReadingQuranChallenges();
-    assertThat(userChallenges.size(), is(1));
+    assertThat(userChallenges.size(), is(1 + TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT));
 
     azkarApi.deleteChallenge(user1, returnedChallenge.getId())
         .andExpect(status().isOk())
@@ -337,6 +350,6 @@ public class ReadingQuranChallengeTest extends TestBase {
         .andExpect(content().json(JsonHandler.toJson(new DeleteChallengeResponse())));
 
     userChallenges = userRepo.findById(user1.getId()).get().getReadingQuranChallenges();
-    assertThat(userChallenges.size(), is(0));
+    assertThat(userChallenges.size(), is(TestBase.STARTING_READING_QURAN_CHALLENGES_COUNT));
   }
 }
