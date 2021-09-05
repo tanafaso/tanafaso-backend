@@ -166,7 +166,7 @@ public class ChallengeTest extends TestBase {
             .andReturn();
     GetChallengesV2Response response = JsonHandler
         .fromJson(mvcResult.getResponse().getContentAsString(), GetChallengesV2Response.class);
-    assertThat(response.getData().size(), is(/*new=*/3 + /*starting challenges=*/3));
+    assertThat(response.getData().size(), is(/*new=*/3 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
 
     assertThat(response.getData().get(0).getMeaningChallenge(), is(nullValue()));
     assertThat(response.getData().get(0).getReadingQuranChallenge(), is(nullValue()));
