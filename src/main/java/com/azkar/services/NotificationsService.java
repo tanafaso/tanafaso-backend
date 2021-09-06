@@ -37,6 +37,7 @@ public class NotificationsService {
       logger.error(String.format("Token not found for user: %s", user.getId()));
       return;
     }
+
     Message message = Message.builder()
         .setToken(user.getNotificationsToken())
         .setNotification(
