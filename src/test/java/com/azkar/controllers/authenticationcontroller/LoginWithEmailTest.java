@@ -14,11 +14,10 @@ import com.azkar.payload.authenticationcontroller.requests.EmailLoginRequestBody
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.responses.EmailLoginResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
-import com.azkar.payload.homecontroller.GetHomeResponse;
+import com.azkar.payload.utils.FeaturesVersions;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MvcResult;
@@ -46,12 +45,8 @@ public class LoginWithEmailTest extends TestBase {
         .andReturn();
 
     // Validate the JWT returned by the API.
-    GetHomeResponse expectedHomeResponse = new GetHomeResponse();
-    expectedHomeResponse.setData(user);
-    performGetRequest(result.getResponse().getHeader(HttpHeaders.AUTHORIZATION), "/")
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedHomeResponse)));
+    azkarApi.getAllChallengesV2(user, FeaturesVersions.READING_QURAN_CHALLENGE_VERSION)
+        .andExpect(status().isOk());
   }
 
   @Test
