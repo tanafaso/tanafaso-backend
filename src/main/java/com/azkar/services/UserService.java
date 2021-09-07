@@ -20,8 +20,6 @@ import com.azkar.repos.GroupRepo;
 import com.azkar.repos.MeaningChallengeRepo;
 import com.azkar.repos.ReadingQuranChallengeRepo;
 import com.azkar.repos.UserRepo;
-import com.google.common.collect.ImmutableList;
-import com.sun.tools.javac.util.List;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -143,17 +141,19 @@ public class UserService {
   }
 
   private void addAzkarChallengeWithSabeq(User user, Group userAndSabeqGroup) {
+    ArrayList<SubChallenge> subChallenges = new ArrayList<>();
+    subChallenges
+        .add(SubChallenge.builder().zekr(Zekr.builder().zekr("سبحان الله وبحمده").id(17).build())
+            .repetitions(3).build());
+    subChallenges.add(
+        SubChallenge.builder().zekr(Zekr.builder().zekr("أستغفر الله").id(18).build())
+            .repetitions(10).build());
     AzkarChallenge challenge = AzkarChallenge.builder()
         .id(new ObjectId().toString())
         .creatingUserId(user.getId())
         .groupId(userAndSabeqGroup.getId())
         .name("تحدي أذكار تجريبي")
-        .subChallenges(ImmutableList.of(
-            SubChallenge.builder().zekr(Zekr.builder().zekr("سبحان الله وبحمده").id(17).build())
-                .repetitions(3).build(),
-            SubChallenge.builder().zekr(Zekr.builder().zekr("أستغفر الله").id(18).build())
-                .repetitions(10).build()
-        ))
+        .subChallenges(subChallenges)
         .motivation("")
         .expiryDate(Instant.now().getEpochSecond() + /*hours=*/12 * 60 * 60)
         .build();
@@ -195,15 +195,17 @@ public class UserService {
 
   private void addReadingQuranChallengeWithSabeq(User user,
       Group userAndSabeqGroup) {
+    ArrayList<SurahSubChallenge> surahSubChallenges = new ArrayList<>();
+    surahSubChallenges
+        .add(SurahSubChallenge.builder().surahName("البَقَرَةِ").startingVerseNumber(284)
+            .endingVerseNumber(286).build());
+    surahSubChallenges.add(SurahSubChallenge.builder().surahName("يسٓ").startingVerseNumber(1)
+        .endingVerseNumber(83).build());
     ReadingQuranChallenge challenge = ReadingQuranChallenge.builder()
         .id(new ObjectId().toString())
         .creatingUserId(user.getId())
         .groupId(userAndSabeqGroup.getId())
-        .surahSubChallenges(List.of(
-            SurahSubChallenge.builder().surahName("البَقَرَةِ").startingVerseNumber(284)
-                .endingVerseNumber(286).build(),
-            SurahSubChallenge.builder().surahName("يسٓ").startingVerseNumber(1)
-                .endingVerseNumber(83).build()))
+        .surahSubChallenges(surahSubChallenges)
         .finished(false)
         .expiryDate(Instant.now().getEpochSecond() + /*hours=*/12 * 60 * 60)
         .build();
