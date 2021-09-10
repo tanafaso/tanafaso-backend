@@ -1,16 +1,27 @@
 package com.azkar.controllers;
 
+import com.azkar.entities.PubliclyAvailableFemaleUser;
+import com.azkar.entities.PubliclyAvailableMaleUser;
 import com.azkar.entities.User;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody;
+import com.azkar.payload.usercontroller.responses.AddToPubliclyAvailableUsersResponse;
+import com.azkar.payload.usercontroller.responses.DeleteFromPubliclyAvailableUsers;
+import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse;
+import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse.PubliclyAvailableUser;
 import com.azkar.payload.usercontroller.responses.GetUserResponse;
 import com.azkar.payload.usercontroller.responses.SetNotificationTokenResponse;
 import com.azkar.repos.FriendshipRepo;
+import com.azkar.repos.PubliclyAvailableFemaleUsersRepo;
+import com.azkar.repos.PubliclyAvailableMaleUsersRepo;
 import com.azkar.repos.UserRepo;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -27,6 +38,10 @@ public class UserController extends BaseController {
   FriendshipRepo friendshipRepo;
   @Autowired
   private UserRepo userRepo;
+  @Autowired
+  private PubliclyAvailableMaleUsersRepo publiclyAvailableMaleUsersRepo;
+  @Autowired
+  private PubliclyAvailableFemaleUsersRepo publiclyAvailableFemaleUsersRepo;
 
   @GetMapping(path = "/{id}")
   public ResponseEntity<GetUserResponse> getUser(@PathVariable String id) {
@@ -127,6 +142,131 @@ public class UserController extends BaseController {
     GetUserResponse response = new GetUserResponse();
     response.setData(userRepo.findById(getCurrentUser().getUserId()).get());
     return ResponseEntity.ok(response);
+  }
+
+  @GetMapping(path = "/publicly_available_users")
+  public ResponseEntity<GetPubliclyAvailableUsersResponse> getPubliclyAvailableUsers() {
+    GetPubliclyAvailableUsersResponse response = new GetPubliclyAvailableUsersResponse();
+
+    User user = getCurrentUser(userRepo);
+
+    Optional<PubliclyAvailableMaleUser> userAsPubliclyAvailableMale =
+        publiclyAvailableMaleUsersRepo.findByUserId(user.getId());
+
+    Optional<PubliclyAvailableFemaleUser> userAsPubliclyAvailableFemale =
+        publiclyAvailableFemaleUsersRepo.findByUserId(user.getId());
+
+    if (!userAsPubliclyAvailableMale.isPresent() && !userAsPubliclyAvailableFemale.isPresent()) {
+      response.setStatus(new Status(Status.USER_NOT_ADDED_TO_PUBLICLY_AVAILABLE_USERS_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    if (userAsPubliclyAvailableMale.isPresent()) {
+      List<PubliclyAvailableUser> publiclyAvailableUsers =
+          publiclyAvailableMaleUsersRepo
+              .findAll()
+              .stream()
+              .map(publiclyAvailableMaleUser -> PubliclyAvailableUser.builder()
+                  .userId(publiclyAvailableMaleUser.getUserId())
+                  .firstName(publiclyAvailableMaleUser.getFirstName())
+                  .lastName(publiclyAvailableMaleUser.getLastName())
+                  .build())
+              .collect(Collectors.toList());
+      response.setData(publiclyAvailableUsers);
+      return ResponseEntity.ok(response);
+    }
+
+    List<PubliclyAvailableUser> publiclyAvailableUsers =
+        publiclyAvailableFemaleUsersRepo
+            .findAll()
+            .stream()
+            .map(publiclyAvailableFemaleUser -> PubliclyAvailableUser.builder()
+                .userId(publiclyAvailableFemaleUser.getUserId())
+                .firstName(publiclyAvailableFemaleUser.getFirstName())
+                .lastName(publiclyAvailableFemaleUser.getLastName())
+                .build())
+            .collect(Collectors.toList());
+    response.setData(publiclyAvailableUsers);
+    return ResponseEntity.ok(response);
+  }
+
+  @PutMapping(path = "/publicly_available_males")
+  public ResponseEntity<AddToPubliclyAvailableUsersResponse> addToPubliclyAvailableMales() {
+    AddToPubliclyAvailableUsersResponse response = new AddToPubliclyAvailableUsersResponse();
+
+    User user = getCurrentUser(userRepo);
+
+    Optional<PubliclyAvailableMaleUser> userAsPubliclyAvailableMale =
+        publiclyAvailableMaleUsersRepo.findByUserId(user.getId());
+
+    Optional<PubliclyAvailableFemaleUser> userAsPubliclyAvailableFemale =
+        publiclyAvailableFemaleUsersRepo.findByUserId(user.getId());
+
+    if (userAsPubliclyAvailableMale.isPresent() || userAsPubliclyAvailableFemale.isPresent()) {
+      response.setStatus(new Status(Status.USER_ALREADY_IS_PUBLICLY_AVAILABLE_USER_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    publiclyAvailableMaleUsersRepo
+        .save(
+            PubliclyAvailableMaleUser.builder()
+                .userId(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .build());
+    return ResponseEntity.ok(response);
+  }
+
+  @PutMapping(path = "/publicly_available_females")
+  public ResponseEntity<AddToPubliclyAvailableUsersResponse> addToPubliclyAvailableFemales() {
+    AddToPubliclyAvailableUsersResponse response = new AddToPubliclyAvailableUsersResponse();
+
+    User user = getCurrentUser(userRepo);
+
+    Optional<PubliclyAvailableMaleUser> userAsPubliclyAvailableMale =
+        publiclyAvailableMaleUsersRepo.findByUserId(user.getId());
+
+    Optional<PubliclyAvailableFemaleUser> userAsPubliclyAvailableFemale =
+        publiclyAvailableFemaleUsersRepo.findByUserId(user.getId());
+
+    if (userAsPubliclyAvailableMale.isPresent() || userAsPubliclyAvailableFemale.isPresent()) {
+      response.setStatus(new Status(Status.USER_ALREADY_IS_PUBLICLY_AVAILABLE_USER_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    publiclyAvailableFemaleUsersRepo
+        .save(
+            PubliclyAvailableFemaleUser.builder()
+                .userId(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .build());
+    return ResponseEntity.ok(response);
+  }
+
+  @DeleteMapping(path = "/publicly_available_users")
+  public ResponseEntity<DeleteFromPubliclyAvailableUsers> deleteFromPubliclyAvailableUsers() {
+    DeleteFromPubliclyAvailableUsers response = new DeleteFromPubliclyAvailableUsers();
+
+    User user = getCurrentUser(userRepo);
+
+    Optional<PubliclyAvailableMaleUser> userAsPubliclyAvailableMale =
+        publiclyAvailableMaleUsersRepo.findByUserId(user.getId());
+
+    if (userAsPubliclyAvailableMale.isPresent()) {
+      publiclyAvailableMaleUsersRepo.deleteById(userAsPubliclyAvailableMale.get().getId());
+      return ResponseEntity.ok(response);
+    }
+
+    Optional<PubliclyAvailableFemaleUser> userAsPubliclyAvailableFemale =
+        publiclyAvailableFemaleUsersRepo.findByUserId(user.getId());
+    if (userAsPubliclyAvailableFemale.isPresent()) {
+      publiclyAvailableFemaleUsersRepo.deleteById(userAsPubliclyAvailableFemale.get().getId());
+      return ResponseEntity.ok(response);
+    }
+
+    response.setStatus(new Status(Status.USER_NOT_ADDED_TO_PUBLICLY_AVAILABLE_USERS_ERROR));
+    return ResponseEntity.badRequest().body(response);
   }
 
   private User getMinimalInfoAboutUser(User user) {
