@@ -9,7 +9,7 @@ A Spring boot application that is a backend for a mobile application for Muslims
 Also, take a look at the [Frontend](https://github.com/challenge-azkar/tanafaso-frontend) repository.
 
 ## Stats
-- **10,000** App Downloads.
+- **10,000** App Installs.
 - **1908** signed-in users.
 - **482** users have at least one Azkar challenge.
 - **370** users have at least one Tafseer challenge.
