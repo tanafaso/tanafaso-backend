@@ -19,6 +19,9 @@ import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
 import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody;
+import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse;
+import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse.PubliclyAvailableUser;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.test.web.servlet.MvcResult;
@@ -40,6 +43,31 @@ public class AzkarApi {
 
   public ResultActions getUserById(User user, String id) throws Exception {
     return httpClient.performGetRequest(user, String.format("/users/%s", id));
+  }
+
+  public ResultActions getPubliclyAvailableUsers(User user) throws Exception {
+    return httpClient.performGetRequest(user, "/users/publicly_available_users");
+  }
+
+  public List<PubliclyAvailableUser> getPubliclyAvailableUsersAndReturn(User user)
+      throws Exception {
+    MvcResult result = getPubliclyAvailableUsers(user).andReturn();
+    GetPubliclyAvailableUsersResponse response =
+        JsonHandler.fromJson(result.getResponse().getContentAsString(),
+            GetPubliclyAvailableUsersResponse.class);
+    return response.getData();
+  }
+
+  public ResultActions addToPubliclyAvailableMales(User user) throws Exception {
+    return httpClient.performPutRequest(user, "/users/publicly_available_males");
+  }
+
+  public ResultActions addToPubliclyAvailableFemales(User user) throws Exception {
+    return httpClient.performPutRequest(user, "/users/publicly_available_females");
+  }
+
+  public ResultActions deleteFromPubliclyAvailableUsers(User user) throws Exception {
+    return httpClient.performDeleteRequest(user, "/users/publicly_available_users");
   }
 
   public ResultActions searchForUserByUsername(User user, String username) throws Exception {

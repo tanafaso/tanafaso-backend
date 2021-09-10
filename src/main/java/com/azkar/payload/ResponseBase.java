@@ -72,6 +72,8 @@ public abstract class ResponseBase<T> {
     public static final int TAFSEER_CHALLENGE_INCORRECT_NUMBER_OF_WORDS_ERROR = 52;
     public static final int CANNOT_REMOVE_SABEQ__FROM_FRIENDS_ERROR = 53;
     public static final int STARTING_VERSE_AFTER_ENDING_VERSE_ERROR = 54;
+    public static final int USER_NOT_ADDED_TO_PUBLICLY_AVAILABLE_USERS_ERROR = 55;
+    public static final int USER_ALREADY_IS_PUBLICLY_AVAILABLE_USER_ERROR = 56;
 
     public int code;
 
