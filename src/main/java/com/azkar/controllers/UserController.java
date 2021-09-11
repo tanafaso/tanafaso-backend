@@ -166,6 +166,15 @@ public class UserController extends BaseController {
           publiclyAvailableMaleUsersRepo
               .findAll()
               .stream()
+              // TODO(issue/335): Optimize filtering publicly available users by the ones without a
+              //  friend request sent
+              .filter(publiclyAvailableMaleUser ->
+                  !publiclyAvailableMaleUser.getUserId().equals(user.getId()) && !friendshipRepo
+                      .findByUserId(publiclyAvailableMaleUser.getUserId())
+                      .getFriends().stream().anyMatch(friend ->
+                          friend.getUserId().equals(user.getId())
+                      )
+              )
               .map(publiclyAvailableMaleUser -> PubliclyAvailableUser.builder()
                   .userId(publiclyAvailableMaleUser.getUserId())
                   .firstName(publiclyAvailableMaleUser.getFirstName())
@@ -180,6 +189,13 @@ public class UserController extends BaseController {
         publiclyAvailableFemaleUsersRepo
             .findAll()
             .stream()
+            .filter(publiclyAvailableFemaleUser ->
+                !publiclyAvailableFemaleUser.getUserId().equals(user.getId()) && !friendshipRepo
+                    .findByUserId(publiclyAvailableFemaleUser.getUserId())
+                    .getFriends().stream().anyMatch(friend ->
+                        friend.getUserId().equals(user.getId())
+                    )
+            )
             .map(publiclyAvailableFemaleUser -> PubliclyAvailableUser.builder()
                 .userId(publiclyAvailableFemaleUser.getUserId())
                 .firstName(publiclyAvailableFemaleUser.getFirstName())

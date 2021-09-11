@@ -46,12 +46,12 @@ public class NotificationsService {
             Notification.builder().setTitle(title).setBody(body).build())
         .setApnsConfig(
             ApnsConfig.builder()
-            .setAps(
-                Aps.builder()
-                    .setSound("default")
-                .build()
-            )
-            .build())
+                .setAps(
+                    Aps.builder()
+                        .setSound("default")
+                        .build()
+                )
+                .build())
         .build();
 
     try {
