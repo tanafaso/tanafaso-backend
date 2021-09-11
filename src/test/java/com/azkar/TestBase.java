@@ -75,7 +75,9 @@ public abstract class TestBase {
       return;
     }
     BEFORE_ALL_DONE = true;
-
+    mongoTemplate.getCollectionNames().stream().forEach(name -> {
+      mongoTemplate.dropCollection(name);
+    });
     mongobee.execute();
   }
 
