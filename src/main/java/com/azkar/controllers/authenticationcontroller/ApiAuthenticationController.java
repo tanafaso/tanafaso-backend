@@ -283,6 +283,7 @@ public class ApiAuthenticationController extends BaseController {
   @PutMapping(value = LOGIN_WITH_FACEBOOK_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> loginWithFacebook(
       @RequestBody FacebookAuthenticationRequest requestBody) {
+
     requestBody.validate();
     FacebookAuthenticationResponse response = new FacebookAuthenticationResponse();
 
@@ -296,6 +297,8 @@ public class ApiAuthenticationController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
+    logger.info("Asserting facebook user data for user with ID {} and token {}",
+        requestBody.getFacebookUserId(), requestBody.getToken());
     FacebookBasicProfileResponse facebookResponse = assertUserFacebookData(requestBody);
 
     if (facebookResponse == null) {
@@ -304,6 +307,14 @@ public class ApiAuthenticationController extends BaseController {
 
       response
           .setStatus(new Status(Status.AUTHENTICATION_WITH_FACEBOOK_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    if (facebookResponse.email == null) {
+      logger.warn("Facebook has returned a null email address.");
+
+      response
+          .setStatus(new Status(Status.FACEBOOK_RETURNED_NULL_EMAIL_ADDRESS_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
@@ -455,16 +466,22 @@ public class ApiAuthenticationController extends BaseController {
     String facebookGraphApiUril =
         "https://graph.facebook.com/v7.0/me?fields=id,first_name,last_name,email&access_token="
             + body.getToken();
+
+    logger.info("Sending to Facebook graph API");
     FacebookBasicProfileResponse facebookResponse = restTemplate.getForObject(
         facebookGraphApiUril,
         FacebookBasicProfileResponse.class);
 
+    logger.info("Got response from facebook graph API. ID: {}, email: {}, first name: {}, last "
+            + "name: {}",
+        facebookResponse.id,
+        facebookResponse.email, facebookResponse.firstName, facebookResponse.lastName);
     if (facebookResponse.id == null || !facebookResponse.id.equals(body.getFacebookUserId())) {
+      logger.warn("Facebook returned a null ID");
       return null;
     }
 
     return facebookResponse;
-
   }
 
   @Data
