@@ -74,6 +74,7 @@ public abstract class ResponseBase<T> {
     public static final int STARTING_VERSE_AFTER_ENDING_VERSE_ERROR = 54;
     public static final int USER_NOT_ADDED_TO_PUBLICLY_AVAILABLE_USERS_ERROR = 55;
     public static final int USER_ALREADY_IS_PUBLICLY_AVAILABLE_USER_ERROR = 56;
+    public static final int FACEBOOK_RETURNED_NULL_EMAIL_ADDRESS_ERROR = 57;
 
     public int code;
 
