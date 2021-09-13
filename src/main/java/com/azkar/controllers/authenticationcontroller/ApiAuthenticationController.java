@@ -288,6 +288,9 @@ public class ApiAuthenticationController extends BaseController {
 
     if (!(SecurityContextHolder.getContext()
         .getAuthentication() instanceof AnonymousAuthenticationToken)) {
+      logger.warn("User with facebook user ID {} is already logged in",
+          requestBody.getFacebookUserId());
+
       response
           .setStatus(new Status(Status.USER_ALREADY_LOGGED_IN_ERROR));
       return ResponseEntity.badRequest().body(response);
@@ -296,6 +299,9 @@ public class ApiAuthenticationController extends BaseController {
     FacebookBasicProfileResponse facebookResponse = assertUserFacebookData(requestBody);
 
     if (facebookResponse == null) {
+      logger.warn("Failed to assert facebook user data for user with ID {}",
+          requestBody.getFacebookUserId());
+
       response
           .setStatus(new Status(Status.AUTHENTICATION_WITH_FACEBOOK_ERROR));
       return ResponseEntity.badRequest().body(response);
@@ -312,6 +318,9 @@ public class ApiAuthenticationController extends BaseController {
         if (sameEmailUser.isPresent() && sameEmailUser.get().getUserFacebookData() == null) {
           user = sameEmailUser.get();
         } else if (sameEmailUser.isPresent()) {
+          logger.warn("Someone else has already connected this facebook account for facebook user"
+              + " ID {}", requestBody.getFacebookUserId());
+
           response.setStatus(new Status(Status.SOMEONE_ELSE_ALREADY_CONNECTED_ERROR));
           return ResponseEntity.badRequest().body(response);
         } else {
@@ -333,6 +342,8 @@ public class ApiAuthenticationController extends BaseController {
       userRepo.save(user);
       jwtToken = jwtService.generateToken(user);
     } catch (Exception e) {
+      logger.error("Problem while trying to connect to facebook.", e);
+
       response
           .setStatus(new Status(Status.AUTHENTICATION_WITH_FACEBOOK_ERROR));
       return ResponseEntity.badRequest().body(response);
