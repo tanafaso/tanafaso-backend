@@ -57,7 +57,7 @@ public class NotificationsService {
     try {
       FirebaseMessaging.getInstance().send(message);
     } catch (FirebaseMessagingException e) {
-      logger.error(
+      logger.warn(
           String.format("Failed to send a notification to user: %s with title: %s, and body: %s",
               user.getId(), title, body), e);
     }

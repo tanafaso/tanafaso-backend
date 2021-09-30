@@ -39,8 +39,8 @@ import com.azkar.repos.GroupRepo;
 import com.azkar.repos.MeaningChallengeRepo;
 import com.azkar.repos.ReadingQuranChallengeRepo;
 import com.azkar.repos.UserRepo;
+import com.azkar.services.ChallengesService;
 import com.azkar.services.NotificationsService;
-import com.azkar.services.ReturnedChallengeComparator;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,26 +74,25 @@ public class ChallengeController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ChallengeController.class);
 
   private static final int RANDOMLY_CHOSEN_WORDS_INDEX_DIFF = 100;
-  private static final int MAX_RETURNED_CHALLENGES = 60;
 
   @Autowired
-  NotificationsService notificationsService;
+  private NotificationsService notificationsService;
   @Autowired
-  UserRepo userRepo;
+  private UserRepo userRepo;
   @Autowired
-  AzkarChallengeRepo azkarChallengeRepo;
+  private AzkarChallengeRepo azkarChallengeRepo;
   @Autowired
-  MeaningChallengeRepo meaningChallengeRepo;
+  private MeaningChallengeRepo meaningChallengeRepo;
   @Autowired
-  ReadingQuranChallengeRepo readingQuranChallengeRepo;
+  private ReadingQuranChallengeRepo readingQuranChallengeRepo;
   @Autowired
-  GroupRepo groupRepo;
+  private GroupRepo groupRepo;
   @Autowired
-  FriendshipRepo friendshipRepo;
+  private FriendshipRepo friendshipRepo;
   @Autowired
-  TafseerCacher tafseerCacher;
+  private TafseerCacher tafseerCacher;
   @Autowired
-  ReturnedChallengeComparator returnedChallengeComparator;
+  private ChallengesService challengesService;
 
   // Note: This function may modify oldSubChallenges.
   private static Optional<ResponseEntity<UpdateChallengeResponse>> updateOldSubChallenges(
@@ -796,44 +795,11 @@ public class ChallengeController extends BaseController {
     if (apiVersion != null) {
       logger.info("API version requested is " + apiVersion);
     }
-    List<AzkarChallenge> allUserAzkarChallenges = getCurrentUser(userRepo).getAzkarChallenges();
-    List<MeaningChallenge> allUserMeaningChallenges =
-        getCurrentUser(userRepo).getMeaningChallenges();
-    List<ReadingQuranChallenge> allUserReadingQuranChallenges =
-        getCurrentUser(userRepo).getReadingQuranChallenges();
-
-    List<AzkarChallenge> recentUserAzkarChallenges =
-        allUserAzkarChallenges.subList(Math.max(0, allUserAzkarChallenges.size() - 30),
-            allUserAzkarChallenges.size());
-    List<MeaningChallenge> recentUserMeaningChallenges =
-        allUserMeaningChallenges
-            .subList(Math.max(0, allUserMeaningChallenges.size() - 30),
-                allUserMeaningChallenges.size());
-    List<ReadingQuranChallenge> recentReadingQuranChallenges =
-        allUserReadingQuranChallenges
-            .subList(Math.max(0, allUserReadingQuranChallenges.size() - 30),
-                allUserReadingQuranChallenges.size());
-
-    List<ReturnedChallenge> challenges = new ArrayList<>();
-    recentUserAzkarChallenges.forEach(azkarChallenge -> {
-      challenges.add(ReturnedChallenge.builder().azkarChallenge(azkarChallenge).build());
-    });
-    recentUserMeaningChallenges.forEach(meaningChallenge ->
-        challenges.add(ReturnedChallenge.builder().meaningChallenge(meaningChallenge).build()));
-
-    if (apiVersion != null
-        && VersionComparator.compare(apiVersion, FeaturesVersions.READING_QURAN_CHALLENGE_VERSION)
-        >= 0) {
-      recentReadingQuranChallenges.forEach(readingQuranChallenge ->
-          challenges
-              .add(ReturnedChallenge.builder().readingQuranChallenge(readingQuranChallenge)
-                  .build()));
-    }
-
-    challenges.sort(returnedChallengeComparator);
 
     GetChallengesV2Response response = new GetChallengesV2Response();
-    response.setData(challenges);
+    List<ReturnedChallenge> returnedChallenges = challengesService.getAllChallenges(apiVersion,
+        getCurrentUser(userRepo));
+    response.setData(returnedChallenges);
     return ResponseEntity.ok(response);
   }
 

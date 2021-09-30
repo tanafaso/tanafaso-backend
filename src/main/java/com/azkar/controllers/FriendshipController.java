@@ -19,6 +19,7 @@ import com.azkar.payload.utils.VersionComparator;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
+import com.azkar.services.FriendshipService;
 import com.azkar.services.NotificationsService;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
@@ -48,16 +49,15 @@ public class FriendshipController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(FriendshipController.class);
 
   @Autowired
-  NotificationsService notificationsService;
-
+  private NotificationsService notificationsService;
   @Autowired
-  FriendshipRepo friendshipRepo;
-
+  private FriendshipRepo friendshipRepo;
   @Autowired
-  UserRepo userRepo;
-
+  private UserRepo userRepo;
   @Autowired
-  GroupRepo groupRepo;
+  private GroupRepo groupRepo;
+  @Autowired
+  private FriendshipService friendshipService;
 
   @GetMapping
   public ResponseEntity<GetFriendsResponse> getFriends(
@@ -108,15 +108,8 @@ public class FriendshipController extends BaseController {
       @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
     GetFriendsLeaderboardV2Response response = new GetFriendsLeaderboardV2Response();
 
-    Friendship friendship =
-        friendshipRepo.findByUserId(getCurrentUser().getUserId());
-
-    List<Friend> friends = friendship.getFriends();
-    if (apiVersion == null
-        || VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
-      friends = friends.stream().filter(friend -> !friend.getUserId().equals(User.SABEQ_ID))
-          .collect(Collectors.toList());
-    }
+    List<Friend> friends = friendshipService.getFriendsLeaderboard(apiVersion,
+        getCurrentUser(userRepo));
 
     response.setData(friends);
     return ResponseEntity.ok(response);

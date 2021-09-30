@@ -303,6 +303,10 @@ public class AzkarApi {
     return httpClient.performGetRequestWithApiVersion(user, "/challenges/v2", apiVersion);
   }
 
+  public ResultActions getHome(User user, String apiVersion) throws Exception {
+    return httpClient.performGetRequestWithApiVersion(user, "/apiHome", apiVersion);
+  }
+
   public void makeFriends(User user1, User user2) throws Exception {
     sendFriendRequest(user1, user2);
     acceptFriendRequest(user2, user1);
