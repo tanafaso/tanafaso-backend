@@ -311,11 +311,9 @@ public class ApiAuthenticationController extends BaseController {
     }
 
     if (facebookResponse.email == null) {
-      logger.warn("Facebook has returned a null email address.");
-
-      response
-          .setStatus(new Status(Status.FACEBOOK_RETURNED_NULL_EMAIL_ADDRESS_ERROR));
-      return ResponseEntity.badRequest().body(response);
+      logger.warn(
+          "Facebook has returned a null email address, but we will allow the user to sign in.");
+      facebookResponse.setEmail(String.format("%s@fake-generated-email", facebookResponse.id));
     }
 
     String jwtToken;
