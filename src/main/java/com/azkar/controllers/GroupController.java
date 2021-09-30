@@ -17,6 +17,7 @@ import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
+import com.azkar.services.GroupsService;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +25,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,15 +46,14 @@ public class GroupController extends BaseController {
 
   @Autowired
   private GroupRepo groupRepo;
-
   @Autowired
   private AzkarChallengeRepo challengeRepo;
-
   @Autowired
   private UserRepo userRepo;
-
   @Autowired
   private FriendshipRepo friendshipRepo;
+  @Autowired
+  private GroupsService groupsService;
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddGroupResponse> addGroup(@RequestBody AddGroupRequest req) {
@@ -117,9 +116,7 @@ public class GroupController extends BaseController {
   public ResponseEntity<GetGroupsResponse> getGroups() {
     GetGroupsResponse response = new GetGroupsResponse();
 
-    response.setData(groupRepo.findAll().stream()
-        .filter(group -> group.getUsersIds().contains(getCurrentUser().getUserId()))
-        .collect(Collectors.toList()));
+    response.setData(groupsService.getGroups(getCurrentUser(userRepo)));
 
     return ResponseEntity.ok(response);
   }
