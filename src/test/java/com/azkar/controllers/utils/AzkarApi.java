@@ -37,6 +37,10 @@ public class AzkarApi {
     return httpClient.performGetRequest(user, "/users/me");
   }
 
+  public ResultActions getProfileV2(User user) throws Exception {
+    return httpClient.performGetRequest(user, "/users/me/v2");
+  }
+
   public ResultActions getProfileWithoutAuthentication() throws Exception {
     return httpClient.performGetRequest(/*user=*/ (User) null, "/users/me");
   }
@@ -301,6 +305,11 @@ public class AzkarApi {
   public ResultActions getAllChallengesV2(User user, String apiVersion)
       throws Exception {
     return httpClient.performGetRequestWithApiVersion(user, "/challenges/v2", apiVersion);
+  }
+
+  public ResultActions getFinishedChallengesCount(User user)
+      throws Exception {
+    return httpClient.performGetRequest(user, "/challenges/finished-challenges-count");
   }
 
   public ResultActions getHome(User user, String apiVersion) throws Exception {

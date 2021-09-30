@@ -28,6 +28,7 @@ import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
+import com.azkar.payload.challengecontroller.responses.GetFinishedChallengesCountResponse;
 import com.azkar.payload.challengecontroller.responses.GetMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
@@ -1114,5 +1115,22 @@ public class ChallengeController extends BaseController {
                 body);
       }
     });
+  }
+
+  @GetMapping("/finished-challenges-count")
+  public ResponseEntity<GetFinishedChallengesCountResponse> getFinishedChallengesCount() {
+    GetFinishedChallengesCountResponse response = new GetFinishedChallengesCountResponse();
+
+    int finishedChallengesCount = 0;
+    User user = getCurrentUser(userRepo);
+    for (UserGroup userGroup : user.getUserGroups()) {
+      finishedChallengesCount += userGroup.getTotalScore();
+    }
+    for (AzkarChallenge azkarChallenge : user.getPersonalChallenges()) {
+      finishedChallengesCount += azkarChallenge.finished() ? 1 : 0;
+    }
+
+    response.setData(finishedChallengesCount);
+    return ResponseEntity.ok(response);
   }
 }

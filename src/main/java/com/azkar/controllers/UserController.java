@@ -137,10 +137,29 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  // Use /me/v2 instead.
+  @Deprecated
   @GetMapping(path = "/me")
   public ResponseEntity<GetUserResponse> getCurrentUserProfile() {
     GetUserResponse response = new GetUserResponse();
     response.setData(userRepo.findById(getCurrentUser().getUserId()).get());
+    return ResponseEntity.ok(response);
+  }
+
+  // This returns only a subset of the user data which makes writing responses much faster
+  // especially for users with large number of challenges.
+  @GetMapping(path = "/me/v2")
+  public ResponseEntity<GetUserResponse> getCurrentUserProfileV2() {
+    GetUserResponse response = new GetUserResponse();
+    User user = userRepo.findById(getCurrentUser().getUserId()).get();
+    response.setData(
+        User.builder()
+            .id(user.getId())
+            .username(user.getUsername())
+            .firstName(user.getFirstName())
+            .lastName(user.getLastName())
+            .email(user.getEmail())
+            .build());
     return ResponseEntity.ok(response);
   }
 
