@@ -144,6 +144,21 @@ public class UserController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
+  @GetMapping(path = "/me/v2")
+  public ResponseEntity<GetUserResponse> getCurrentUserProfileV2() {
+    GetUserResponse response = new GetUserResponse();
+    User user = userRepo.findById(getCurrentUser().getUserId()).get();
+    response.setData(
+        User.builder()
+            .id(user.getId())
+            .username(user.getUsername())
+            .firstName(user.getFirstName())
+            .lastName(user.getLastName())
+            .email(user.getEmail())
+            .build());
+    return ResponseEntity.ok(response);
+  }
+
   @GetMapping(path = "/publicly_available_users")
   public ResponseEntity<GetPubliclyAvailableUsersResponse> getPubliclyAvailableUsers() {
     GetPubliclyAvailableUsersResponse response = new GetPubliclyAvailableUsersResponse();

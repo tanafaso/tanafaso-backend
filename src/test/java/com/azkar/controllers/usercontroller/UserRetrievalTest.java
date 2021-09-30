@@ -1,5 +1,7 @@
 package com.azkar.controllers.usercontroller;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,9 +13,11 @@ import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.usercontroller.responses.GetUserResponse;
 import com.azkar.repos.UserRepo;
+import java.util.Collections;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 public class UserRetrievalTest extends TestBase {
@@ -37,6 +41,30 @@ public class UserRetrievalTest extends TestBase {
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
+  }
+
+  @Test
+  public void getLoggedInUserProfileV2_shouldSucceed() throws Exception {
+    User user = UserFactory.getNewUser();
+    addNewUser(user);
+
+    MvcResult result = azkarApi.getProfileV2(user)
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andReturn();
+
+    GetUserResponse response =
+        JsonHandler.fromJson(result.getResponse().getContentAsString(),
+            GetUserResponse.class);
+
+    User returnedUser = response.getData();
+    assertThat(returnedUser.getId(), is(user.getId()));
+    assertThat(returnedUser.getEmail(), is(user.getEmail()));
+    assertThat(returnedUser.getFirstName(), is(user.getFirstName()));
+    assertThat(returnedUser.getLastName(), is(user.getLastName()));
+    assertThat(returnedUser.getUsername(), is(user.getUsername()));
+    assertThat(returnedUser.getAzkarChallenges(), is(Collections.emptyList()));
+    assertThat(returnedUser.getPersonalChallenges(), is(Collections.emptyList()));
   }
 
   @Test

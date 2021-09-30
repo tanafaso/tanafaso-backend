@@ -26,6 +26,7 @@ import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse
 import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
+import com.azkar.payload.challengecontroller.responses.GetFinishedChallengesCountResponse;
 import com.azkar.payload.utils.FeaturesVersions;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
@@ -218,6 +219,75 @@ public class ChallengeTest extends TestBase {
         is(meaningChallengeResponse.getId()));
     assertThat(response.getData().get(2).getAzkarChallenge().getId(),
         is(addAzkarChallengeResponse.getData().getId()));
+  }
+
+  @Test
+  public void getFinishedChallengesCount_shouldSucceed() throws Exception {
+    User user1 = getNewRegisteredUser();
+    User user2 = getNewRegisteredUser();
+    User user3 = getNewRegisteredUser();
+
+    azkarApi.makeFriends(user1, user2);
+    azkarApi.makeFriends(user1, user3);
+
+    long readingQuranChallengeExpiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
+    long meaningChallengeExpiryDate = readingQuranChallengeExpiryDate + EXPIRY_DATE_OFFSET;
+    long azkarChallengeExpiryDate = meaningChallengeExpiryDate + EXPIRY_DATE_OFFSET;
+
+    // Add one reading Quran challenge.
+    ReadingQuranChallenge readingQuranChallenge = ChallengeFactory.getNewReadingChallenge(
+        "reading-quran-group-id").toBuilder()
+        .expiryDate(readingQuranChallengeExpiryDate)
+        .groupId(null)
+        .build();
+    AddReadingQuranChallengeRequest addReadingQuranChallengeRequest =
+        AddReadingQuranChallengeRequest.AddReadingQuranChallengeRequestBuilder().
+            friendsIds(ImmutableList.of(user2.getId(), user3.getId()))
+            .readingQuranChallenge(readingQuranChallenge)
+            .build();
+
+    MvcResult result = azkarApi.addReadingQuranChallenge(user1, addReadingQuranChallengeRequest)
+        .andExpect(status().isOk())
+        .andReturn();
+    AddReadingQuranChallengeResponse addReadingQuranChallengeResponse =
+        JsonHandler.fromJson(result.getResponse().getContentAsString(),
+            AddReadingQuranChallengeResponse.class);
+
+    // Add one meaning challenge.
+    AddMeaningChallengeRequest addMeaningChallengeRequest = AddMeaningChallengeRequest.builder()
+        .friendsIds(ImmutableList.of(user2.getId()))
+        .expiryDate(meaningChallengeExpiryDate)
+        .build();
+    MeaningChallenge meaningChallengeResponse =
+        azkarApi.addMeaningChallengeAndReturn(user1, addMeaningChallengeRequest);
+
+    // Add one azkar challenge.
+    AzkarChallenge challenge = ChallengeFactory.getNewChallenge("groupId").toBuilder()
+        .expiryDate(azkarChallengeExpiryDate)
+        .groupId(null)
+        .build();
+    AddAzkarChallengeRequest addAzkarChallengeRequest =
+        AddAzkarChallengeRequest.AddFriendsChallengeRequestBuilder().
+            friendsIds(ImmutableList.of(user2.getId(), user3.getId()))
+            .challenge(challenge)
+            .build();
+
+    result = azkarApi.addFriendsChallenge(user1, addAzkarChallengeRequest)
+        .andExpect(status().isOk())
+        .andReturn();
+
+    // Finish some challenges
+    azkarApi.finishMeaningChallenge(user1, meaningChallengeResponse.getId());
+    azkarApi.finishReadingQuranChallenge(user1, addReadingQuranChallengeResponse.getData().getId());
+
+    MvcResult mvcResult = azkarApi.getFinishedChallengesCount(user1)
+        .andExpect(status().isOk())
+        .andReturn();
+    GetFinishedChallengesCountResponse response = JsonHandler
+        .fromJson(mvcResult.getResponse().getContentAsString(),
+            GetFinishedChallengesCountResponse.class);
+
+    assertThat(response.getData(), is(2));
   }
 
   private AzkarChallenge createGroupChallenge(User user, Group group)
