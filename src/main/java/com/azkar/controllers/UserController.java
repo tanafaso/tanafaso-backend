@@ -15,6 +15,7 @@ import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.PubliclyAvailableFemaleUsersRepo;
 import com.azkar.repos.PubliclyAvailableMaleUsersRepo;
 import com.azkar.repos.UserRepo;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -221,6 +222,10 @@ public class UserController extends BaseController {
                 .lastName(publiclyAvailableFemaleUser.getLastName())
                 .build())
             .collect(Collectors.toList());
+
+    // Return them in reverse order so that newly added members are shown first.
+    Collections.reverse(publiclyAvailableUsers);
+
     response.setData(publiclyAvailableUsers);
     return ResponseEntity.ok(response);
   }

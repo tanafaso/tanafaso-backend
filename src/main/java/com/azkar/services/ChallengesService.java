@@ -31,16 +31,16 @@ public class ChallengesService {
 
     List<AzkarChallenge> recentUserAzkarChallenges =
         allUserAzkarChallenges.subList(Math.max(0,
-            allUserAzkarChallenges.size() - MAX_RETURNED_AZKAR_CHALLENGES / 3),
+            allUserAzkarChallenges.size() - MAX_RETURNED_AZKAR_CHALLENGES),
             allUserAzkarChallenges.size());
     List<MeaningChallenge> recentUserMeaningChallenges =
         allUserMeaningChallenges
-            .subList(Math.max(0, allUserMeaningChallenges.size() - MAX_RETURNED_MEANING_CHALLENGES / 3),
+            .subList(Math.max(0, allUserMeaningChallenges.size() - MAX_RETURNED_MEANING_CHALLENGES),
                 allUserMeaningChallenges.size());
     List<ReadingQuranChallenge> recentReadingQuranChallenges =
         allUserReadingQuranChallenges
             .subList(Math.max(0,
-                allUserReadingQuranChallenges.size() - MAX_RETURNED_READING_QURAN_CHALLENGES / 3),
+                allUserReadingQuranChallenges.size() - MAX_RETURNED_READING_QURAN_CHALLENGES),
                 allUserReadingQuranChallenges.size());
 
     List<ReturnedChallenge> challenges = new ArrayList<>();
