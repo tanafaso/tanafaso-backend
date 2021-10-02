@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class ChallengesService {
 
-  private static final int MAX_RETURNED_CHALLENGES = 30;
+  private static final int MAX_RETURNED_AZKAR_CHALLENGES = 20;
+  private static final int MAX_RETURNED_READING_QURAN_CHALLENGES = 5;
+  private static final int MAX_RETURNED_MEANING_CHALLENGES = 5;
 
   @Autowired
   ReturnedChallengeComparator returnedChallengeComparator;
@@ -29,16 +31,16 @@ public class ChallengesService {
 
     List<AzkarChallenge> recentUserAzkarChallenges =
         allUserAzkarChallenges.subList(Math.max(0,
-            allUserAzkarChallenges.size() - MAX_RETURNED_CHALLENGES / 3),
+            allUserAzkarChallenges.size() - MAX_RETURNED_AZKAR_CHALLENGES / 3),
             allUserAzkarChallenges.size());
     List<MeaningChallenge> recentUserMeaningChallenges =
         allUserMeaningChallenges
-            .subList(Math.max(0, allUserMeaningChallenges.size() - MAX_RETURNED_CHALLENGES / 3),
+            .subList(Math.max(0, allUserMeaningChallenges.size() - MAX_RETURNED_MEANING_CHALLENGES / 3),
                 allUserMeaningChallenges.size());
     List<ReadingQuranChallenge> recentReadingQuranChallenges =
         allUserReadingQuranChallenges
             .subList(Math.max(0,
-                allUserReadingQuranChallenges.size() - MAX_RETURNED_CHALLENGES / 3),
+                allUserReadingQuranChallenges.size() - MAX_RETURNED_READING_QURAN_CHALLENGES / 3),
                 allUserReadingQuranChallenges.size());
 
     List<ReturnedChallenge> challenges = new ArrayList<>();
