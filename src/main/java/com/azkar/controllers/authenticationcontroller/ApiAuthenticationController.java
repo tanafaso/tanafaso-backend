@@ -26,12 +26,14 @@ import com.google.api.client.extensions.appengine.http.UrlFetchTransport;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -427,24 +429,20 @@ public class ApiAuthenticationController extends BaseController {
       @RequestBody GoogleAuthenticationRequest request) {
     GoogleAuthenticationResponse response = new GoogleAuthenticationResponse();
     GoogleIdTokenVerifier verifier =
-        new GoogleIdTokenVerifier.Builder(
-            UrlFetchTransport.getDefaultInstance(),
-            new JacksonFactory())
-            .setAudience(Collections.singletonList(googleClientId))
-            .build();
+        new GoogleIdTokenVerifier(new NetHttpTransport(), new GsonFactory());
 
     GoogleIdToken idToken;
     try {
-      idToken = verifier.verify(request.getGoogleTokenId());
+      idToken = verifier.verify(request.getGoogleIdToken());
     } catch (Exception e) {
-      logger.warn("Failed to verify the Google ID token: {}", request.getGoogleTokenId(), e);
+      logger.warn("Failed to verify the Google ID token: {}", request.getGoogleIdToken(), e);
       response.setStatus(new Status(Status.AUTHENTICATION_WITH_GOOGLE_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
 
     if (idToken == null) {
-      logger.warn("ID token returned from verification for token: {} is empy",
-          request.getGoogleTokenId());
+      logger.warn("ID token returned from verification for token: {} is empty",
+          request.getGoogleIdToken());
       response.setStatus(new Status(Status.AUTHENTICATION_WITH_GOOGLE_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
@@ -485,7 +483,9 @@ public class ApiAuthenticationController extends BaseController {
 
     HttpHeaders httpHeaders = new HttpHeaders();
     httpHeaders.setBearerAuth(jwtToken);
-    return ResponseEntity.ok(response);
+    ResponseEntity<GoogleAuthenticationResponse> responseEntity =
+        new ResponseEntity<>(response, httpHeaders, HttpStatus.OK);
+    return responseEntity;
   }
 
   private void sendVerificationEmail(String email, int pin)
