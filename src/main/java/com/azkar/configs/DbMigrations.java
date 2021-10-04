@@ -344,6 +344,15 @@ public class DbMigrations {
       mongoTemplate.save(user);
     });
   }
+/*
+
+  @ChangeSet(order = "0008", id = "cleanUpOldChallenges", author = "")
+  public void cleanUpOldChallenges(MongoTemplate mongoTemplate) {
+    mongoTemplate.findAll(User.class).stream().forEach(user -> {
+
+    });
+  }
+*/
 
   private void updateFriendScore(MongoTemplate mongoTemplate, String userId, Friend friend) {
     User user = mongoTemplate.findById(userId, User.class);

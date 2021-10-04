@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GoogleAuthenticationRequest extends RequestBodyBase {
 
-  private String googleTokenId;
+  private String googleIdToken;
 
   @Override public void validate() throws BadRequestException {
-    checkNotNull(googleTokenId);
+    checkNotNull(googleIdToken);
   }
 }
