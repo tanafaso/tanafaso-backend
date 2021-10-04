@@ -75,6 +75,7 @@ public abstract class ResponseBase<T> {
     public static final int USER_NOT_ADDED_TO_PUBLICLY_AVAILABLE_USERS_ERROR = 55;
     public static final int USER_ALREADY_IS_PUBLICLY_AVAILABLE_USER_ERROR = 56;
     public static final int FACEBOOK_RETURNED_NULL_EMAIL_ADDRESS_ERROR = 57;
+    public static final int AUTHENTICATION_WITH_GOOGLE_ERROR = 10;
 
     public int code;
 

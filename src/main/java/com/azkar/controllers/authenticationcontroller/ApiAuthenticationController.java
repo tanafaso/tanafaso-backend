@@ -9,21 +9,29 @@ import com.azkar.payload.authenticationcontroller.requests.EmailLoginRequestBody
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.FacebookAuthenticationRequest;
+import com.azkar.payload.authenticationcontroller.requests.GoogleAuthenticationRequest;
 import com.azkar.payload.authenticationcontroller.requests.ResetPasswordRequest;
 import com.azkar.payload.authenticationcontroller.responses.EmailLoginResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailVerificationResponse;
 import com.azkar.payload.authenticationcontroller.responses.FacebookAuthenticationResponse;
+import com.azkar.payload.authenticationcontroller.responses.GoogleAuthenticationResponse;
 import com.azkar.payload.authenticationcontroller.responses.ResetPasswordResponse;
 import com.azkar.repos.RegistrationEmailConfirmationStateRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.JwtService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.api.client.extensions.appengine.http.UrlFetchTransport;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -36,6 +44,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
@@ -59,6 +68,7 @@ import org.springframework.web.client.RestTemplate;
 public class ApiAuthenticationController extends BaseController {
 
   public static final String LOGIN_WITH_FACEBOOK_PATH = "/login/facebook";
+  public static final String LOGIN_WITH_GOOGLE_PATH = "/login/google";
   // Use REGISTER_WITH_EMAIL_V2_PATH instead.
   @Deprecated
   public static final String REGISTER_WITH_EMAIL_PATH = "/register/email";
@@ -91,6 +101,10 @@ public class ApiAuthenticationController extends BaseController {
   @Autowired
   private JavaMailSender javaMailSender;
   private RestTemplate restTemplate;
+
+  @Value("${GOOGLE_CLIENT_ID}")
+  private String googleClientId;
+
 
   public ApiAuthenticationController(RestTemplateBuilder restTemplateBuilder) {
     restTemplate = restTemplateBuilder.build();
@@ -405,6 +419,72 @@ public class ApiAuthenticationController extends BaseController {
     user.setUserFacebookData(userFacebookData);
     userRepo.save(user);
 
+    return ResponseEntity.ok(response);
+  }
+
+  @PutMapping(value = LOGIN_WITH_GOOGLE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<GoogleAuthenticationResponse> loginWithGoogle(
+      @RequestBody GoogleAuthenticationRequest request) {
+    GoogleAuthenticationResponse response = new GoogleAuthenticationResponse();
+    GoogleIdTokenVerifier verifier =
+        new GoogleIdTokenVerifier.Builder(
+            UrlFetchTransport.getDefaultInstance(),
+            new JacksonFactory())
+            .setAudience(Collections.singletonList(googleClientId))
+            .build();
+
+    GoogleIdToken idToken;
+    try {
+      idToken = verifier.verify(request.getGoogleTokenId());
+    } catch (Exception e) {
+      logger.warn("Failed to verify the Google ID token: {}", request.getGoogleTokenId(), e);
+      response.setStatus(new Status(Status.AUTHENTICATION_WITH_GOOGLE_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    if (idToken == null) {
+      logger.warn("ID token returned from verification for token: {} is empy",
+          request.getGoogleTokenId());
+      response.setStatus(new Status(Status.AUTHENTICATION_WITH_GOOGLE_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    Payload payload = idToken.getPayload();
+    String userId = payload.getSubject();
+    String email = payload.getEmail();
+    boolean emailVerified = Boolean.valueOf(payload.getEmailVerified());
+    String name = (String) payload.get("name");
+    String familyName = (String) payload.get("family_name");
+    String givenName = (String) payload.get("given_name");
+    logger.info("User is trying to login with Google [userId: {}, email: {}, emailVerified: {},"
+            + " name: {}, familyName: {}, givenName: {}]", userId, email, emailVerified, name,
+        familyName, givenName);
+
+    Optional<User> user = userRepo.findByEmail(email);
+    if (user.isPresent()) {
+      logger.info("Logging with Google: User has logged in with this email before");
+    } else {
+      if (givenName == null || givenName.isEmpty()) {
+        user = Optional.of(
+            userService.addNewUser(userService.buildNewUser(email, name, "")));
+      } else {
+        user = Optional.of(
+            userService.addNewUser(userService.buildNewUser(email, givenName, familyName)));
+      }
+    }
+
+    String jwtToken;
+    try {
+      jwtToken = jwtService.generateToken(user.get());
+    } catch (UnsupportedEncodingException e) {
+      logger.warn("Failed to generate JWT token for user logging in with Google with email {}",
+          email, e);
+      response.setStatus(new Status(Status.AUTHENTICATION_WITH_GOOGLE_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    HttpHeaders httpHeaders = new HttpHeaders();
+    httpHeaders.setBearerAuth(jwtToken);
     return ResponseEntity.ok(response);
   }
 

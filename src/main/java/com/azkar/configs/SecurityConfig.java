@@ -35,6 +35,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       WebAuthenticationController.VERIFY_EMAIL_V2_PATH,
       ApiAuthenticationController.LOGIN_WITH_EMAIL_PATH,
       ApiAuthenticationController.LOGIN_WITH_FACEBOOK_PATH,
+      ApiAuthenticationController.LOGIN_WITH_GOOGLE_PATH,
       ApiAuthenticationController.RESET_PASSWORD_PATH,
       AppLinkController.STORE_LINK_ANDROID_PATH,
       AppLinkController.STORE_LINK_IOS_PATH,

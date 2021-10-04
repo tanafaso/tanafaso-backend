@@ -116,6 +116,11 @@
       <artifactId>firebase-admin</artifactId>
       <version>7.1.1</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.api-client</groupId>
+      <artifactId>google-api-client</artifactId>
+      <version>1.31.5</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
