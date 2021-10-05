@@ -43,6 +43,7 @@ public class User extends EntityBase {
   @Indexed(name = "username_index", unique = true)
   @Default
   private List<AzkarChallenge> personalChallenges = new ArrayList<>();
+  private int finishedPersonalChallengesCount;
   private String username;
   @NotNull
   private String firstName;
@@ -59,13 +60,13 @@ public class User extends EntityBase {
   private List<AzkarChallenge> userChallenges = new ArrayList();
   @Default
   private List<AzkarChallenge> azkarChallenges = new ArrayList();
-  //  private int finishedAzkarChallengesCount;
+  private int finishedAzkarChallengesCount;
   @Default
   private List<MeaningChallenge> meaningChallenges = new ArrayList();
-  //  private int finishedMeaningChallengesCount;
+  private int finishedMeaningChallengesCount;
   @Default
   private List<ReadingQuranChallenge> readingQuranChallenges = new ArrayList();
-  //  private int finishedReadingQuranChallengesCount;
+  private int finishedReadingQuranChallengesCount;
   @JsonIgnore
   @Default
   private String resetPasswordToken = "";
