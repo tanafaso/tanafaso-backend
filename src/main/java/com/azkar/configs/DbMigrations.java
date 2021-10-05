@@ -345,15 +345,46 @@ public class DbMigrations {
     });
   }
 
-  /*
+  @ChangeSet(order = "0008", id = "populateFinishedChallengesCount", author = "")
+  public void populateFinishedChallengesCount(MongoTemplate mongoTemplate) {
+    mongoTemplate.findAll(User.class).stream().forEach(user -> {
+      int finishedAzkarChallengesCount =
+          (int) user.getAzkarChallenges().stream()
+              .filter(azkarChallenge -> azkarChallenge.finished()).count();
+      user.setFinishedAzkarChallengesCount(finishedAzkarChallengesCount);
 
-    @ChangeSet(order = "0008", id = "cleanUpOldChallenges", author = "")
-    public void cleanUpOldChallenges(MongoTemplate mongoTemplate) {
-      mongoTemplate.findAll(User.class).stream().forEach(user -> {
+      int finishedReadingQuranChallengesCount =
+          (int) user.getReadingQuranChallenges().stream()
+              .filter(readingQuranChallenge -> readingQuranChallenge.isFinished()).count();
+      user.setFinishedReadingQuranChallengesCount(finishedReadingQuranChallengesCount);
 
-      });
-    }
-  */
+      int finishedMeaningChallengesCount =
+          (int) user.getMeaningChallenges().stream()
+              .filter(meaningChallenge -> meaningChallenge.isFinished()).count();
+      user.setFinishedMeaningChallengesCount(finishedMeaningChallengesCount);
+
+    });
+  }
+
+  @ChangeSet(order = "0009", id = "cleanUpOldChallenges", author = "")
+  public void cleanUpOldChallenges(MongoTemplate mongoTemplate) {
+    mongoTemplate.findAll(User.class).stream().forEach(user -> {
+      user.setPersonalChallenges(new ArrayList<>());
+      user.setUserChallenges(new ArrayList<>());
+
+      user.setAzkarChallenges(user.getAzkarChallenges().subList(
+          Math.max(0, user.getAzkarChallenges().size() - 100),
+          user.getAzkarChallenges().size()));
+
+      user.setReadingQuranChallenges(user.getReadingQuranChallenges().subList(
+          Math.max(0, user.getReadingQuranChallenges().size() - 100),
+          user.getReadingQuranChallenges().size()));
+
+      user.setMeaningChallenges(user.getMeaningChallenges().subList(
+          Math.max(0, user.getMeaningChallenges().size() - 100),
+          user.getMeaningChallenges().size()));
+    });
+  }
 
   private void updateFriendScore(MongoTemplate mongoTemplate, String userId, Friend friend) {
     User user = mongoTemplate.findById(userId, User.class);

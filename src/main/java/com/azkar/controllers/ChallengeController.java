@@ -898,10 +898,8 @@ public class ChallengeController extends BaseController {
       // Invalidate current user because it may have changed indirectly (by changing only the
       // database instance) after calling updateChallengeOnUserFinished.
       currentUser = userRepo.findById(currentUser.getId()).get();
-      /*
-            currentUser
-                .setFinishedAzkarChallengesCount(currentUser.getFinishedAzkarChallengesCount() + 1);
-      */
+      currentUser
+          .setFinishedAzkarChallengesCount(currentUser.getFinishedAzkarChallengesCount() + 1);
 
       sendNotificationOnFinishedAzkarChallenge(getCurrentUser(userRepo), challenge);
       azkarChallengeRepo.save(challenge);
@@ -949,10 +947,8 @@ public class ChallengeController extends BaseController {
     // Invalidate current user because it may have changed indirectly (by changing only the
     // database instance) after calling updateChallengeOnUserFinished.
     currentUser = userRepo.findById(currentUser.getId()).get();
-    /*
-        currentUser
-            .setFinishedMeaningChallengesCount(currentUser.getFinishedMeaningChallengesCount() + 1);
-    */
+    currentUser
+        .setFinishedMeaningChallengesCount(currentUser.getFinishedMeaningChallengesCount() + 1);
 
     sendNotificationOnFinishedMeaningChallenge(getCurrentUser(userRepo), challenge);
     meaningChallengeRepo.save(challenge);
@@ -999,10 +995,8 @@ public class ChallengeController extends BaseController {
     // Invalidate current user because it may have changed indirectly (by changing only the
     // database instance) after calling updateChallengeOnUserFinished.
     currentUser = userRepo.findById(currentUser.getId()).get();
-    /*
-        currentUser.setFinishedReadingQuranChallengesCount(
-            currentUser.getFinishedReadingQuranChallengesCount() + 1);
-    */
+    currentUser.setFinishedReadingQuranChallengesCount(
+        currentUser.getFinishedReadingQuranChallengesCount() + 1);
 
     sendNotificationOnFinishedReadingQuranChallenge(getCurrentUser(userRepo), challenge);
     readingQuranChallengeRepo.save(challenge);
@@ -1133,14 +1127,12 @@ public class ChallengeController extends BaseController {
   public ResponseEntity<GetFinishedChallengesCountResponse> getFinishedChallengesCount() {
     GetFinishedChallengesCountResponse response = new GetFinishedChallengesCountResponse();
 
-    int finishedChallengesCount = 0;
     User user = getCurrentUser(userRepo);
-    for (UserGroup userGroup : user.getUserGroups()) {
-      finishedChallengesCount += userGroup.getTotalScore();
-    }
-    for (AzkarChallenge azkarChallenge : user.getPersonalChallenges()) {
-      finishedChallengesCount += azkarChallenge.finished() ? 1 : 0;
-    }
+    int finishedChallengesCount =
+        user.getFinishedAzkarChallengesCount()
+            + user.getFinishedMeaningChallengesCount()
+            + user.getFinishedReadingQuranChallengesCount()
+            + user.getFinishedPersonalChallengesCount();
 
     response.setData(finishedChallengesCount);
     return ResponseEntity.ok(response);
