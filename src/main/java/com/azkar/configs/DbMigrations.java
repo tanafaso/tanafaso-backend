@@ -341,13 +341,15 @@ public class DbMigrations {
   public void populateUserAzkarChallenges(MongoTemplate mongoTemplate) {
     mongoTemplate.findAll(User.class).stream().forEach(user -> {
       user.setAzkarChallenges(user.getUserChallenges());
+      // Noted later: that was not safe as we shouldn't be modifying the source of the stream
+      // within the stream function.
       mongoTemplate.save(user);
     });
   }
 
   @ChangeSet(order = "0008", id = "populateFinishedChallengesCount", author = "")
   public void populateFinishedChallengesCount(MongoTemplate mongoTemplate) {
-    mongoTemplate.findAll(User.class).stream().forEach(user -> {
+    List<User> modifiedUsers = mongoTemplate.findAll(User.class).stream().map(user -> {
       int finishedAzkarChallengesCount =
           (int) user.getAzkarChallenges().stream()
               .filter(azkarChallenge -> azkarChallenge.finished()).count();
@@ -363,12 +365,18 @@ public class DbMigrations {
               .filter(meaningChallenge -> meaningChallenge.isFinished()).count();
       user.setFinishedMeaningChallengesCount(finishedMeaningChallengesCount);
 
-    });
+      logger.info("Populating finished challenges count [azkar: {}, reading: {}, meaning: {}] for "
+              + "user: {}", finishedAzkarChallengesCount, finishedReadingQuranChallengesCount,
+          finishedMeaningChallengesCount, user.getUsername());
+      return user;
+    }).collect(Collectors.toList());
+
+    modifiedUsers.stream().forEach(user -> mongoTemplate.save(user));
   }
 
   @ChangeSet(order = "0009", id = "cleanUpOldChallenges", author = "")
   public void cleanUpOldChallenges(MongoTemplate mongoTemplate) {
-    mongoTemplate.findAll(User.class).stream().forEach(user -> {
+    List<User> modifiedUsers = mongoTemplate.findAll(User.class).stream().map(user -> {
       user.setPersonalChallenges(new ArrayList<>());
       user.setUserChallenges(new ArrayList<>());
 
@@ -383,7 +391,10 @@ public class DbMigrations {
       user.setMeaningChallenges(user.getMeaningChallenges().subList(
           Math.max(0, user.getMeaningChallenges().size() - 100),
           user.getMeaningChallenges().size()));
-    });
+      return user;
+    }).collect(Collectors.toList());
+
+    modifiedUsers.forEach(user -> mongoTemplate.save(user));
   }
 
   private void updateFriendScore(MongoTemplate mongoTemplate, String userId, Friend friend) {
