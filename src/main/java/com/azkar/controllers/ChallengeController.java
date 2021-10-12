@@ -9,16 +9,20 @@ import com.azkar.entities.User.UserGroup;
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
+import com.azkar.entities.challenges.MemorizationChallenge;
+import com.azkar.entities.challenges.MemorizationChallenge.Question;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddAzkarChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.AddMemorizationChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddReadingQuranChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.AddMemorizationChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
@@ -38,10 +42,12 @@ import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.MeaningChallengeRepo;
+import com.azkar.repos.MemorizationChallengeRepo;
 import com.azkar.repos.ReadingQuranChallengeRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.ChallengesService;
 import com.azkar.services.NotificationsService;
+import com.azkar.services.QuranService;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,6 +91,8 @@ public class ChallengeController extends BaseController {
   @Autowired
   private MeaningChallengeRepo meaningChallengeRepo;
   @Autowired
+  private MemorizationChallengeRepo memorizationChallengeRepo;
+  @Autowired
   private ReadingQuranChallengeRepo readingQuranChallengeRepo;
   @Autowired
   private GroupRepo groupRepo;
@@ -94,6 +102,8 @@ public class ChallengeController extends BaseController {
   private TafseerCacher tafseerCacher;
   @Autowired
   private ChallengesService challengesService;
+  @Autowired
+  private QuranService quranService;
 
   // Note: This function may modify oldSubChallenges.
   private static Optional<ResponseEntity<UpdateChallengeResponse>> updateOldSubChallenges(
@@ -667,6 +677,125 @@ public class ChallengeController extends BaseController {
 
     response.setData(challenge);
     return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/memorization")
+  public ResponseEntity<AddMemorizationChallengeResponse> addMemorizationChallenge(
+      @RequestBody AddMemorizationChallengeRequest request) {
+    AddMemorizationChallengeResponse response = new AddMemorizationChallengeResponse();
+
+    try {
+      request.validate();
+    } catch (BadRequestException e) {
+      response.setStatus(e.error);
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    User currentUser = getCurrentUser(userRepo);
+
+    // TODO(issue#328): Reuse the friend group to associate new Memorization challenges
+    HashSet<String> friendsIds = getUserFriends(currentUser);
+    boolean allValidFriends =
+        request.getFriendsIds().stream().allMatch(id -> friendsIds.contains(id));
+    if (!allValidFriends) {
+      response.setStatus(new Status(Status.ONE_OR_MORE_USERS_NOT_FRIENDS_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    List<String> groupMembers = new ArrayList<>(request.getFriendsIds());
+    groupMembers.add(currentUser.getId());
+
+    Group newGroup = Group.builder()
+        .id(new ObjectId().toString())
+        .creatorId(currentUser.getId())
+        .usersIds(groupMembers)
+        .build();
+
+    UserGroup userGroup = UserGroup.builder()
+        .groupId(newGroup.getId())
+        .invitingUserId(currentUser.getId())
+        .monthScore(0)
+        .totalScore(0)
+        .build();
+
+    MemorizationChallenge challenge = createMemorizationChallenge(request, currentUser, newGroup);
+
+    newGroup.getChallengesIds().add(challenge.getId());
+
+    Iterable<User> affectedUsers = userRepo.findAllById(groupMembers);
+    affectedUsers.forEach(user -> {
+      user.getMemorizationChallenges().add(challenge);
+      user.getUserGroups().add(userGroup);
+    });
+
+    userRepo.saveAll(affectedUsers);
+    groupRepo.save(newGroup);
+    memorizationChallengeRepo.save(challenge);
+
+    affectedUsers.forEach(affectedUser -> {
+      if (!affectedUser.getId().equals(currentUser.getId())) {
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += currentUser.getFirstName();
+        body += " ";
+        body += currentUser.getLastName();
+        body += " (";
+
+        body += "اختبار حفظ قرآن";
+        body += ")";
+        notificationsService.sendNotificationToUser(affectedUser, "لديك تحدٍ جديد",
+            body);
+      }
+    });
+
+    response.setData(challenge);
+    return ResponseEntity.ok(response);
+  }
+
+  private MemorizationChallenge createMemorizationChallenge(AddMemorizationChallengeRequest request,
+      User user, Group group) {
+    MemorizationChallenge memorizationChallenge =
+        MemorizationChallenge.builder()
+            .id(new ObjectId().toString())
+            .creatingUserId(user.getId())
+            .groupId(group.getId())
+            .expiryDate(request.getExpiryDate())
+            .finished(false)
+            .questions(new ArrayList<>())
+            .build();
+
+    for (int i = 0; i < request.getNumberOfQuestions(); i++) {
+      int juz =
+          quranService.getRandomJuzInRange(request.getFirstJuz(), request.getLastJuz());
+      int ayah = quranService.getRandomAyahInJuz(juz);
+      int surah = quranService.getSurahOfAyah(ayah);
+      int firstAyahInJuz = quranService.getFirstAyahInJuz(juz);
+      int rub = quranService.getRubOfAya(ayah);
+      int firstAyahInRub = quranService.getFirstAyahInRub(rub);
+      List<Integer> wrongPreviousAyahOptions = quranService.getRandomTwoWrongPreviousAyahs(ayah);
+      List<Integer> wrongNextAyahOptions = quranService.getRandomTwoWrongNextAyahs(ayah);
+      List<Integer> wrongFirstAyahsInRubOptions =
+          quranService.getRandomTwoWrongFirstAyahsInRub(rub);
+      List<Integer> wrongFirstAyahsInJuzOptions =
+          quranService.getRandomTwoWrongFirstAyahsInJuz(juz);
+      List<Integer> wrongSurahsOptions = quranService.getRandomTwoWrongSurahsOfAyah(ayah);
+
+      Question question = Question.builder().build();
+      question.setJuz(juz);
+      question.setAyah(ayah);
+      question.setSurah(surah);
+      question.setFirstAyahInJuz(firstAyahInJuz);
+      question.setFirstAyahInRub(firstAyahInRub);
+      question.setWrongPreviousAyahOptions(wrongPreviousAyahOptions);
+      question.setWrongNextAyahOptions(wrongNextAyahOptions);
+      question.setWrongFirstAyahInRubOptions(wrongFirstAyahsInRubOptions);
+      question.setWrongFirstAyahInJuzOptions(wrongFirstAyahsInJuzOptions);
+      question.setWrongSurahOptions(wrongSurahsOptions);
+
+      memorizationChallenge.getQuestions().add(question);
+    }
+    return memorizationChallenge;
   }
 
   @PostMapping("/reading_quran")
