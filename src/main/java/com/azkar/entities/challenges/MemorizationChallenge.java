@@ -18,9 +18,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "memorization_challenges")
 public class MemorizationChallenge extends ChallengeBase {
 
-  private boolean finished = false;
   @NotNull
   private List<Question> questions;
+  @NotNull
+  private int difficulty;
+
+  public boolean finished() {
+    return !questions.stream().anyMatch(question -> !question.isFinished());
+  }
 
   @Getter
   @Setter
@@ -49,5 +54,6 @@ public class MemorizationChallenge extends ChallengeBase {
     private List<Integer> wrongFirstAyahInJuzOptions;
     @NotNull
     private List<Integer> wrongSurahOptions;
+    private boolean finished = false;
   }
 }

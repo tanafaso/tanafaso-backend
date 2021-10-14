@@ -4,8 +4,9 @@ import com.opencsv.CSVReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,10 +29,14 @@ public class QuranMetadataCacher {
   @Value("${files.quran-metadata}")
   public String quranMetadataFile;
 
-  List<AyahMetadata> ayahsMetadata;
-  List<SurahMetadata> surahsMetadata;
-  List<JuzMetadata> juzsMetadata;
-  List<RubMetadata> rubsMetadata;
+  // Maps the 1-based index of Ayah to the Ayah's metadata.
+  Map<Integer, AyahMetadata> ayahsMetadata;
+  // Maps the 1-based index of Surah to the first Ayah in it.
+  Map<Integer, Integer> firstAyahsInSurahs;
+  // Maps the 1-based index of Juz to the first Ayah in it.
+  Map<Integer, Integer> firstAyahsInJuzs;
+  // Maps the 1-based index of Rub to the first Ayah in it.
+  Map<Integer, Integer> firstAyahsInRubs;
 
   @Bean
   @Primary
@@ -40,9 +45,9 @@ public class QuranMetadataCacher {
 
     List<LineInQuranMetadataFile> linesInQuranMetadataFile = parseQuranMetadataFile();
     quranMetadataCacher.setAyahsMetadata(buildAyahsMetadata(linesInQuranMetadataFile));
-    quranMetadataCacher.setSurahsMetadata(buildSurahsMetadata(linesInQuranMetadataFile));
-    quranMetadataCacher.setJuzsMetadata(buildJuzsMetadata(linesInQuranMetadataFile));
-    quranMetadataCacher.setRubsMetadata(buildRubsMetadata(linesInQuranMetadataFile));
+    quranMetadataCacher.setFirstAyahsInSurahs(buildSurahsMetadata(linesInQuranMetadataFile));
+    quranMetadataCacher.setFirstAyahsInJuzs(buildJuzsMetadata(linesInQuranMetadataFile));
+    quranMetadataCacher.setFirstAyahsInRubs(buildRubsMetadata(linesInQuranMetadataFile));
 
     return quranMetadataCacher;
   }
@@ -89,85 +94,70 @@ public class QuranMetadataCacher {
   }
 
 
-  private List<RubMetadata> buildRubsMetadata(
+  private Map<Integer, Integer> buildRubsMetadata(
       List<LineInQuranMetadataFile> linesInQuranMetadataFile) {
-    List<RubMetadata> rubsMetadata = new ArrayList<>();
+    Map<Integer, Integer> firstAyahInRub = new HashMap<>();
 
     int currentRub = 1;
-    rubsMetadata.add(RubMetadata.builder()
-        .rub(1)
-        .firstAyahInRub(1)
-        .build());
+    firstAyahInRub.put(1, 1);
 
     for (LineInQuranMetadataFile lineInQuranMetadataFile : linesInQuranMetadataFile) {
       if (lineInQuranMetadataFile.rub != currentRub) {
         currentRub = lineInQuranMetadataFile.rub;
-        rubsMetadata.add(RubMetadata.builder()
-            .rub(currentRub)
-            .firstAyahInRub(lineInQuranMetadataFile.ayah)
-            .build());
+        firstAyahInRub.put(currentRub, lineInQuranMetadataFile.ayah);
       }
     }
 
-    return rubsMetadata;
+    return firstAyahInRub;
   }
 
-  private List<JuzMetadata> buildJuzsMetadata(
+  private Map<Integer, Integer> buildJuzsMetadata(
       List<LineInQuranMetadataFile> linesInQuranMetadataFile) {
-    List<JuzMetadata> juzsMetadata = new ArrayList<>();
+    Map<Integer, Integer> firstAyahInJuz = new HashMap<>();
 
     int currentJuz = 1;
-    juzsMetadata.add(JuzMetadata.builder()
-        .juz(1)
-        .firstAyahInJuz(1)
-        .build());
+    firstAyahInJuz.put(1, 1);
 
     for (LineInQuranMetadataFile lineInQuranMetadataFile : linesInQuranMetadataFile) {
       if (lineInQuranMetadataFile.juz != currentJuz) {
         currentJuz = lineInQuranMetadataFile.juz;
-        juzsMetadata.add(JuzMetadata.builder()
-            .juz(currentJuz)
-            .firstAyahInJuz(lineInQuranMetadataFile.ayah)
-            .build());
+        firstAyahInJuz.put(currentJuz, lineInQuranMetadataFile.ayah);
       }
     }
 
-    return juzsMetadata;
+    return firstAyahInJuz;
   }
 
-  private List<SurahMetadata> buildSurahsMetadata(
+  private Map<Integer, Integer> buildSurahsMetadata(
       List<LineInQuranMetadataFile> linesInQuranMetadataFile) {
-    List<SurahMetadata> surahsMetadata = new ArrayList<>();
+    Map<Integer, Integer> firstAyahInSurah = new HashMap<>();
 
     int currentSurah = 1;
-    surahsMetadata.add(SurahMetadata.builder()
-        .surah(1)
-        .firstAyahInSurah(1)
-        .build());
+    firstAyahInSurah.put(1, 1);
 
     for (LineInQuranMetadataFile lineInQuranMetadataFile : linesInQuranMetadataFile) {
       if (lineInQuranMetadataFile.surah != currentSurah) {
         currentSurah = lineInQuranMetadataFile.surah;
-        surahsMetadata.add(SurahMetadata.builder()
-            .surah(currentSurah)
-            .firstAyahInSurah(lineInQuranMetadataFile.ayah)
-            .build());
+        firstAyahInSurah.put(currentSurah, lineInQuranMetadataFile.ayah);
       }
     }
 
-    return surahsMetadata;
+    return firstAyahInSurah;
   }
 
-  private List<AyahMetadata> buildAyahsMetadata(
+  private Map<Integer, AyahMetadata> buildAyahsMetadata(
       List<LineInQuranMetadataFile> linesInQuranMetadataFile) {
-    return linesInQuranMetadataFile.stream().map(lineInQuranMetadataFile ->
-        AyahMetadata.builder()
-            .ayah(lineInQuranMetadataFile.getAyah())
-            .surah(lineInQuranMetadataFile.getSurah())
-            .juz(lineInQuranMetadataFile.getJuz())
-            .rub(lineInQuranMetadataFile.getRub())
-            .build()
-    ).collect(Collectors.toList());
+    Map<Integer, AyahMetadata> map = new HashMap<>();
+    linesInQuranMetadataFile.stream().forEach(lineInQuranMetadataFile ->
+        map.put(lineInQuranMetadataFile.getAyah(),
+            AyahMetadata.builder()
+                .ayah(lineInQuranMetadataFile.getAyah())
+                .surah(lineInQuranMetadataFile.getSurah())
+                .juz(lineInQuranMetadataFile.getJuz())
+                .rub(lineInQuranMetadataFile.getRub())
+                .build())
+    );
+    return map;
   }
 
   @Getter
@@ -175,40 +165,7 @@ public class QuranMetadataCacher {
   @AllArgsConstructor
   @Setter
   @Builder
-  public class JuzMetadata {
-
-    int juz;
-    int firstAyahInJuz;
-  }
-
-  @Getter
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Setter
-  @Builder
-  public class RubMetadata {
-
-    int rub;
-    int firstAyahInRub;
-  }
-
-  @Getter
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Setter
-  @Builder
-  public class SurahMetadata {
-
-    int surah;
-    int firstAyahInSurah;
-  }
-
-  @Getter
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @Setter
-  @Builder
-  public class AyahMetadata {
+  public static class AyahMetadata {
 
     int ayah;
     int surah;
@@ -221,7 +178,7 @@ public class QuranMetadataCacher {
   @AllArgsConstructor
   @Setter
   @Builder
-  public class LineInQuranMetadataFile {
+  public static class LineInQuranMetadataFile {
 
     int ayah;
     int surah;

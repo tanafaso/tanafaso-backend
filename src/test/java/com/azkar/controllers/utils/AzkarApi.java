@@ -4,18 +4,22 @@ import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
+import com.azkar.entities.challenges.MemorizationChallenge;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.payload.authenticationcontroller.requests.ResetPasswordRequest;
 import com.azkar.payload.challengecontroller.requests.AddAzkarChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.AddMemorizationChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddReadingQuranChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.AddMemorizationChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.GetFinishedChallengesCountResponse;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
 import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody;
@@ -145,6 +149,22 @@ public class AzkarApi {
         JsonHandler.toJson(request));
   }
 
+  public MemorizationChallenge addMemorizationChallengeAndReturn(User user,
+      AddMemorizationChallengeRequest request) throws Exception {
+    MvcResult result = addMemorizationChallenge(user, request).andReturn();
+    AddMemorizationChallengeResponse response =
+        JsonHandler.fromJson(result.getResponse().getContentAsString(),
+            AddMemorizationChallengeResponse.class);
+    return response.getData();
+  }
+
+
+  public ResultActions addMemorizationChallenge(User user,
+      AddMemorizationChallengeRequest request) throws Exception {
+    return httpClient.performPostRequest(user, "/challenges/memorization",
+        JsonHandler.toJson(request));
+  }
+
   public MeaningChallenge addMeaningChallengeAndReturn(User user,
       AddMeaningChallengeRequest request)
       throws Exception {
@@ -171,6 +191,13 @@ public class AzkarApi {
       throws Exception {
     return httpClient.performPutRequest(user, String.format("/challenges/finish/reading_quran/%s",
         readingQuranChallengeId));
+  }
+
+  public ResultActions finishMemorizationChallengeQuestion(User user,
+      String challengeId, String question)
+      throws Exception {
+    return httpClient.performPutRequest(user, String.format("/challenges/finish/memorization/%s/%s",
+        challengeId, question));
   }
 
   public ResultActions addFriendsChallenge(User user, AddAzkarChallengeRequest request)
@@ -310,6 +337,15 @@ public class AzkarApi {
   public ResultActions getFinishedChallengesCount(User user)
       throws Exception {
     return httpClient.performGetRequest(user, "/challenges/finished-challenges-count");
+  }
+
+  public int getFinishedChallengesCountAndReturn(User user)
+      throws Exception {
+    MvcResult result = getFinishedChallengesCount(user).andReturn();
+    GetFinishedChallengesCountResponse response =
+        JsonHandler.fromJson(result.getResponse().getContentAsString(),
+            GetFinishedChallengesCountResponse.class);
+    return response.getData();
   }
 
   public ResultActions getHome(User user, String apiVersion) throws Exception {

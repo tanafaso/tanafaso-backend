@@ -27,6 +27,7 @@ import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeRespo
 import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.FinishMeaningChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.FinishMemorizationChallengeQuestionResponse;
 import com.azkar.payload.challengecontroller.responses.FinishReadingQuranChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
@@ -385,8 +386,16 @@ public class ChallengeController extends BaseController {
                 .equals(
                     challengeId))
         .findFirst();
+
+    Optional<MemorizationChallenge> memorizationChallenge = user.getMemorizationChallenges()
+        .stream()
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
     if (!azkarChallenge.isPresent() && !meaningChallenge.isPresent() && !readingQuranChallenge
-        .isPresent()) {
+        .isPresent() && !memorizationChallenge.isPresent()) {
       response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
@@ -396,9 +405,12 @@ public class ChallengeController extends BaseController {
     } else if (meaningChallenge.isPresent()) {
       user.getMeaningChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
       response.setData(meaningChallenge.get());
-    } else {
+    } else if (readingQuranChallenge.isPresent()) {
       user.getReadingQuranChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
       response.setData(readingQuranChallenge.get());
+    } else {
+      user.getMemorizationChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+      response.setData(memorizationChallenge.get());
     }
     userRepo.save(user);
     return ResponseEntity.ok(response);
@@ -761,8 +773,8 @@ public class ChallengeController extends BaseController {
             .creatingUserId(user.getId())
             .groupId(group.getId())
             .expiryDate(request.getExpiryDate())
-            .finished(false)
             .questions(new ArrayList<>())
+            .difficulty(request.getDifficulty())
             .build();
 
     for (int i = 0; i < request.getNumberOfQuestions(); i++) {
@@ -792,6 +804,7 @@ public class ChallengeController extends BaseController {
       question.setWrongFirstAyahInRubOptions(wrongFirstAyahsInRubOptions);
       question.setWrongFirstAyahInJuzOptions(wrongFirstAyahsInJuzOptions);
       question.setWrongSurahOptions(wrongSurahsOptions);
+      question.setFinished(false);
 
       memorizationChallenge.getQuestions().add(question);
     }
@@ -1134,6 +1147,86 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(new FinishReadingQuranChallengeResponse());
   }
 
+  // question is 0-based.
+  @PutMapping(path = "/finish/memorization/{challengeId}/{question}")
+  public ResponseEntity<FinishMemorizationChallengeQuestionResponse> finishMemorizationChallengeQuestion(
+      @PathVariable(value = "challengeId") String challengeId,
+      @PathVariable(value = "question") String question) {
+    User currentUser = getCurrentUser(userRepo);
+    Optional<MemorizationChallenge> currentUserChallenge = currentUser.getMemorizationChallenges()
+        .stream()
+        .filter(challenge -> challenge.getId()
+            .equals(
+                challengeId))
+        .findFirst();
+    if (!currentUserChallenge.isPresent()) {
+      FinishMemorizationChallengeQuestionResponse response =
+          new FinishMemorizationChallengeQuestionResponse();
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+    // TODO(issue#170): Time should be supplied by a bean to allow easier testing
+    if (currentUserChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
+      FinishMemorizationChallengeQuestionResponse response =
+          new FinishMemorizationChallengeQuestionResponse();
+      response.setStatus(new Status(Status.CHALLENGE_EXPIRED_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    int questionNumber;
+    try {
+      questionNumber = Integer.parseInt(question);
+    } catch (NumberFormatException e) {
+      logger.error("Couldn't parse question number {} to integer", question);
+      FinishMemorizationChallengeQuestionResponse response =
+          new FinishMemorizationChallengeQuestionResponse();
+      response
+          .setStatus(new Status(Status.MEMORIZATION_CHALLENGE_NUMBER_OF_QUESTIONS_INVALID_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    if (questionNumber >= currentUserChallenge.get().getQuestions().size() || questionNumber < 0) {
+      logger.error("Question number: {} is invalid, because the total number of questions are {}",
+          question, currentUserChallenge.get().getQuestions().size());
+      FinishMemorizationChallengeQuestionResponse response =
+          new FinishMemorizationChallengeQuestionResponse();
+      response
+          .setStatus(new Status(Status.MEMORIZATION_CHALLENGE_NUMBER_OF_QUESTIONS_INVALID_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    if (currentUserChallenge.get().getQuestions().get(questionNumber).isFinished()) {
+      FinishMemorizationChallengeQuestionResponse response =
+          new FinishMemorizationChallengeQuestionResponse();
+      response.setStatus(new Status(Status.MEMORIZATION_QUESTION_HAS_ALREADY_BEEN_FINISHED));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    currentUserChallenge.get().getQuestions().get(questionNumber).setFinished(true);
+    if (!currentUserChallenge.get().finished()) {
+      userRepo.save(currentUser);
+      return ResponseEntity.ok(new FinishMemorizationChallengeQuestionResponse());
+    }
+
+    updateScoreInUserGroup(currentUser, currentUserChallenge.get().getGroupId());
+    updateScoreInFriendships(currentUser, currentUserChallenge.get().getGroupId());
+    userRepo.save(currentUser);
+
+    MemorizationChallenge challenge = memorizationChallengeRepo.findById(challengeId).get();
+    updateMemorizationChallengeOnUserFinished(challenge, currentUser);
+    // Invalidate current user because it may have changed indirectly (by changing only the
+    // database instance) after calling updateChallengeOnUserFinished.
+    currentUser = userRepo.findById(currentUser.getId()).get();
+    currentUser.setFinishedMemorizationChallengesCount(
+        currentUser.getFinishedMemorizationChallengesCount() + 1);
+
+    sendNotificationOnFinishedMemorizationChallenge(getCurrentUser(userRepo), challenge);
+    memorizationChallengeRepo.save(challenge);
+    userRepo.save(currentUser);
+
+    return ResponseEntity.ok(new FinishMemorizationChallengeQuestionResponse());
+  }
+
   private void updateAzkarChallengeOnUserFinished(AzkarChallenge challenge, User currentUser) {
     // Update the original copy of the challenge
     challenge.getUsersFinished().add(currentUser.getId());
@@ -1175,6 +1268,23 @@ public class ChallengeController extends BaseController {
     groupRepo.findById(challenge.getGroupId()).get().getUsersIds().forEach(groupMember -> {
       User user = userRepo.findById(groupMember).get();
       user.getReadingQuranChallenges().forEach(userChallenge -> {
+        if (userChallenge.getId().equals(challenge.getId())) {
+          userChallenge.getUsersFinished().add(currentUser.getId());
+        }
+      });
+      userRepo.save(user);
+    });
+  }
+
+  private void updateMemorizationChallengeOnUserFinished(MemorizationChallenge challenge,
+      User currentUser) {
+    // Update the original copy of the challenge
+    challenge.getUsersFinished().add(currentUser.getId());
+
+    // Update users copies of the challenge
+    groupRepo.findById(challenge.getGroupId()).get().getUsersIds().forEach(groupMember -> {
+      User user = userRepo.findById(groupMember).get();
+      user.getMemorizationChallenges().forEach(userChallenge -> {
         if (userChallenge.getId().equals(challenge.getId())) {
           userChallenge.getUsersFinished().add(currentUser.getId());
         }
@@ -1252,6 +1362,29 @@ public class ChallengeController extends BaseController {
     });
   }
 
+  private void sendNotificationOnFinishedMemorizationChallenge(User userFinishedChallenge,
+      MemorizationChallenge challenge) {
+    Group group = groupRepo.findById(challenge.getGroupId()).get();
+    group.getUsersIds().stream().forEach(userId -> {
+      if (!userId.equals(userFinishedChallenge.getId())) {
+
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += userFinishedChallenge.getFirstName();
+        body += " ";
+        body += userFinishedChallenge.getLastName();
+        body += " (";
+
+        body += "اختبار حفظ قرآن";
+        body += ")";
+        notificationsService
+            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
+                body);
+      }
+    });
+  }
+
   @GetMapping("/finished-challenges-count")
   public ResponseEntity<GetFinishedChallengesCountResponse> getFinishedChallengesCount() {
     GetFinishedChallengesCountResponse response = new GetFinishedChallengesCountResponse();
@@ -1261,6 +1394,7 @@ public class ChallengeController extends BaseController {
         user.getFinishedAzkarChallengesCount()
             + user.getFinishedMeaningChallengesCount()
             + user.getFinishedReadingQuranChallengesCount()
+            + user.getFinishedMemorizationChallengesCount()
             + user.getFinishedPersonalChallengesCount();
 
     response.setData(finishedChallengesCount);
