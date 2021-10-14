@@ -51,6 +51,7 @@ public abstract class TestBase {
   public static int STARTING_AZKAR_CHALLENGES_COUNT = 1;
   public static int STARTING_MEANING_CHALLENGES_COUNT = 1;
   public static int STARTING_READING_QURAN_CHALLENGES_COUNT = 1;
+  public static int STARTING_MEMORIZATION_CHALLENGES_COUNT = 0;
   public static int STARTING_CHALLENGES_COUNT = 3;
 
   @Autowired

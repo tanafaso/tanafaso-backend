@@ -3,6 +3,7 @@ package com.azkar.services;
 import com.azkar.entities.User;
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
+import com.azkar.entities.challenges.MemorizationChallenge;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
 import com.azkar.payload.utils.FeaturesVersions;
@@ -18,6 +19,7 @@ public class ChallengesService {
   private static final int MAX_RETURNED_AZKAR_CHALLENGES = 20;
   private static final int MAX_RETURNED_READING_QURAN_CHALLENGES = 5;
   private static final int MAX_RETURNED_MEANING_CHALLENGES = 5;
+  private static final int MAX_RETURNED_MEMORIZATION_CHALLENGES = 5;
 
   @Autowired
   ReturnedChallengeComparator returnedChallengeComparator;
@@ -28,6 +30,7 @@ public class ChallengesService {
         user.getMeaningChallenges();
     List<ReadingQuranChallenge> allUserReadingQuranChallenges =
         user.getReadingQuranChallenges();
+    List<MemorizationChallenge> allUserMemorizationChallenges = user.getMemorizationChallenges();
 
     List<AzkarChallenge> recentUserAzkarChallenges =
         allUserAzkarChallenges.subList(Math.max(0,
@@ -42,6 +45,11 @@ public class ChallengesService {
             .subList(Math.max(0,
                 allUserReadingQuranChallenges.size() - MAX_RETURNED_READING_QURAN_CHALLENGES),
                 allUserReadingQuranChallenges.size());
+    List<MemorizationChallenge> recentMemorizationChallenges =
+        allUserMemorizationChallenges
+            .subList(Math.max(0,
+                allUserMemorizationChallenges.size() - MAX_RETURNED_MEMORIZATION_CHALLENGES),
+                allUserMemorizationChallenges.size());
 
     List<ReturnedChallenge> challenges = new ArrayList<>();
     recentUserAzkarChallenges.forEach(azkarChallenge -> {
@@ -56,6 +64,15 @@ public class ChallengesService {
       recentReadingQuranChallenges.forEach(readingQuranChallenge ->
           challenges
               .add(ReturnedChallenge.builder().readingQuranChallenge(readingQuranChallenge)
+                  .build()));
+    }
+
+    if (apiVersion != null
+        && VersionComparator.compare(apiVersion, FeaturesVersions.MEMORIZATION_CHALLENGE_VERSION)
+        >= 0) {
+      recentMemorizationChallenges.forEach(memorizationChallenge ->
+          challenges
+              .add(ReturnedChallenge.builder().memorizationChallenge(memorizationChallenge)
                   .build()));
     }
 

@@ -76,6 +76,10 @@ public abstract class ResponseBase<T> {
     public static final int USER_ALREADY_IS_PUBLICLY_AVAILABLE_USER_ERROR = 56;
     public static final int FACEBOOK_RETURNED_NULL_EMAIL_ADDRESS_ERROR = 57;
     public static final int AUTHENTICATION_WITH_GOOGLE_ERROR = 58;
+    public static final int MEMORIZATION_CHALLENGE_DIFFICULTY_LEVEL_INVALID_ERROR = 59;
+    public static final int MEMORIZATION_CHALLENGE_JUZ_RANGE_INVALID_ERROR = 60;
+    public static final int MEMORIZATION_CHALLENGE_NUMBER_OF_QUESTIONS_INVALID_ERROR = 61;
+    public static final int MEMORIZATION_QUESTION_HAS_ALREADY_BEEN_FINISHED = 62;
 
     public int code;
 

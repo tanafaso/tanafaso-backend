@@ -30,3 +30,4 @@ files:
   azkar: azkar.csv
   categories: categories.csv
   tafseer: tafseer.txt
+  quran-metadata: quran_metadata.csv
