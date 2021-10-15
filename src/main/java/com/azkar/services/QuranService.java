@@ -108,7 +108,7 @@ public class QuranService {
     List<Integer> candidateWrongAyahs = new ArrayList<>();
     for (int i = Math.max(1, rub - 3); i <= Math.min(LAST_RUB_IN_QURAN, rub + 3); i++) {
       if (i != rub) {
-        candidateWrongAyahs.add(getFirstAyahInRub(rub));
+        candidateWrongAyahs.add(getFirstAyahInRub(i));
       }
     }
 
@@ -140,7 +140,7 @@ public class QuranService {
     List<Integer> candidateWrongAyahs = new ArrayList<>();
     for (int i = Math.max(1, juz - 3); i <= Math.min(LAST_JUZ_IN_QURAN, juz + 3); i++) {
       if (i != juz) {
-        candidateWrongAyahs.add(getFirstAyahInJuz(juz));
+        candidateWrongAyahs.add(getFirstAyahInJuz(i));
       }
     }
 
@@ -173,7 +173,7 @@ public class QuranService {
     List<Integer> candidateWrongSurahs = new ArrayList<>();
     for (int i = Math.max(1, surah - 3); i <= Math.min(LAST_SURAH_IN_QURAN, surah + 3); i++) {
       if (i != surah) {
-        candidateWrongSurahs.add(surah);
+        candidateWrongSurahs.add(i);
       }
     }
 
