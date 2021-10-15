@@ -49,7 +49,7 @@ public class QuranService {
   public List<Integer> getRandomTwoWrongPreviousAyahs(int ayah) {
     int juz = quranMetadataCacher.getAyahsMetadata().get(ayah).getJuz();
     int firstToChooseFrom = getFirstAyahInJuz(juz);
-    int lastToChooseFrom = ayah - 1;
+    int lastToChooseFrom = ayah - 2;
 
     int firstWrongOption = getRandomNumberInRange(firstToChooseFrom, lastToChooseFrom);
     Optional<Integer> secondWrongOption = Optional.empty();
@@ -77,7 +77,7 @@ public class QuranService {
 
   public List<Integer> getRandomTwoWrongNextAyahs(int ayah) {
     int juz = quranMetadataCacher.getAyahsMetadata().get(ayah).getJuz();
-    int firstToChooseFrom = ayah + 1;
+    int firstToChooseFrom = ayah + 2;
     int lastToChooseFrom = getLastAyahInJuz(juz);
 
     int firstWrongOption = getRandomNumberInRange(firstToChooseFrom, lastToChooseFrom);
