@@ -22,6 +22,10 @@ public class MemorizationChallenge extends ChallengeBase {
   private List<Question> questions;
   @NotNull
   private int difficulty;
+  @NotNull
+  private int firstJuz;
+  @NotNull
+  private int lastJuz;
 
   public boolean finished() {
     return !questions.stream().anyMatch(question -> !question.isFinished());
@@ -34,6 +38,8 @@ public class MemorizationChallenge extends ChallengeBase {
   @Builder(toBuilder = true)
   public static class Question {
 
+    @NotNull
+    private int number;
     @NotNull
     private int juz;
     @NotNull

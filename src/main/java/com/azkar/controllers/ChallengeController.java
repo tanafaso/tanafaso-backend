@@ -775,6 +775,8 @@ public class ChallengeController extends BaseController {
             .expiryDate(request.getExpiryDate())
             .questions(new ArrayList<>())
             .difficulty(request.getDifficulty())
+            .firstJuz(request.getFirstJuz())
+            .lastJuz(request.getLastJuz())
             .build();
 
     for (int i = 0; i < request.getNumberOfQuestions(); i++) {
@@ -794,6 +796,7 @@ public class ChallengeController extends BaseController {
       List<Integer> wrongSurahsOptions = quranService.getRandomTwoWrongSurahsOfAyah(ayah);
 
       Question question = Question.builder().build();
+      question.setNumber(i);
       question.setJuz(juz);
       question.setAyah(ayah);
       question.setSurah(surah);
@@ -1150,7 +1153,7 @@ public class ChallengeController extends BaseController {
   // question is 0-based.
   @PutMapping(path = "/finish/memorization/{challengeId}/{question}")
   public ResponseEntity<FinishMemorizationChallengeQuestionResponse>
-  finishMemorizationChallengeQuestion(
+      finishMemorizationChallengeQuestion(
       @PathVariable(value = "challengeId") String challengeId,
       @PathVariable(value = "question") String question) {
     User currentUser = getCurrentUser(userRepo);
