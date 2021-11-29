@@ -3,6 +3,8 @@ package com.azkar.configs;
 import com.azkar.entities.Friendship;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
+import com.azkar.entities.PubliclyAvailableFemaleUser;
+import com.azkar.entities.PubliclyAvailableMaleUser;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
 import com.azkar.entities.challenges.AzkarChallenge;
@@ -15,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -396,6 +399,68 @@ public class DbMigrations {
 
     modifiedUsers.forEach(user -> mongoTemplate.save(user));
   }
+
+  // In one bad release, we have used com/sun/tools/javac/util/List and that affected some new
+  // users using UserService in such a way that those users were actually created but no
+  // friendships or test challenges were added to them.
+  // The bad dependency were solved in https://github.com/tanafaso/tanafaso-backend/pull/351
+  @ChangeSet(order = "0010", id = "cleanUpUsersWithoutFriendships", author = "")
+  public void cleanUpUsersWithoutFriendships(MongoTemplate mongoTemplate) {
+    Friendship sabeqFriendship =
+        mongoTemplate.findAll(Friendship.class).stream()
+            .filter(friendship -> friendship.getUserId().equals(User.SABEQ_ID)).findFirst().get();
+
+    List<User> usersToBeRemoved = new ArrayList<>();
+    mongoTemplate.findAll(User.class).stream().forEach(user -> {
+      if (!mongoTemplate.findAll(Friendship.class).stream()
+          .anyMatch(friendship -> friendship.getUserId().equals(user.getId()))) {
+        logger.info("Will remove user with ID {} and name {} and username {}", user.getId(),
+            user.getFirstName(), user.getUsername());
+        usersToBeRemoved.add(user);
+
+        if (sabeqFriendship.getFriends().stream()
+            .anyMatch(friend -> friend.getUserId().equals(user.getId()))) {
+          logger.error("Found friendship with sabeq for user with ID: {}", user.getId());
+        }
+      }
+    });
+    logger.info("Number of users to be removed {}", usersToBeRemoved.size());
+    usersToBeRemoved.stream().forEach(user -> mongoTemplate.remove(user));
+  }
+
+  // That is a follow-up from the last migration.
+  @ChangeSet(order = "0011", id = "cleanUpNonExistingPubliclyAvailableUsers", author = "")
+  public void cleanUpNonExistingPubliclyAvailableUsers(MongoTemplate mongoTemplate) {
+    Set<String> existingUserIds = new HashSet<>();
+    mongoTemplate.findAll(User.class).stream().forEach(user -> existingUserIds.add(user.getId()));
+
+    List<PubliclyAvailableMaleUser> publiclyAvailableMaleUsersToBeDeleted = new ArrayList<>();
+    List<PubliclyAvailableFemaleUser> publiclyAvailableFemaleUsersToBeDeleted = new ArrayList<>();
+    mongoTemplate.findAll(PubliclyAvailableMaleUser.class).stream()
+        .forEach(publiclyAvailableMaleUser -> {
+          if (!existingUserIds.contains(publiclyAvailableMaleUser.getUserId())) {
+            logger.info("Will delete publicly available male user with ID: {}",
+                publiclyAvailableMaleUser.getUserId(), publiclyAvailableMaleUser.getFirstName());
+            publiclyAvailableMaleUsersToBeDeleted.add(publiclyAvailableMaleUser);
+          }
+        });
+    mongoTemplate.findAll(PubliclyAvailableFemaleUser.class).stream()
+        .forEach(publiclyAvailableFemaleUser -> {
+          if (!existingUserIds.contains(publiclyAvailableFemaleUser.getUserId())) {
+            logger.info("Will delete publicly available female user with ID: {}",
+                publiclyAvailableFemaleUser.getUserId(),
+                publiclyAvailableFemaleUser.getFirstName());
+            publiclyAvailableFemaleUsersToBeDeleted.add(publiclyAvailableFemaleUser);
+          }
+        });
+    publiclyAvailableMaleUsersToBeDeleted.stream().forEach(
+        publiclyAvailableMaleUser -> mongoTemplate
+            .remove(publiclyAvailableMaleUser));
+    publiclyAvailableFemaleUsersToBeDeleted.stream().forEach(
+        publiclyAvailableFemaleUser -> mongoTemplate
+            .remove(publiclyAvailableFemaleUser));
+  }
+
 
   private void updateFriendScore(MongoTemplate mongoTemplate, String userId, Friend friend) {
     User user = mongoTemplate.findById(userId, User.class);
