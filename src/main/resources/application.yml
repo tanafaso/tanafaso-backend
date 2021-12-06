@@ -16,7 +16,7 @@ server:
     key-store-password: ${KEY_STORE_PASSWORD}
     key-store-type: PKCS12
     key-store: classpath:tanafaso.p12
-    enabled: true
+    enabled: false
 
 spring:
   main:
@@ -47,3 +47,4 @@ files:
   categories: categories.csv
   tafseer: tafseer.txt
   quran-metadata: quran_metadata.csv
+  apple_auth_private_key: sign_in_with_apple_auth_key

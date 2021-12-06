@@ -80,6 +80,7 @@ public abstract class ResponseBase<T> {
     public static final int MEMORIZATION_CHALLENGE_JUZ_RANGE_INVALID_ERROR = 60;
     public static final int MEMORIZATION_CHALLENGE_NUMBER_OF_QUESTIONS_INVALID_ERROR = 61;
     public static final int MEMORIZATION_QUESTION_HAS_ALREADY_BEEN_FINISHED = 62;
+    public static final int AUTHENTICATION_WITH_APPLE_ERROR = 63;
 
     public int code;
 

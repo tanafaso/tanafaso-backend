@@ -3,21 +3,21 @@ package com.azkar.payload.authenticationcontroller.requests;
 import com.azkar.payload.RequestBodyBase;
 import com.azkar.payload.exceptions.BadRequestException;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Getter
-@Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmailVerificationRequestBody extends RequestBodyBase {
+public class AppleAuthenticationRequest extends RequestBodyBase {
 
+  private String firstName;
+  private String lastName;
   private String email;
-  private Integer pin;
+  private String authCode;
 
   @Override public void validate() throws BadRequestException {
-    checkNotNull(email, pin);
+    checkNotNull(email, authCode, firstName, lastName);
     email = email.toLowerCase();
   }
 }

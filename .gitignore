@@ -10,5 +10,6 @@ LOGS_PATH_IS_UNDEFINED/
 src/main/java/com/azkar/configs/firebase/
 firebase-key.json
 src/main/resources/tanafaso.p12
+src/main/resources/sign_in_with_apple_auth_key
 src/main/.DS_Store
 feedback.csv
