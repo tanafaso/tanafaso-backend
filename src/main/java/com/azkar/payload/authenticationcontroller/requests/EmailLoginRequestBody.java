@@ -20,6 +20,7 @@ public class EmailLoginRequestBody extends RequestBodyBase {
 
   @Override public void validate() throws BadRequestException {
     checkNotNull(email, password);
+    email = email.toLowerCase();
     EmailAuthenticationRequestBodyUtil.validateEmail(email);
     EmailAuthenticationRequestBodyUtil.validatePassword(password);
   }

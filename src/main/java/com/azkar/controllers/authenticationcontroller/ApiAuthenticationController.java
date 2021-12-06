@@ -1,16 +1,21 @@
 package com.azkar.controllers.authenticationcontroller;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.azkar.controllers.BaseController;
 import com.azkar.entities.RegistrationEmailConfirmationState;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserFacebookData;
 import com.azkar.payload.ResponseBase.Status;
+import com.azkar.payload.authenticationcontroller.requests.AppleAuthenticationRequest;
 import com.azkar.payload.authenticationcontroller.requests.EmailLoginRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailRegistrationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.EmailVerificationRequestBody;
 import com.azkar.payload.authenticationcontroller.requests.FacebookAuthenticationRequest;
 import com.azkar.payload.authenticationcontroller.requests.GoogleAuthenticationRequest;
 import com.azkar.payload.authenticationcontroller.requests.ResetPasswordRequest;
+import com.azkar.payload.authenticationcontroller.responses.AppleAuthenticationResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailLoginResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailRegistrationResponse;
 import com.azkar.payload.authenticationcontroller.responses.EmailVerificationResponse;
@@ -27,25 +32,37 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.security.KeyFactory;
+import java.security.interfaces.ECPrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import lombok.Data;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -55,6 +72,8 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -68,6 +87,7 @@ public class ApiAuthenticationController extends BaseController {
 
   public static final String LOGIN_WITH_FACEBOOK_PATH = "/login/facebook";
   public static final String LOGIN_WITH_GOOGLE_PATH = "/login/google";
+  public static final String LOGIN_WITH_APPLE_PATH = "/login/apple";
   // Use REGISTER_WITH_EMAIL_V2_PATH instead.
   @Deprecated
   public static final String REGISTER_WITH_EMAIL_PATH = "/register/email";
@@ -86,7 +106,8 @@ public class ApiAuthenticationController extends BaseController {
   @Deprecated
   private static final String VERIFY_EMAIL_TEMPLATE_PATH = "emailTemplates/verify_email.html";
   private static final String VERIFY_EMAIL_V2_TEMPLATE_PATH = "emailTemplates/verify_email_v2.html";
-
+  @Value("${files.apple_auth_private_key}")
+  public String appleAuthPrivateKeyFile;
   @Autowired
   UserRepo userRepo;
   @Autowired
@@ -100,9 +121,12 @@ public class ApiAuthenticationController extends BaseController {
   @Autowired
   private JavaMailSender javaMailSender;
   private RestTemplate restTemplate;
-
   @Value("${GOOGLE_CLIENT_ID}")
   private String googleClientId;
+  @Value("${APPLE_TEAM_ID}")
+  private String appleTeamId;
+  @Value("${APPLE_SIGN_IN_KEY_ID}")
+  private String appleSignInKeyId;
 
 
   public ApiAuthenticationController(RestTemplateBuilder restTemplateBuilder) {
@@ -296,7 +320,6 @@ public class ApiAuthenticationController extends BaseController {
   @PutMapping(value = LOGIN_WITH_FACEBOOK_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FacebookAuthenticationResponse> loginWithFacebook(
       @RequestBody FacebookAuthenticationRequest requestBody) {
-
     requestBody.validate();
     FacebookAuthenticationResponse response = new FacebookAuthenticationResponse();
 
@@ -424,6 +447,8 @@ public class ApiAuthenticationController extends BaseController {
   @PutMapping(value = LOGIN_WITH_GOOGLE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<GoogleAuthenticationResponse> loginWithGoogle(
       @RequestBody GoogleAuthenticationRequest request) {
+    request.validate();
+
     GoogleAuthenticationResponse response = new GoogleAuthenticationResponse();
     GoogleIdTokenVerifier verifier =
         new GoogleIdTokenVerifier(new NetHttpTransport(), new GsonFactory());
@@ -481,6 +506,50 @@ public class ApiAuthenticationController extends BaseController {
     HttpHeaders httpHeaders = new HttpHeaders();
     httpHeaders.setBearerAuth(jwtToken);
     ResponseEntity<GoogleAuthenticationResponse> responseEntity =
+        new ResponseEntity<>(response, httpHeaders, HttpStatus.OK);
+    return responseEntity;
+  }
+
+  @PutMapping(value = LOGIN_WITH_APPLE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<AppleAuthenticationResponse> loginWithApple(
+      @RequestBody AppleAuthenticationRequest request) {
+    request.validate();
+
+    AppleAuthenticationResponse response = new AppleAuthenticationResponse();
+
+    logger.info("A user is trying to login with Apple [email: {}, firstName: "
+        + "{}, lastName: {}]", request.getEmail(), request.getFirstName(), request.getLastName());
+
+    if (!validateAppleAuthCode(request)) {
+      response.setStatus(new Status(Status.AUTHENTICATION_WITH_APPLE_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    logger.info("Verified data for user who is trying to login with Apple [email: {}, firstName: "
+        + "{}, lastName: {}]", request.getEmail(), request.getFirstName(), request.getLastName());
+
+    Optional<User> user = userRepo.findByEmail(request.getEmail());
+    if (user.isPresent()) {
+      logger.info("Logging with Apple: User has logged in with this email before");
+    } else {
+      user = Optional.of(
+          userService.addNewUser(userService.buildNewUser(request.getEmail(),
+              request.getFirstName(), request.getLastName())));
+    }
+
+    String jwtToken;
+    try {
+      jwtToken = jwtService.generateToken(user.get());
+    } catch (UnsupportedEncodingException e) {
+      logger.warn("Failed to generate JWT token for user logging in with Apple with email {}",
+          request.getEmail(), e);
+      response.setStatus(new Status(Status.AUTHENTICATION_WITH_APPLE_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    HttpHeaders httpHeaders = new HttpHeaders();
+    httpHeaders.setBearerAuth(jwtToken);
+    ResponseEntity<AppleAuthenticationResponse> responseEntity =
         new ResponseEntity<>(response, httpHeaders, HttpStatus.OK);
     return responseEntity;
   }
@@ -559,6 +628,84 @@ public class ApiAuthenticationController extends BaseController {
     return facebookResponse;
   }
 
+  private boolean validateAppleAuthCode(AppleAuthenticationRequest request) {
+    Map<String, Object> appleApiRequestHeader = new HashMap<>();
+    appleApiRequestHeader.put("alg", "ES256");
+    appleApiRequestHeader.put("kid", appleSignInKeyId);
+    appleApiRequestHeader.put("typ", "JWT");
+
+    FileReader appleAuthPrivateKeyFileReader;
+    try {
+      File file = new ClassPathResource(appleAuthPrivateKeyFile).getFile();
+      appleAuthPrivateKeyFileReader = new FileReader(file);
+    } catch (IOException e) {
+      logger.error("Couldn't read the apple authorization private key file.", e);
+      return false;
+    }
+
+    ECPrivateKey privateKey;
+    try {
+      PemObject pemObject;
+      pemObject = new PemReader(appleAuthPrivateKeyFileReader).readPemObject();
+      PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(pemObject.getContent());
+      KeyFactory factory;
+      factory = KeyFactory.getInstance("EC");
+      privateKey = (ECPrivateKey) factory.generatePrivate(spec);
+    } catch (Exception e) {
+      logger.error("Could not convert Apple private key into an EC key.", e);
+      return false;
+    }
+
+    String signedJwt = JWT.create()
+        .withHeader(appleApiRequestHeader)
+        .withIssuer(appleTeamId)
+        .withIssuedAt(new Date(System.currentTimeMillis()))
+        .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10)))
+        .withAudience("https://appleid.apple.com")
+        .withSubject("com.tanafaso.azkar")
+        .sign(Algorithm.ECDSA256(privateKey));
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+    MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
+    map.add("client_id", "com.tanafaso.azkar");
+    map.add("client_secret", signedJwt);
+    map.add("code", request.getAuthCode());
+    map.add("grant_type", "authorization_code");
+
+    HttpEntity<MultiValueMap<String, String>> appleApiRequestHttpEntity =
+        new HttpEntity<>(map, headers);
+
+    logger.info("Sending to Apple auth code verification API.");
+
+    ResponseEntity<AppleIdToken> appleIdToken = restTemplate
+        .postForEntity("https://appleid.apple.com/auth/token", appleApiRequestHttpEntity,
+            AppleIdToken.class);
+
+    if (appleIdToken.getStatusCode() == HttpStatus.OK) {
+      DecodedJWT decodedJwt = JWT.decode(appleIdToken.getBody().getIdToken());
+      boolean emailIsVerified = decodedJwt.getClaim("email_verified").asString().equals("true");
+      String potentiallyVerifiedEmail = decodedJwt.getClaim("email").asString().toLowerCase();
+      if (emailIsVerified && potentiallyVerifiedEmail.equals(request.getEmail())) {
+        return true;
+      }
+
+      logger.info("Failed to verify user signing in with apple: email={}, firstName={}, "
+              + "lastName={}, emailIsVerified={}, appleApiReturnedEmail={}",
+          request.getEmail(), request.getFirstName(), request.getLastName(), emailIsVerified,
+          potentiallyVerifiedEmail);
+      return false;
+    }
+
+    logger.info("Failed to verify user signing in with apple as apple API returned status code: "
+            + "{} for email={}, firstName={}, lastName={}",
+        appleIdToken.getStatusCode().toString(), request.getEmail(), request.getFirstName(),
+        request.getLastName());
+    return false;
+  }
+
+
   @Data
   public static class FacebookBasicProfileResponse {
 
@@ -569,4 +716,12 @@ public class ApiAuthenticationController extends BaseController {
     String lastName;
     String email;
   }
+
+  @Data
+  public static class AppleIdToken {
+
+    @JsonProperty("id_token")
+    String idToken;
+  }
+
 }

@@ -22,6 +22,7 @@ public class EmailRegistrationRequestBody extends RequestBodyBase {
 
   @Override public void validate() throws BadRequestException {
     checkNotNull(email, password, firstName, lastName);
+    email = email.toLowerCase();
     EmailAuthenticationRequestBodyUtil.validateEmail(email);
     EmailAuthenticationRequestBodyUtil.validatePassword(password);
     EmailAuthenticationRequestBodyUtil.validateName(firstName);
