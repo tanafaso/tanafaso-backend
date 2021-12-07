@@ -634,10 +634,10 @@ public class ApiAuthenticationController extends BaseController {
     appleApiRequestHeader.put("kid", appleSignInKeyId);
     appleApiRequestHeader.put("typ", "JWT");
 
-    FileReader appleAuthPrivateKeyFileReader;
+    InputStreamReader appleAuthPrivateKeyInputStreamReader;
     try {
-      File file = new ClassPathResource(appleAuthPrivateKeyFile).getFile();
-      appleAuthPrivateKeyFileReader = new FileReader(file);
+      appleAuthPrivateKeyInputStreamReader =
+          new InputStreamReader(new ClassPathResource(appleAuthPrivateKeyFile).getInputStream());
     } catch (IOException e) {
       logger.error("Couldn't read the apple authorization private key file.", e);
       return false;
@@ -646,7 +646,7 @@ public class ApiAuthenticationController extends BaseController {
     ECPrivateKey privateKey;
     try {
       PemObject pemObject;
-      pemObject = new PemReader(appleAuthPrivateKeyFileReader).readPemObject();
+      pemObject = new PemReader(appleAuthPrivateKeyInputStreamReader).readPemObject();
       PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(pemObject.getContent());
       KeyFactory factory;
       factory = KeyFactory.getInstance("EC");
