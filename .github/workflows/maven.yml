@@ -20,7 +20,24 @@ jobs:
           java-version: 1.8
       - name: Run MongoDb in a container
         run:  docker run --name mongo -d -p 27017:27017 mongo
-      - name: Export environment variables
-        run: source ./env-dev.sh
       - name: Build and test with Maven
         run: ./mvnw package
+        env:
+          DATABASE_USER: springuser
+          DATABASE_NAME: azkar
+          DATABASE_PASSWORD: password
+          FACEBOOK_CLIENT_ID: example-facebook-client-id
+          FACEBOOK_CLIENT_SECRET: example-facebook-secret
+          GOOGLE_CLIENT_ID: example-google-client-id
+          GOOGLE_CLIENT_SECRET: example-google-client-secret
+          SERVER_HOST: localhost
+          SERVER_PORT: 8080
+          MONGODB_URI: localhost:27017/test
+          JWT_SECRET: JWT_SECRET
+          LOGS_PATH: ./logs
+          MAIL_HOST: smtp.gmail.com
+          MAIL_USERNAME: example@example.com
+          MAIL_PASSWORD: example-password
+          MAIL_PORT: 587
+          APPLE_TEAM_ID: EXAMPLE_APPLE_TEAM_ID
+          APPLE_SIGN_IN_KEY_ID: EXAMPLE_ID
