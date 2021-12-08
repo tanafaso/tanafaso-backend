@@ -1,6 +1,6 @@
 <h1 align="center">:fire: تنافسوا</h1>
 
-![Build, test & package](https://github.com/challenge-azkar/azkar-api/workflows/CI/badge.svg?branch=master)
+[![Build, Test & Package](https://github.com/tanafaso/tanafaso-backend/actions/workflows/Build,%20Test%20&%20Package.yml/badge.svg)](https://github.com/tanafaso/tanafaso-backend/actions/workflows/Build,%20Test%20&%20Package.yml)
 
 A Spring boot application that is a backend for a mobile application for Muslims to help them challenge and motivate themselves and their friends to read Azkar in a fun way.
 
