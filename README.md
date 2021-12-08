@@ -95,7 +95,7 @@ You should find a log line like `Tomcat started on port(s): 8080 (http)`.
 Congratulations! You have a local instance of the server running and listening for requests at `localhost:8080`.
 
 ## Contributing
-(Optionally) join Tanafaso's [discord server](https://discord.gg/qcAupBDp) to give feedback, propose new features or ask for help.
+(Optionally) join Tanafaso's [discord server](https://discord.gg/jSKsZdJcT5) to give feedback, propose new features or ask for help.
 
 There are a lot of ways you can contribute to this project. You can filter issues by `good first issue` label to get started with an issue that is easy to fix.
 - Suggest new features by filing an issue.
