@@ -485,6 +485,30 @@ public class DbMigrations {
     modifiedUsers.forEach(user -> mongoTemplate.save(user));
   }
 
+  @ChangeSet(order = "0013", id = "cleanUpOldChallenges3", author = "")
+  public void cleanUpOldChallenges3(MongoTemplate mongoTemplate) {
+    List<User> modifiedUsers = mongoTemplate.findAll(User.class).stream().map(user -> {
+      user.setAzkarChallenges(user.getAzkarChallenges().subList(
+          Math.max(0, user.getAzkarChallenges().size() - 30),
+          user.getAzkarChallenges().size()));
+
+      user.setReadingQuranChallenges(user.getReadingQuranChallenges().subList(
+          Math.max(0, user.getReadingQuranChallenges().size() - 30),
+          user.getReadingQuranChallenges().size()));
+
+      user.setMeaningChallenges(user.getMeaningChallenges().subList(
+          Math.max(0, user.getMeaningChallenges().size() - 30),
+          user.getMeaningChallenges().size()));
+
+      user.setMemorizationChallenges(user.getMemorizationChallenges().subList(
+          Math.max(0, user.getMemorizationChallenges().size() - 30),
+          user.getMemorizationChallenges().size()));
+      return user;
+    }).collect(Collectors.toList());
+
+    modifiedUsers.forEach(user -> mongoTemplate.save(user));
+  }
+
   private void updateFriendScore(MongoTemplate mongoTemplate, String userId, Friend friend) {
     User user = mongoTemplate.findById(userId, User.class);
     User friendUser = mongoTemplate.findById(friend.getUserId(), User.class);
