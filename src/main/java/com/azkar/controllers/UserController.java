@@ -358,8 +358,8 @@ public class UserController extends BaseController {
     friendship.getFriends().stream().forEach(friend -> {
       Friendship friendsFriendship = friendshipRepo.findByUserId(friend.getUserId());
       if (friendsFriendship == null) {
-        logger.error("Couldn't find friendship for user with ID {}, while deleting user with ID {}"
-            , friend.getUserId(), userId);
+        logger.error("Couldn't find friendship for user with ID {}, while deleting user with ID {}",
+            friend.getUserId(), userId);
         return;
       }
 
