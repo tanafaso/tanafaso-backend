@@ -11,4 +11,5 @@ public interface PubliclyAvailableMaleUsersRepo extends
 
   Optional<PubliclyAvailableMaleUser> findByUserId(String userId);
 
+  Long deleteByUserId(String userId);
 }

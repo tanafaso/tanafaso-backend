@@ -10,4 +10,6 @@ public interface PubliclyAvailableFemaleUsersRepo extends
     MongoRepository<PubliclyAvailableFemaleUser, String> {
 
   Optional<PubliclyAvailableFemaleUser> findByUserId(String userId);
+
+  Long deleteByUserId(String userId);
 }

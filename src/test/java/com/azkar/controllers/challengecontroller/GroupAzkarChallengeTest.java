@@ -118,7 +118,7 @@ public class GroupAzkarChallengeTest extends TestBase {
             friendsIds(friendsIds)
             .challenge(challenge)
             .build();
-    MvcResult result = azkarApi.addFriendsChallenge(user1, request)
+    MvcResult result = azkarApi.addAzkarChallenge(user1, request)
         .andExpect(status().isOk())
         .andReturn();
     AddAzkarChallengeResponse response =
@@ -201,7 +201,7 @@ public class GroupAzkarChallengeTest extends TestBase {
             .build();
     AddAzkarChallengeResponse expectedResponse = new AddAzkarChallengeResponse();
     expectedResponse.setStatus(new Status(Status.ONE_OR_MORE_USERS_NOT_FRIENDS_ERROR));
-    azkarApi.addFriendsChallenge(user1, request)
+    azkarApi.addAzkarChallenge(user1, request)
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -244,7 +244,7 @@ public class GroupAzkarChallengeTest extends TestBase {
             .build();
     AddAzkarChallengeResponse expectedResponse = new AddAzkarChallengeResponse();
     expectedResponse.setStatus(new Status(Status.LESS_THAN_TWO_FRIENDS_ARE_PROVIDED_ERROR));
-    azkarApi.addFriendsChallenge(user1, request)
+    azkarApi.addAzkarChallenge(user1, request)
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
@@ -283,7 +283,7 @@ public class GroupAzkarChallengeTest extends TestBase {
             .build();
     AddAzkarChallengeResponse expectedResponse = new AddAzkarChallengeResponse();
     expectedResponse.setStatus(new Status(Status.DUPLICATE_FRIEND_IDS_PROVIDED_ERROR));
-    azkarApi.addFriendsChallenge(user1, request)
+    azkarApi.addAzkarChallenge(user1, request)
         .andExpect(status().isBadRequest())
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 

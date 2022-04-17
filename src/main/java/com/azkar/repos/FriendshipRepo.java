@@ -9,4 +9,6 @@ public interface FriendshipRepo extends MongoRepository<Friendship, String> {
 
   Friendship findByUserId(String userId);
 
+  Long deleteByUserId(String userId);
+
 }

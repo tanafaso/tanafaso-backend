@@ -87,7 +87,7 @@ public class HomeControllerTest extends TestBase {
             .challenge(challenge)
             .build();
 
-    result = azkarApi.addFriendsChallenge(user1, addAzkarChallengeRequest)
+    result = azkarApi.addAzkarChallenge(user1, addAzkarChallengeRequest)
         .andExpect(status().isOk())
         .andReturn();
     AddAzkarChallengeResponse addAzkarChallengeResponse =
