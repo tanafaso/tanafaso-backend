@@ -321,7 +321,6 @@ public class UserController extends BaseController {
 
   @DeleteMapping(path = "/me")
   public ResponseEntity<DeleteUserResponse> deleteUser() {
-    DeleteUserResponse response = new DeleteUserResponse();
 
     User user = getCurrentUser(userRepo);
 
@@ -334,6 +333,7 @@ public class UserController extends BaseController {
 
     userRepo.deleteById(user.getId());
 
+    DeleteUserResponse response = new DeleteUserResponse();
     response.setData(getMinimalInfoAboutUser(user));
     return ResponseEntity.ok(response);
   }
