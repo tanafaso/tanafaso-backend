@@ -1,5 +1,6 @@
 package com.azkar.controllers.utils;
 
+import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.challenges.AzkarChallenge;
@@ -22,7 +23,9 @@ import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetFinishedChallengesCountResponse;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
+import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody;
+import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardV2Response;
 import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse;
 import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse.PubliclyAvailableUser;
 import java.util.List;
@@ -51,6 +54,10 @@ public class AzkarApi {
 
   public ResultActions getUserById(User user, String id) throws Exception {
     return httpClient.performGetRequest(user, String.format("/users/%s", id));
+  }
+
+  public ResultActions deleteUser(User user) throws Exception {
+    return httpClient.performDeleteRequest(user, "/users/me");
   }
 
   public ResultActions getPubliclyAvailableUsers(User user) throws Exception {
@@ -200,7 +207,16 @@ public class AzkarApi {
         challengeId, question));
   }
 
-  public ResultActions addFriendsChallenge(User user, AddAzkarChallengeRequest request)
+  public AzkarChallenge addAzkarChallengeAndReturn(User user,
+      AddAzkarChallengeRequest request) throws Exception {
+    MvcResult result = addAzkarChallenge(user, request).andReturn();
+    AddAzkarChallengeResponse response =
+        JsonHandler.fromJson(result.getResponse().getContentAsString(),
+            AddAzkarChallengeResponse.class);
+    return response.getData();
+  }
+
+  public ResultActions addAzkarChallenge(User user, AddAzkarChallengeRequest request)
       throws Exception {
     return httpClient.performPostRequest(user, "/challenges/friends", JsonHandler.toJson(request));
   }
@@ -249,6 +265,13 @@ public class AzkarApi {
   public ResultActions addGroup(User user, String name) throws Exception {
     return httpClient.performPostRequest(user, "/groups",
         JsonHandler.toJson(AddGroupRequest.builder().name(name).build()));
+  }
+
+  public Group getGroupAndReturn(User user, String groupId) throws Exception {
+    MvcResult result = getGroup(user, groupId).andReturn();
+    GetGroupResponse response = JsonHandler.fromJson(result.getResponse().getContentAsString(),
+        GetGroupResponse.class);
+    return response.getData();
   }
 
   public ResultActions getGroup(User user, String groupId) throws Exception {
@@ -313,6 +336,14 @@ public class AzkarApi {
 
   public ResultActions getFriendsLeaderboard(User user) throws Exception {
     return httpClient.performGetRequest(user, "/friends/leaderboard");
+  }
+
+  public List<Friend> getFriendsLeaderboardV2AndReturn(User user) throws Exception {
+    MvcResult result = getFriendsLeaderboardV2(user).andReturn();
+    GetFriendsLeaderboardV2Response response =
+        JsonHandler.fromJson(result.getResponse().getContentAsString(),
+            GetFriendsLeaderboardV2Response.class);
+    return response.getData();
   }
 
   public ResultActions getFriendsLeaderboardV2(User user) throws Exception {

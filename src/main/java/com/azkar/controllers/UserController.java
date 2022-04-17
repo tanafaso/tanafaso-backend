@@ -1,5 +1,7 @@
 package com.azkar.controllers;
 
+import com.azkar.entities.Friendship;
+import com.azkar.entities.Group;
 import com.azkar.entities.PubliclyAvailableFemaleUser;
 import com.azkar.entities.PubliclyAvailableMaleUser;
 import com.azkar.entities.User;
@@ -7,11 +9,13 @@ import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody;
 import com.azkar.payload.usercontroller.responses.AddToPubliclyAvailableUsersResponse;
 import com.azkar.payload.usercontroller.responses.DeleteFromPubliclyAvailableUsers;
+import com.azkar.payload.usercontroller.responses.DeleteUserResponse;
 import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse;
 import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse.PubliclyAvailableUser;
 import com.azkar.payload.usercontroller.responses.GetUserResponse;
 import com.azkar.payload.usercontroller.responses.SetNotificationTokenResponse;
 import com.azkar.repos.FriendshipRepo;
+import com.azkar.repos.GroupRepo;
 import com.azkar.repos.PubliclyAvailableFemaleUsersRepo;
 import com.azkar.repos.PubliclyAvailableMaleUsersRepo;
 import com.azkar.repos.UserRepo;
@@ -19,6 +23,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,8 +41,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "users", produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserController extends BaseController {
 
+  private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+
   @Autowired
   FriendshipRepo friendshipRepo;
+  @Autowired
+  GroupRepo groupRepo;
   @Autowired
   private UserRepo userRepo;
   @Autowired
@@ -307,6 +317,57 @@ public class UserController extends BaseController {
 
     response.setStatus(new Status(Status.USER_NOT_ADDED_TO_PUBLICLY_AVAILABLE_USERS_ERROR));
     return ResponseEntity.badRequest().body(response);
+  }
+
+  @DeleteMapping(path = "/me")
+  public ResponseEntity<DeleteUserResponse> deleteUser() {
+    DeleteUserResponse response = new DeleteUserResponse();
+
+    User user = getCurrentUser(userRepo);
+
+    publiclyAvailableMaleUsersRepo.deleteByUserId(user.getId());
+    publiclyAvailableFemaleUsersRepo.deleteByUserId(user.getId());
+
+    deleteFriendships(user.getId());
+
+    deleteUserFromGroups(user);
+
+    userRepo.deleteById(user.getId());
+
+    response.setData(getMinimalInfoAboutUser(user));
+    return ResponseEntity.ok(response);
+  }
+
+  private void deleteUserFromGroups(User user) {
+    user.getUserGroups().stream().forEach(userGroup -> {
+      Optional<Group> group = groupRepo.findById(userGroup.getGroupId());
+      if (!group.isPresent()) {
+        logger.error("Couldn't find group with ID {} to delete user {} from it.",
+            userGroup.getGroupId(), user.getId());
+        return;
+      }
+
+      group.get().getUsersIds().removeIf(userId -> userId.equals(user.getId()));
+      groupRepo.save(group.get());
+    });
+  }
+
+  private void deleteFriendships(String userId) {
+    Friendship friendship = friendshipRepo.findByUserId(userId);
+
+    friendship.getFriends().stream().forEach(friend -> {
+      Friendship friendsFriendship = friendshipRepo.findByUserId(friend.getUserId());
+      if (friendsFriendship == null) {
+        logger.error("Couldn't find friendship for user with ID {}, while deleting user with ID {}"
+            , friend.getUserId(), userId);
+        return;
+      }
+
+      friendsFriendship.getFriends().removeIf(friend1 -> friend1.getUserId().equals(userId));
+      friendshipRepo.save(friendsFriendship);
+    });
+
+    friendshipRepo.deleteByUserId(userId);
   }
 
   private User getMinimalInfoAboutUser(User user) {

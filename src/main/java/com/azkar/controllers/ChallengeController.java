@@ -1153,7 +1153,7 @@ public class ChallengeController extends BaseController {
   // question is 0-based.
   @PutMapping(path = "/finish/memorization/{challengeId}/{question}")
   public ResponseEntity<FinishMemorizationChallengeQuestionResponse>
-      finishMemorizationChallengeQuestion(
+  finishMemorizationChallengeQuestion(
       @PathVariable(value = "challengeId") String challengeId,
       @PathVariable(value = "question") String question) {
     User currentUser = getCurrentUser(userRepo);
