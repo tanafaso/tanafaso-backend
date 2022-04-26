@@ -27,6 +27,8 @@
         class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
         <maxFileSize>10MB</maxFileSize>
       </timeBasedFileNamingAndTriggeringPolicy>
+      <!-- Keep the last 30 days of logs -->
+      <maxHistory>30</maxHistory>
     </rollingPolicy>
   </appender>
 
