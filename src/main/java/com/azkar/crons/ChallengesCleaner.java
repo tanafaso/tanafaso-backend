@@ -23,7 +23,9 @@ public class ChallengesCleaner {
   // Runs once every night to delete old challenges. "Old" is a bit misleading here as the
   // function will actually delete the oldest challenges for every user until every user has a
   // maximum of 30 challenges per category.
-  @Scheduled(cron = "@midnight")
+  // 0 0 0 * * * means daily at midnight. For more information, check: https://docs.spring
+  // .io/spring-framework/docs/current/reference/html/integration.html#scheduling-task-scheduler
+  @Scheduled(cron = "0 0 0 * * *")
   private void cleanOldChallenges() {
     logger.info("Challenges cleaner started!");
 
