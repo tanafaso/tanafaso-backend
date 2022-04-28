@@ -25,7 +25,7 @@ public class ChallengesCleaner {
   // maximum of 30 challenges per category.
   // 0 0 0 * * * means daily at midnight. For more information, check: https://docs.spring
   // .io/spring-framework/docs/current/reference/html/integration.html#scheduling-task-scheduler
-  @Scheduled(cron = "0 0 0 * * *")
+  @Scheduled(cron = "0 0 3 * * *")
   private void cleanOldChallenges() {
     logger.info("Challenges cleaner started!");
 
