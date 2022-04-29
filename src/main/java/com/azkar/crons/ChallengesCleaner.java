@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Component;
 public class ChallengesCleaner {
 
   private static final Logger logger = LoggerFactory.getLogger(ChallengesCleaner.class);
+  private static final int USERS_BATCH_SIZE = 100;
 
   @Autowired
   private UserRepo userRepo;
@@ -27,29 +30,41 @@ public class ChallengesCleaner {
   // .io/spring-framework/docs/current/reference/html/integration.html#scheduling-task-scheduler
   @Scheduled(cron = "0 0 3 * * *")
   private void cleanOldChallenges() {
-    logger.info("Challenges cleaner started!");
+    logger.info("[Challenges cleaner] started!");
 
-    List<User> modifiedUsers = userRepo.findAll().stream().map(user -> {
-      user.setAzkarChallenges(user.getAzkarChallenges().subList(
-          Math.max(0, user.getAzkarChallenges().size() - 30),
-          user.getAzkarChallenges().size()));
+    long numberOfUsers = userRepo.count();
+    logger.info("[Challenges cleaner] number of users to be processed: {}", numberOfUsers);
+    logger.info("[Challenges cleaner] users will be processed in batches of {}", USERS_BATCH_SIZE);
 
-      user.setReadingQuranChallenges(user.getReadingQuranChallenges().subList(
-          Math.max(0, user.getReadingQuranChallenges().size() - 30),
-          user.getReadingQuranChallenges().size()));
+    long numberOfBatches = (numberOfUsers + USERS_BATCH_SIZE - 1) / USERS_BATCH_SIZE;
+    logger.info("[Challenges cleaner] number of batches to be processed: {}", numberOfBatches);
 
-      user.setMeaningChallenges(user.getMeaningChallenges().subList(
-          Math.max(0, user.getMeaningChallenges().size() - 30),
-          user.getMeaningChallenges().size()));
+    for (int batch = 0; batch < numberOfBatches; batch++) {
+      Page<User> page = userRepo.findAll(PageRequest.of(batch, USERS_BATCH_SIZE));
+      List<User> modifiedUsers = page.get().map(user -> {
+        user.setAzkarChallenges(user.getAzkarChallenges().subList(
+            Math.max(0, user.getAzkarChallenges().size() - 30),
+            user.getAzkarChallenges().size()));
 
-      user.setMemorizationChallenges(user.getMemorizationChallenges().subList(
-          Math.max(0, user.getMemorizationChallenges().size() - 30),
-          user.getMemorizationChallenges().size()));
-      return user;
-    }).collect(Collectors.toList());
+        user.setReadingQuranChallenges(user.getReadingQuranChallenges().subList(
+            Math.max(0, user.getReadingQuranChallenges().size() - 30),
+            user.getReadingQuranChallenges().size()));
 
-    userRepo.saveAll(modifiedUsers);
+        user.setMeaningChallenges(user.getMeaningChallenges().subList(
+            Math.max(0, user.getMeaningChallenges().size() - 30),
+            user.getMeaningChallenges().size()));
 
-    logger.info("Challenges cleaner finished!");
+        user.setMemorizationChallenges(user.getMemorizationChallenges().subList(
+            Math.max(0, user.getMemorizationChallenges().size() - 30),
+            user.getMemorizationChallenges().size()));
+        return user;
+      }).collect(Collectors.toList());
+
+      userRepo.saveAll(modifiedUsers);
+
+      logger.info("[Challenges cleaner] processed {}/{} batches", batch + 1, numberOfBatches);
+    }
+
+    logger.info("[Challenges cleaner] finished!");
   }
 }
