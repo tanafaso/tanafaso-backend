@@ -10,8 +10,6 @@ import com.azkar.payload.groupcontroller.responses.AddToGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupsResponse;
-import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
-import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
 import com.azkar.payload.utils.UserScore;
 import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
@@ -102,16 +100,6 @@ public class GroupController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping("/userGroups")
-  public ResponseEntity<GetUserGroupsResponse> getUserGroups() {
-    GetUserGroupsResponse response = new GetUserGroupsResponse();
-
-    User user = userRepo.findById(getCurrentUser().getUserId()).get();
-    response.setData(user.getUserGroups());
-
-    return ResponseEntity.ok(response);
-  }
-
   @GetMapping()
   public ResponseEntity<GetGroupsResponse> getGroups() {
     GetGroupsResponse response = new GetGroupsResponse();
@@ -120,6 +108,7 @@ public class GroupController extends BaseController {
 
     return ResponseEntity.ok(response);
   }
+
 
   @GetMapping(value = "/{groupId}/leaderboard")
   public ResponseEntity<GetGroupLeaderboardResponse> getGroupLeaderboard(
@@ -281,37 +270,7 @@ public class GroupController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @PutMapping(value = "/{groupId}/leave")
-  public ResponseEntity<LeaveGroupResponse> leave(@PathVariable String groupId) {
-    LeaveGroupResponse response = new LeaveGroupResponse();
-
-    User user = userRepo.findById(getCurrentUser().getUserId()).get();
-    Optional<Group> group = groupRepo.findById(groupId);
-
-    // Check if the group id is valid.
-    if (!group.isPresent()) {
-      response.setStatus(new Status(Status.GROUP_INVALID_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
-
-    // Check if the user is not already a member of the group.
-    if (!isMember(user, group.get())) {
-      response.setStatus(new Status(Status.NOT_MEMBER_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
-
-    group.get().getUsersIds().removeIf(userId -> userId.equals(user.getId()));
-
-    List<UserGroup> userGroups = user.getUserGroups();
-    userGroups.removeIf(userGroup -> userGroup.getGroupId().equals(groupId));
-
-    userRepo.save(user);
-    groupRepo.save(group.get());
-    return ResponseEntity.ok(response);
-  }
-
   private boolean isMember(User user, Group group) {
     return group.getUsersIds().stream().anyMatch(userId -> userId.equals(user.getId()));
   }
-
 }

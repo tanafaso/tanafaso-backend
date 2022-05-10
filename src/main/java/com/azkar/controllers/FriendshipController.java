@@ -14,19 +14,16 @@ import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardV2Respons
 import com.azkar.payload.usercontroller.responses.GetFriendsResponse;
 import com.azkar.payload.usercontroller.responses.ResolveFriendRequestResponse;
 import com.azkar.payload.utils.FeaturesVersions;
-import com.azkar.payload.utils.UserScore;
 import com.azkar.payload.utils.VersionComparator;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.FriendshipService;
 import com.azkar.services.NotificationsService;
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -332,52 +329,5 @@ public class FriendshipController extends BaseController {
       }
     }
     return -1;
-  }
-
-  // Accumulates the scores of the two users in all of the groups they are both members in.
-  private List<UserScore> getFriendsScores(User user1, User user2) {
-    AtomicInteger user1Score = new AtomicInteger(0);
-    AtomicInteger user2Score = new AtomicInteger(0);
-    groupRepo.findAll().stream().filter(
-        grp -> (grp.getUsersIds().contains(user1.getId()) && grp.getUsersIds()
-            .contains(user2.getId())))
-        .forEach(grp -> {
-          Optional<UserScore> user1ScoreInGrp = getUserScoreInGroup(user1.getId(), grp);
-          Optional<UserScore> user2ScoreInGrp = getUserScoreInGroup(user2.getId(), grp);
-          user1ScoreInGrp.ifPresent(userScore -> user1Score.addAndGet(userScore.getTotalScore()));
-          user2ScoreInGrp.ifPresent(userScore -> user2Score.addAndGet(userScore.getTotalScore()));
-        });
-    UserScore userScore1 = UserScore.builder()
-        .username(user1.getUsername())
-        .firstName(user1.getFirstName())
-        .lastName(user1.getLastName())
-        .totalScore(user1Score.get())
-        .build();
-    UserScore userScore2 = UserScore.builder()
-        .username(user2.getUsername())
-        .firstName(user2.getFirstName())
-        .lastName(user2.getLastName())
-        .totalScore(user2Score.get())
-        .build();
-    return ImmutableList.of(userScore1, userScore2);
-  }
-
-  private Optional<UserScore> getUserScoreInGroup(String userId, Group group) {
-    Optional<User> user = userRepo.findById(userId);
-    if (!user.isPresent()) {
-      return Optional.empty();
-    }
-
-    Optional<UserGroup> userGroup =
-        user.get().getUserGroups().stream()
-            .filter(userGroup1 -> userGroup1.getGroupId().equals(group.getId())).findFirst();
-    if (!userGroup.isPresent()) {
-      return Optional.empty();
-    }
-
-    return Optional.of(
-        UserScore.builder().firstName(user.get().getFirstName()).lastName(user.get().getLastName())
-            .username(user.get().getUsername())
-            .totalScore(userGroup.get().getTotalScore()).build());
   }
 }

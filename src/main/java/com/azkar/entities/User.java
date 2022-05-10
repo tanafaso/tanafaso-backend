@@ -96,8 +96,10 @@ public class User extends EntityBase {
     @NotNull
     private String invitingUserId;
     @Default
+    @Deprecated
     private int monthScore = 0;
     @Default
+    @Deprecated
     private int totalScore = 0;
   }
 

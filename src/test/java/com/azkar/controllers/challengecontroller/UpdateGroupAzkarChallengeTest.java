@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
@@ -17,7 +18,6 @@ import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.repos.AzkarChallengeRepo;
 import com.google.common.collect.Iterators;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,9 +62,6 @@ public class UpdateGroupAzkarChallengeTest extends UpdateAzkarChallengeTestBase 
     assertThat(updatedUser1Challenge.getSubChallenges().get(1).getRepetitions(), is(
         0));
 
-    User updatedUser1 = userRepo.findById(user1.getId()).get();
-    User updatedUser2 = userRepo.findById(user2InGroup1.getId()).get();
-
     assertThat(Iterators.getOnlyElement(updatedUser1Challenge.getUsersFinished().iterator()),
         equalTo(user1.getId()));
     assertThat(Iterators.getOnlyElement(updatedUser2Challenge.getUsersFinished().iterator()),
@@ -73,47 +70,16 @@ public class UpdateGroupAzkarChallengeTest extends UpdateAzkarChallengeTestBase 
     assertThat(Iterators.getOnlyElement(updatedChallenge.getUsersFinished().iterator()),
         equalTo(user1.getId()));
 
-    List<UserGroup> user1Groups = updatedUser1.getUserGroups();
-    UserGroup userGroup1ForUser1 =
-        user1Groups.stream().filter(userGroup -> userGroup.getGroupId().equals(group1.getId()))
-            .findAny().get();
-    UserGroup userGroup2ForUser1 =
-        user1Groups.stream().filter(userGroup -> userGroup.getGroupId().equals(group2.getId()))
-            .findAny().get();
+    Friend user1Friend = azkarApi.getFriendsLeaderboardV2AndReturn(user1).stream()
+        .filter(friend -> friend.getUserId().equals(user2InGroup1.getId())).findFirst().get();
+    Friend user2Friend = azkarApi.getFriendsLeaderboardV2AndReturn(user2InGroup1).stream()
+        .filter(friend -> friend.getUserId().equals(user1.getId())).findFirst().get();
 
-    assertThat(userGroup1ForUser1.getTotalScore(), is(1));
-    assertThat(userGroup2ForUser1.getTotalScore(), is(0));
+    assertThat(user1Friend.getUserTotalScore(), is(1L));
+    assertThat(user1Friend.getFriendTotalScore(), is(0L));
 
-    List<UserGroup> user2Groups = updatedUser2.getUserGroups();
-    UserGroup userGroup1ForUser2 =
-        user2Groups.stream().filter(userGroup -> userGroup.getGroupId().equals(group1.getId()))
-            .findAny().get();
-    assertThat(userGroup1ForUser2.getTotalScore(), is(0));
-  }
-
-  @Test
-  public void updateChallenge_finishChallengeTwice_shouldUpdateScoreOnce() throws Exception {
-    int userGroupsCountBefore = user.getUserGroups().size();
-
-    assertThat(userRepo.findById(user.getId()).get().getUserGroups().get(0).getTotalScore(), is(0));
-
-    AzkarChallenge challenge = createGroupChallenge(user, group.getId());
-    for (SubChallenge subChallenge : challenge.getSubChallenges()) {
-      subChallenge.setRepetitions(0);
-    }
-
-    UpdateChallengeRequest requestBody = createUpdateChallengeRequest(challenge);
-    updateChallenge(user, challenge.getId(), requestBody)
-        .andExpect(status().isOk());
-
-    updateChallenge(user, challenge.getId(), requestBody)
-        .andExpect(status().isOk());
-
-    User updatedUser = userRepo.findById(user.getId()).get();
-    assertThat(updatedUser.getUserGroups().size(), is(userGroupsCountBefore + 1));
-
-    UserGroup userGroup = updatedUser.getUserGroups().get(userGroupsCountBefore);
-    assertThat(userGroup.getTotalScore(), is(1));
+    assertThat(user2Friend.getUserTotalScore(), is(0L));
+    assertThat(user2Friend.getFriendTotalScore(), is(1L));
   }
 
   @Test
