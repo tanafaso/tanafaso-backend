@@ -73,33 +73,6 @@ public class FriendshipController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  // Use getFriendsLeaderboardV2 instead
-  @Deprecated
-  @GetMapping(path = "/leaderboard")
-  public ResponseEntity<GetFriendsLeaderboardResponse> getFriendsLeaderboard(
-      @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
-    GetFriendsLeaderboardResponse response = new GetFriendsLeaderboardResponse();
-
-    List<FriendshipScores> friendsScores = new ArrayList<>();
-    Friendship friendship = friendshipRepo.findByUserId(getCurrentUser().getUserId());
-    List<Friend> friends = friendship.getFriends();
-    if (apiVersion == null
-        || VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
-      friends = friends.stream().filter(friend -> !friend.getUserId().equals(User.SABEQ_ID))
-          .collect(Collectors.toList());
-    }
-    friends.stream().forEach(friend -> {
-      friendsScores.add(FriendshipScores.builder()
-          .currentUserScore((int) friend.getUserTotalScore())
-          .friendScore((int) friend.getFriendTotalScore())
-          .friend(friend)
-          .build());
-    });
-
-    response.setData(friendsScores);
-    return ResponseEntity.ok(response);
-  }
-
   @GetMapping(path = "/leaderboard/v2")
   public ResponseEntity<GetFriendsLeaderboardV2Response> getFriendsLeaderboardV2(
       @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
