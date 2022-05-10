@@ -461,7 +461,6 @@ public class ChallengeController extends BaseController {
     Iterable<User> affectedUsers = userRepo.findAllById(groupMembers);
     affectedUsers.forEach(user -> {
       user.getAzkarChallenges().add(challenge);
-      user.getUserGroups().add(userGroup);
     });
 
     userRepo.saveAll(affectedUsers);
@@ -545,7 +544,6 @@ public class ChallengeController extends BaseController {
     Iterable<User> affectedUsers = userRepo.findAllById(groupMembers);
     affectedUsers.forEach(user -> {
       user.getMeaningChallenges().add(challenge);
-      user.getUserGroups().add(userGroup);
     });
 
     userRepo.saveAll(affectedUsers);
@@ -619,7 +617,6 @@ public class ChallengeController extends BaseController {
     Iterable<User> affectedUsers = userRepo.findAllById(groupMembers);
     affectedUsers.forEach(user -> {
       user.getMemorizationChallenges().add(challenge);
-      user.getUserGroups().add(userGroup);
     });
 
     userRepo.saveAll(affectedUsers);
@@ -745,7 +742,6 @@ public class ChallengeController extends BaseController {
     Iterable<User> affectedUsers = userRepo.findAllById(groupMembers);
     affectedUsers.forEach(user -> {
       user.getReadingQuranChallenges().add(challenge);
-      user.getUserGroups().add(userGroup);
     });
 
     userRepo.saveAll(affectedUsers);

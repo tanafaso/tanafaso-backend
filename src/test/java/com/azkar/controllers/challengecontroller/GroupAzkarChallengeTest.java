@@ -102,9 +102,6 @@ public class GroupAzkarChallengeTest extends TestBase {
     azkarApi.makeFriends(user1, user2);
     azkarApi.makeFriends(user1, user3);
 
-    int user1GroupsNumBefore = userRepo.findById(user1.getId()).get().getUserGroups().size();
-    int user2GroupsNumBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
-    int user3GroupsNumBefore = userRepo.findById(user3.getId()).get().getUserGroups().size();
     long groupsNumBefore = groupRepo.count();
 
     List<String> friendsIds = ImmutableList.of(user2.getId(), user3.getId());
@@ -133,21 +130,6 @@ public class GroupAzkarChallengeTest extends TestBase {
     User updatedUser1 = userRepo.findById(user1.getId()).get();
     User updatedUser2 = userRepo.findById(user2.getId()).get();
     User updatedUser3 = userRepo.findById(user3.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore + 1));
-    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore + 1));
-    assertThat(updatedUser3.getUserGroups().size(), is(user3GroupsNumBefore + 1));
-
-    UserGroup user1AddedGroup = updatedUser1.getUserGroups().get(user1GroupsNumBefore + 0);
-    UserGroup user2AddedGroup = updatedUser2.getUserGroups().get(user2GroupsNumBefore + 0);
-    UserGroup user3AddedGroup = updatedUser3.getUserGroups().get(user3GroupsNumBefore + 0);
-    assertThat(user1AddedGroup.getGroupId(), equalTo(user2AddedGroup.getGroupId()));
-    assertThat(user2AddedGroup.getGroupId(), equalTo(user3AddedGroup.getGroupId()));
-
-    assertThat(user1AddedGroup.getInvitingUserId(), equalTo(user1.getId()));
-    assertThat(user2AddedGroup.getInvitingUserId(), equalTo(user1.getId()));
-    assertThat(user3AddedGroup.getInvitingUserId(), equalTo(user1.getId()));
-
-    assertThat(user1AddedGroup.getGroupName(), nullValue());
 
     assertThat(updatedUser1.getAzkarChallenges().size(),
         is(1 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
@@ -156,24 +138,9 @@ public class GroupAzkarChallengeTest extends TestBase {
     assertThat(updatedUser3.getAzkarChallenges().size(),
         is(1 + TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
 
-    assertThat(updatedUser1.getAzkarChallenges().get(TestBase.STARTING_AZKAR_CHALLENGES_COUNT)
-            .getGroupId(),
-        equalTo(user1AddedGroup.getGroupId()));
-    assertThat(updatedUser2.getAzkarChallenges().get(TestBase.STARTING_AZKAR_CHALLENGES_COUNT)
-            .getGroupId(),
-        equalTo(user1AddedGroup.getGroupId()));
-    assertThat(updatedUser3.getAzkarChallenges().get(TestBase.STARTING_AZKAR_CHALLENGES_COUNT)
-            .getGroupId(),
-        equalTo(user1AddedGroup.getGroupId()));
-
     assertThat(
         updatedUser1.getAzkarChallenges().get(TestBase.STARTING_AZKAR_CHALLENGES_COUNT).getName(),
         equalTo(challenge.getName()));
-
-    Group updatedGroup = groupRepo.findById(user1AddedGroup.getGroupId()).get();
-    assertThat(updatedGroup.getUsersIds().size(), is(3));
-    assertThat(updatedGroup.getUsersIds(),
-        containsInAnyOrder(user1.getId(), user2.getId(), user3.getId()));
   }
 
   @Test
@@ -183,9 +150,6 @@ public class GroupAzkarChallengeTest extends TestBase {
 
     azkarApi.makeFriends(user1, user2);
 
-    int user1GroupsNumBefore = userRepo.findById(user1.getId()).get().getUserGroups().size();
-    int user2GroupsNumBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
-    int user3GroupsNumBefore = userRepo.findById(user3.getId()).get().getUserGroups().size();
     long groupsNumBefore = groupRepo.count();
 
     List<String> friendsIds = ImmutableList.of(user2.getId(), user3.getId());
@@ -209,9 +173,6 @@ public class GroupAzkarChallengeTest extends TestBase {
     User updatedUser1 = userRepo.findById(user1.getId()).get();
     User updatedUser2 = userRepo.findById(user2.getId()).get();
     User updatedUser3 = userRepo.findById(user3.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore));
-    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
-    assertThat(updatedUser3.getUserGroups().size(), is(user3GroupsNumBefore));
 
     assertThat(updatedUser1.getAzkarChallenges().size(),
         is(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
@@ -227,8 +188,6 @@ public class GroupAzkarChallengeTest extends TestBase {
 
     azkarApi.makeFriends(user1, user2);
 
-    int user1GroupsNumBefore = userRepo.findById(user1.getId()).get().getUserGroups().size();
-    int user2GroupsNumBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
     long groupsNumBefore = groupRepo.count();
 
     List<String> friendsIds = ImmutableList.of(user2.getId());
@@ -251,8 +210,6 @@ public class GroupAzkarChallengeTest extends TestBase {
 
     User updatedUser1 = userRepo.findById(user1.getId()).get();
     User updatedUser2 = userRepo.findById(user2.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore));
-    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
 
     assertThat(updatedUser1.getAzkarChallenges().size(),
         is(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));
@@ -266,8 +223,6 @@ public class GroupAzkarChallengeTest extends TestBase {
 
     azkarApi.makeFriends(user1, user2);
 
-    int user1GroupsNumBefore = userRepo.findById(user1.getId()).get().getUserGroups().size();
-    int user2GroupsNumBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
     long groupsNumBefore = groupRepo.count();
 
     List<String> friendsIds = ImmutableList.of(user2.getId(), user2.getId());
@@ -290,8 +245,6 @@ public class GroupAzkarChallengeTest extends TestBase {
 
     User updatedUser1 = userRepo.findById(user1.getId()).get();
     User updatedUser2 = userRepo.findById(user2.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), is(user1GroupsNumBefore));
-    assertThat(updatedUser2.getUserGroups().size(), is(user2GroupsNumBefore));
 
     assertThat(updatedUser1.getAzkarChallenges().size(),
         is(TestBase.STARTING_AZKAR_CHALLENGES_COUNT));

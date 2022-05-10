@@ -128,7 +128,6 @@ public class UserService {
         .groupId(binaryGroup.getId())
         .groupName("")
         .build();
-    user.getUserGroups().add(userGroup);
     userRepo.save(user);
 
     return binaryGroup;

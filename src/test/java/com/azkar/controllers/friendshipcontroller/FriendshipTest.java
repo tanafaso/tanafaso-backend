@@ -204,13 +204,6 @@ public class FriendshipTest extends TestBase {
 
     assertThat(user1Friend.getGroupId(), notNullValue());
     assertThat(user1Friend.getGroupId(), equalTo(user2Friend.getGroupId()));
-
-    User updatedUser1 = userRepo.findById(USER1.getId()).get();
-    User updatedUser2 = userRepo.findById(USER2.getId()).get();
-    assertThat(Iterators.getLast(updatedUser1.getUserGroups().iterator()).getGroupId(),
-        equalTo(group.getId()));
-    assertThat(Iterators.getLast(updatedUser2.getUserGroups().iterator()).getGroupId(),
-        equalTo(group.getId()));
   }
 
   @Test
@@ -376,7 +369,6 @@ public class FriendshipTest extends TestBase {
   @Test
   public void deleteFriend_deleteSabeq_shouldFail() throws Exception {
     long groupsCountBefore = groupRepo.count();
-    int user1GroupsCountBefore = userRepo.findById(USER1.getId()).get().getUserGroups().size();
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     expectedResponse.setStatus(new Status(Status.CANNOT_REMOVE_SABEQ__FROM_FRIENDS_ERROR));
@@ -395,17 +387,12 @@ public class FriendshipTest extends TestBase {
 
     assertThat(groupRepo.count(), equalTo(groupsCountBefore));
     User updatedUser1 = userRepo.findById(USER1.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), equalTo(user1GroupsCountBefore));
   }
 
   @Test
   public void deleteFriend_normalScenario_shouldSucceed() throws Exception {
     azkarApi.makeFriends(USER1, USER2);
     long groupsCountAfterFriendship = groupRepo.count();
-    int user1GroupsCountAfterFriendship =
-        userRepo.findById(USER1.getId()).get().getUserGroups().size();
-    int user2GroupsCountAfterFriendship =
-        userRepo.findById(USER2.getId()).get().getUserGroups().size();
 
     DeleteFriendResponse expectedResponse = new DeleteFriendResponse();
     azkarApi.deleteFriend(USER1, USER2)
@@ -423,8 +410,6 @@ public class FriendshipTest extends TestBase {
     assertThat(groupRepo.count(), equalTo(groupsCountAfterFriendship));
     User updatedUser1 = userRepo.findById(USER1.getId()).get();
     User updatedUser2 = userRepo.findById(USER2.getId()).get();
-    assertThat(updatedUser1.getUserGroups().size(), equalTo(user1GroupsCountAfterFriendship));
-    assertThat(updatedUser2.getUserGroups().size(), equalTo(user2GroupsCountAfterFriendship));
   }
 
   @Test
