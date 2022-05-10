@@ -509,6 +509,17 @@ public class DbMigrations {
     modifiedUsers.forEach(user -> mongoTemplate.save(user));
   }
 
+  @ChangeSet(order = "0014", id = "cleanUpUserGroups", author = "")
+  public void cleanUpUserGroups(MongoTemplate mongoTemplate) {
+    List<User> modifiedUsers = mongoTemplate.findAll(User.class).stream().map(user -> {
+      user.setUserGroups(new ArrayList<>());
+      return user;
+    }).collect(Collectors.toList());
+
+    modifiedUsers.forEach(user -> mongoTemplate.save(user));
+  }
+
+
   private void updateFriendScore(MongoTemplate mongoTemplate, String userId, Friend friend) {
     User user = mongoTemplate.findById(userId, User.class);
     User friendUser = mongoTemplate.findById(friend.getUserId(), User.class);
