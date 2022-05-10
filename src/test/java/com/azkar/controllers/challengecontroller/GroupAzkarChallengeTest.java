@@ -8,7 +8,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -459,30 +458,6 @@ public class GroupAzkarChallengeTest extends TestBase {
         groupChallenges.isEmpty());
   }
 
-  @Test
-  public void getChallenges_normalScenario_shouldSucceed() throws Exception {
-    User groupMember = UserFactory.getNewUser();
-    User nonGroupMember = UserFactory.getNewUser();
-    addNewUser(groupMember);
-    addNewUser(nonGroupMember);
-    addNewValidChallenge(user1, CHALLENGE_NAME_PREFIX_1, validGroup.getId());
-    azkarApi.makeFriends(user1, groupMember);
-    azkarApi.addUserToGroup(/* invitingUser= */ user1, groupMember, validGroup.getId());
-    addNewValidChallenge(groupMember, CHALLENGE_NAME_PREFIX_2, validGroup.getId());
-
-    GetChallengesResponse user1AllChallenges = getUserAllChallenges(user1);
-    GetChallengesResponse groupMemberAllChallenges = getUserAllChallenges(groupMember);
-    GetChallengesResponse nonGroupMemberAllChallenges = getUserAllChallenges(nonGroupMember);
-
-    assertThat(user1AllChallenges.getData().size(), is(2));
-    assertThat(user1AllChallenges.getData().get(0).getName(),
-        startsWith(CHALLENGE_NAME_PREFIX_2));
-    assertThat(user1AllChallenges.getData().get(1).getName(),
-        startsWith(CHALLENGE_NAME_PREFIX_1));
-    // Currently new group members will only see new challenges.
-    assertThat(groupMemberAllChallenges.getData().size(), is(1));
-    assertThat(nonGroupMemberAllChallenges.getData().size(), is(0));
-  }
 
 
   @Test
@@ -525,11 +500,6 @@ public class GroupAzkarChallengeTest extends TestBase {
       throws Exception {
     ResultActions resultActions = azkarApi.getAllChallengesInGroup(user, groupId)
         .andExpect(status().isOk());
-    return getResponse(resultActions, GetChallengesResponse.class);
-  }
-
-  private GetChallengesResponse getUserAllChallenges(User user) throws Exception {
-    ResultActions resultActions = azkarApi.getAllChallenges(user).andExpect(status().isOk());
     return getResponse(resultActions, GetChallengesResponse.class);
   }
 

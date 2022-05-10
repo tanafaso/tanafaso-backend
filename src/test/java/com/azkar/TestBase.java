@@ -4,7 +4,6 @@ package com.azkar;
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.azkar.controllers.challengecontroller.PersonalAzkarChallengeTest;
 import com.azkar.controllers.utils.AzkarApi;
 import com.azkar.controllers.utils.HttpClient;
 import com.azkar.controllers.utils.JsonHandler;

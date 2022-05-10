@@ -232,11 +232,6 @@ public class AzkarApi {
         .performGetRequest(user, String.format("/challenges/groups/%s/", groupId));
   }
 
-  public ResultActions getAllChallenges(User user) throws Exception {
-    return httpClient
-        .performGetRequest(user, "/challenges/");
-  }
-
   public ResultActions updateChallenge(User user, String challengeId,
       UpdateChallengeRequest request) throws Exception {
     return httpClient.performPutRequest(user, String.format("/challenges/%s", challengeId),
