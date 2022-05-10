@@ -17,13 +17,11 @@ import com.azkar.payload.challengecontroller.requests.AddAzkarChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMemorizationChallengeRequest;
-import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddReadingQuranChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddMemorizationChallengeResponse;
-import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.FinishMeaningChallengeResponse;
@@ -37,8 +35,6 @@ import com.azkar.payload.challengecontroller.responses.GetFinishedChallengesCoun
 import com.azkar.payload.challengecontroller.responses.GetMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
-import com.azkar.payload.utils.FeaturesVersions;
-import com.azkar.payload.utils.VersionComparator;
 import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
@@ -225,83 +221,6 @@ public class ChallengeController extends BaseController {
     });
   }
 
-  // This is not used anymore after introducing Sabeq.
-  @Deprecated
-  @PostMapping(path = "/personal", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<AddPersonalChallengeResponse> addPersonalChallenge(
-      @RequestBody AddPersonalChallengeRequest request) {
-    AddPersonalChallengeResponse response = new AddPersonalChallengeResponse();
-    // TODO(issue#36): Allow this method to throw the exception and handle it on a higher level.
-    try {
-      request.validate();
-    } catch (BadRequestException e) {
-      response.setStatus(e.error);
-      return ResponseEntity.badRequest().body(response);
-    }
-
-    AzkarChallenge challenge = request.getChallenge();
-    challenge = challenge.toBuilder()
-        .id(new ObjectId().toString())
-        .groupId(AzkarChallenge.PERSONAL_CHALLENGES_NON_EXISTING_GROUP_ID)
-        .creatingUserId(getCurrentUser().getUserId())
-        .createdAt(Instant.now().getEpochSecond())
-        .modifiedAt(Instant.now().getEpochSecond())
-        .build();
-
-    User loggedInUser = getCurrentUser(userRepo);
-    loggedInUser.getPersonalChallenges().add(challenge);
-    azkarChallengeRepo.save(challenge);
-    userRepo.save(loggedInUser);
-    response.setData(challenge);
-    return ResponseEntity.ok(response);
-  }
-
-  // This is not used anymore after introducing Sabeq.
-  @Deprecated
-  @GetMapping(path = "/personal")
-  public ResponseEntity<GetChallengesResponse> getPersonalChallenges() {
-    GetChallengesResponse response = new GetChallengesResponse();
-    response.setData(getCurrentUser(userRepo).getPersonalChallenges());
-    Collections.reverse(response.getData());
-    return ResponseEntity.ok(response);
-  }
-
-  // This is not used anymore after introducing Sabeq.
-  @Deprecated
-  @PutMapping(path = "/personal/{challengeId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<UpdateChallengeResponse> updatePersonalChallenge(
-      @PathVariable(value = "challengeId") String challengeId,
-      @RequestBody UpdateChallengeRequest request) {
-    User currentUser = getCurrentUser(userRepo);
-    Optional<AzkarChallenge> personalChallenge = currentUser.getPersonalChallenges().stream()
-        .filter(
-            personalChallengeItem -> personalChallengeItem
-                .getId().equals(challengeId))
-        .findAny();
-    if (!personalChallenge.isPresent()) {
-      UpdateChallengeResponse response = new UpdateChallengeResponse();
-      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
-    if (personalChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
-      UpdateChallengeResponse response = new UpdateChallengeResponse();
-      response.setStatus(new Status(Status.CHALLENGE_EXPIRED_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
-
-    List<SubChallenge> oldSubChallenges = personalChallenge.get().getSubChallenges();
-    // Note: It is ok to change the old sub-challenges even if there was an error since we don't
-    // save the updated user object unless there are no errors.
-    Optional<ResponseEntity<UpdateChallengeResponse>> errorResponse = updateOldSubChallenges(
-        oldSubChallenges, request.getNewChallenge().getSubChallenges());
-
-    if (errorResponse.isPresent()) {
-      return errorResponse.get();
-    }
-    userRepo.save(currentUser);
-    return ResponseEntity.ok(new UpdateChallengeResponse());
-  }
-
   @GetMapping("{challengeId}")
   public ResponseEntity<GetChallengeResponse> getChallenge(
       @PathVariable(value = "challengeId") String challengeId) {
@@ -402,32 +321,6 @@ public class ChallengeController extends BaseController {
       response.setData(memorizationChallenge.get());
     }
     userRepo.save(user);
-    return ResponseEntity.ok(response);
-  }
-
-  // This is not used anymore after introducing Sabeq.
-  @Deprecated
-  @DeleteMapping("/personal/{challengeId}")
-  public ResponseEntity<DeleteChallengeResponse> deletePersonalChallenge(
-      @PathVariable(value = "challengeId") String challengeId) {
-    DeleteChallengeResponse response = new DeleteChallengeResponse();
-    User user = getCurrentUser(userRepo);
-    Optional<AzkarChallenge> userPersonalChallenge = user.getPersonalChallenges()
-        .stream()
-        .filter(
-            challenge -> challenge.getId()
-                .equals(
-                    challengeId))
-        .findFirst();
-    if (!userPersonalChallenge.isPresent()) {
-      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
-    user.getPersonalChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
-    userRepo.save(user);
-    // Also delete the original copy of it.
-    azkarChallengeRepo.deleteById(challengeId);
-    response.setData(userPersonalChallenge.get());
     return ResponseEntity.ok(response);
   }
 
@@ -901,26 +794,6 @@ public class ChallengeController extends BaseController {
 
   private boolean groupContainsCurrentUser(Group group) {
     return group.getUsersIds().contains(getCurrentUser().getUserId());
-  }
-
-  // Returns all non-personal challenges.
-  @Deprecated
-  @GetMapping(path = "/")
-  public ResponseEntity<GetChallengesResponse> getAllChallenges(
-      @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
-    if (apiVersion != null) {
-      logger.info("API version requested is " + apiVersion);
-    }
-    List<AzkarChallenge> userChallenges = getCurrentUser(userRepo).getAzkarChallenges();
-    if (apiVersion == null
-        || VersionComparator.compare(apiVersion, FeaturesVersions.SABEQ_ADDITION_VERSION) < 0) {
-      userChallenges = filterOutSabeqChallenges(userChallenges);
-    }
-
-    GetChallengesResponse response = new GetChallengesResponse();
-    response.setData(userChallenges);
-    Collections.reverse(response.getData());
-    return ResponseEntity.ok(response);
   }
 
   // Returns all challenges with all types.
