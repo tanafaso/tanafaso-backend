@@ -29,21 +29,6 @@ public class UserRetrievalTest extends TestBase {
   AzkarApi azkarApi;
 
   @Test
-  public void getLoggedInUserProfile_shouldSucceed() throws Exception {
-    User user = UserFactory.getNewUser();
-    addNewUser(user);
-    GetUserResponse expectedResponse = new GetUserResponse();
-    expectedResponse.setData(user);
-
-    ResultActions result = azkarApi.getProfile(user);
-
-    result
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-  }
-
-  @Test
   public void getLoggedInUserProfileV2_shouldSucceed() throws Exception {
     User user = UserFactory.getNewUser();
     addNewUser(user);

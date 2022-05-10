@@ -12,7 +12,6 @@ import com.azkar.payload.challengecontroller.requests.AddAzkarChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMemorizationChallengeRequest;
-import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddReadingQuranChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
@@ -26,8 +25,6 @@ import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.usercontroller.requests.SetNotificationTokenRequestBody;
 import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardV2Response;
-import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse;
-import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse.PubliclyAvailableUser;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,10 +36,6 @@ public class AzkarApi {
 
   @Autowired
   HttpClient httpClient;
-
-  public ResultActions getProfile(User user) throws Exception {
-    return httpClient.performGetRequest(user, "/users/me");
-  }
 
   public ResultActions getProfileV2(User user) throws Exception {
     return httpClient.performGetRequest(user, "/users/me/v2");
@@ -62,15 +55,6 @@ public class AzkarApi {
 
   public ResultActions getPubliclyAvailableUsers(User user) throws Exception {
     return httpClient.performGetRequest(user, "/users/publicly_available_users");
-  }
-
-  public List<PubliclyAvailableUser> getPubliclyAvailableUsersAndReturn(User user)
-      throws Exception {
-    MvcResult result = getPubliclyAvailableUsers(user).andReturn();
-    GetPubliclyAvailableUsersResponse response =
-        JsonHandler.fromJson(result.getResponse().getContentAsString(),
-            GetPubliclyAvailableUsersResponse.class);
-    return response.getData();
   }
 
   public ResultActions addToPubliclyAvailableMales(User user) throws Exception {
@@ -221,12 +205,6 @@ public class AzkarApi {
     return httpClient.performPostRequest(user, "/challenges/friends", JsonHandler.toJson(request));
   }
 
-  public ResultActions addPersonalChallenge(User user, AddPersonalChallengeRequest request)
-      throws Exception {
-    return
-        httpClient.performPostRequest(user, "/challenges/personal", JsonHandler.toJson(request));
-  }
-
   public ResultActions getAllChallengesInGroup(User user, String groupId) throws Exception {
     return httpClient
         .performGetRequest(user, String.format("/challenges/groups/%s/", groupId));
@@ -238,17 +216,6 @@ public class AzkarApi {
         JsonHandler.toJson(request));
   }
 
-
-  public ResultActions getPersonalChallenges(User user) throws Exception {
-    return httpClient.performGetRequest(user, "/challenges/personal");
-  }
-
-  public ResultActions updatePersonalChallenge(User user, String challengeId,
-      UpdateChallengeRequest body)
-      throws Exception {
-    return httpClient.performPutRequest(user, String.format("/challenges/personal/%s", challengeId),
-        JsonHandler.toJson(body));
-  }
 
   public Group addGroupAndReturn(User user, String groupName) throws Exception {
     MvcResult result = addGroup(user, groupName).andReturn();
@@ -333,13 +300,13 @@ public class AzkarApi {
     return response.getData();
   }
 
-  public ResultActions getFriendsLeaderboardV2(User user) throws Exception {
-    return httpClient.performGetRequest(user, "/friends/leaderboard/v2");
+  public ResultActions callNonExistingEndpoint(User user) throws Exception {
+    // /friends/leaderboard has been removed.
+    return httpClient.performGetRequest(user, "/friends/leaderboard/");
   }
 
-  public ResultActions getFriendsLeaderboardWithApiVersion(User user, String apiVersion)
-      throws Exception {
-    return httpClient.performGetRequestWithApiVersion(user, "/friends/leaderboard", apiVersion);
+  public ResultActions getFriendsLeaderboardV2(User user) throws Exception {
+    return httpClient.performGetRequest(user, "/friends/leaderboard/v2");
   }
 
   public ResultActions getFriendsLeaderboardV2WithApiVersion(User user, String apiVersion)
