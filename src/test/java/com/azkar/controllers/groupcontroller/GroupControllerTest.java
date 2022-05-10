@@ -19,8 +19,6 @@ import com.azkar.payload.groupcontroller.responses.AddToGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupsResponse;
-import com.azkar.payload.groupcontroller.responses.GetUserGroupsResponse;
-import com.azkar.payload.groupcontroller.responses.LeaveGroupResponse;
 import com.azkar.payload.utils.UserScore;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
@@ -34,7 +32,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 
 public class GroupControllerTest extends TestBase {
 
@@ -184,101 +181,6 @@ public class GroupControllerTest extends TestBase {
   }
 
   @Test
-  public void leave_normalScenario_shouldSucceed() throws Exception {
-    azkarApi.makeFriends(user1, user2);
-
-    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, user1Group.getId());
-
-    int user2NumGroupsBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
-    LeaveGroupResponse expectedResponse = new LeaveGroupResponse();
-    leaveGroup(user2, user1Group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-
-    Group group = groupRepo.findById(user1Group.getId()).get();
-    assertThat(group.getUsersIds().size(), is(1));
-    assertThat(group.getUsersIds().get(0), is(user1.getId()));
-
-    User user2InRepo = userRepo.findById(user2.getId()).get();
-    assertThat(user2InRepo.getUserGroups().size(), is(user2NumGroupsBefore - 1));
-  }
-
-  @Test
-  public void leave_invalidGroup_shouldNoSucceed() throws Exception {
-    Group unSavedGroup = GroupFactory.getNewGroup(user1.getId());
-
-    LeaveGroupResponse expectedResponse = new LeaveGroupResponse();
-    expectedResponse.setStatus(new Status(Status.GROUP_INVALID_ERROR));
-    leaveGroup(user2, unSavedGroup.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-  }
-
-  @Test
-  public void leave_notMember_shouldNoSucceed() throws Exception {
-    LeaveGroupResponse expectedResponse = new LeaveGroupResponse();
-    expectedResponse.setStatus(new Status(Status.NOT_MEMBER_ERROR));
-    leaveGroup(user2, user1Group.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-  }
-
-  @Test
-  public void getUserGroups_normalScenario_shouldSucceed() throws Exception {
-    User user4 = getNewRegisteredUser();
-
-    azkarApi.makeFriends(user3, user1);
-    azkarApi.makeFriends(user3, user2);
-
-    String user1Group1Name = "user1group1name";
-    String user1Group2Name = "user1group2name";
-    String user2Group1Name = "user2group1name";
-    String user4Group1Name = "user4group1name";
-    Group group1 = azkarApi.addGroupAndReturn(user1, user1Group1Name);
-    Group group2 = azkarApi.addGroupAndReturn(user1, user1Group2Name);
-    Group group3 = azkarApi.addGroupAndReturn(user2, user2Group1Name);
-    azkarApi.addGroupAndReturn(user4, user4Group1Name);
-
-    GetUserGroupsResponse expectedResponse = new GetUserGroupsResponse();
-    List<UserGroup> expectedUser3Groups =
-        new ArrayList(userRepo.findById(user3.getId()).get().getUserGroups());
-    expectedUser3Groups.add(UserGroup.builder()
-        .groupId(group1.getId())
-        .groupName(user1Group1Name)
-        .build());
-
-    expectedUser3Groups.add(UserGroup.builder()
-        .groupId(group2.getId())
-        .invitingUserId(user1.getId())
-        .groupName(user1Group2Name)
-        .build());
-
-    expectedUser3Groups.add(UserGroup.builder()
-        .groupId(group3.getId())
-        .groupName(user2Group1Name)
-        .build());
-
-    expectedResponse.setData(expectedUser3Groups);
-
-    // Add user3 to group1.
-    azkarApi.addUserToGroup(/*invitingUser=*/user1, user3, group1.getId());
-
-    // Add user3 to group2.
-    azkarApi.addUserToGroup(/*invitingUser=*/user1, user3, group2.getId());
-
-    // Add user3 to group3.
-    azkarApi.addUserToGroup(/*invitingUser=*/user2, user3, group3.getId());
-
-    azkarApi.getUserGroups(user3)
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-  }
-
-  @Test
   public void getGroups_normalScenario_shouldSucceed() throws Exception {
     User user4 = getNewRegisteredUser();
 
@@ -369,44 +271,6 @@ public class GroupControllerTest extends TestBase {
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
-  }
-
-  @Test
-  public void getUserGroups_ownedGroups_normalScenario_shouldSucceed() throws Exception {
-    List<UserGroup> user1GroupsBefore = user1.getUserGroups();
-    List<UserGroup> user2GroupsBefore = user2.getUserGroups();
-
-    String groupName1 = "group1name";
-    String groupName2 = "group2name";
-    Group group1 = azkarApi.addGroupAndReturn(user1, groupName1);
-    Group group2 = azkarApi.addGroupAndReturn(user2, groupName2);
-
-    GetUserGroupsResponse expectedUser1Response = new GetUserGroupsResponse();
-    List<UserGroup> expectedUser1Groups = user1GroupsBefore;
-    expectedUser1Groups.add(UserGroup.builder()
-        .groupId(group1.getId())
-        .groupName(groupName1)
-        .build());
-    expectedUser1Response.setData(expectedUser1Groups);
-
-    GetUserGroupsResponse expectedUser2Response = new GetUserGroupsResponse();
-    List<UserGroup> expectedUser2Groups = user2GroupsBefore;
-    expectedUser2Groups.add(UserGroup.builder()
-        .groupId(group2.getId())
-        .groupName(groupName2)
-        .build());
-    expectedUser2Response.setData(expectedUser2Groups);
-
-    azkarApi.getUserGroups(user1)
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedUser1Response)))
-        .andReturn();
-    azkarApi.getUserGroups(user2)
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedUser2Response)))
         .andReturn();
   }
 
@@ -533,10 +397,6 @@ public class GroupControllerTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
         .andReturn();
-  }
-
-  private ResultActions leaveGroup(User user, String groupId) throws Exception {
-    return performPutRequest(user, String.format("/groups/%s/leave/", groupId), /*body=*/ null);
   }
 
   private int getLastAddedUserGroupIndex(User user1) {

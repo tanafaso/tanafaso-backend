@@ -140,17 +140,6 @@ public class ChallengeController extends BaseController {
     return Optional.empty();
   }
 
-  private static void updateScoreInUserGroup(User user, String groupId) {
-    Optional<UserGroup> group =
-        user.getUserGroups().stream().filter(userGroup -> userGroup.getGroupId().equals(groupId))
-            .findAny();
-    if (!group.isPresent()) {
-      throw new RuntimeException("The updated challenge is not in a group.");
-    }
-    int oldScore = group.get().getTotalScore();
-    group.get().setTotalScore(oldScore + 1);
-  }
-
   private static Optional<SubChallenge> findSubChallenge(
       List<SubChallenge> oldSubChallenges,
       SubChallenge newSubChallenge) {
@@ -1034,7 +1023,6 @@ public class ChallengeController extends BaseController {
     boolean newSubChallengesFinished =
         oldSubChallenges.stream().allMatch(subChallenge -> (subChallenge.getRepetitions() == 0));
     if (newSubChallengesFinished && !oldSubChallengesFinished) {
-      updateScoreInUserGroup(currentUser, currentUserChallenge.get().getGroupId());
       updateScoreInFriendships(currentUser, currentUserChallenge.get().getGroupId());
       userRepo.save(currentUser);
 
@@ -1083,7 +1071,6 @@ public class ChallengeController extends BaseController {
     }
 
     currentUserChallenge.get().setFinished(true);
-    updateScoreInUserGroup(currentUser, currentUserChallenge.get().getGroupId());
     updateScoreInFriendships(currentUser, currentUserChallenge.get().getGroupId());
     userRepo.save(currentUser);
 
@@ -1131,7 +1118,6 @@ public class ChallengeController extends BaseController {
     }
 
     currentUserChallenge.get().setFinished(true);
-    updateScoreInUserGroup(currentUser, currentUserChallenge.get().getGroupId());
     updateScoreInFriendships(currentUser, currentUserChallenge.get().getGroupId());
     userRepo.save(currentUser);
 
@@ -1212,7 +1198,6 @@ public class ChallengeController extends BaseController {
       return ResponseEntity.ok(new FinishMemorizationChallengeQuestionResponse());
     }
 
-    updateScoreInUserGroup(currentUser, currentUserChallenge.get().getGroupId());
     updateScoreInFriendships(currentUser, currentUserChallenge.get().getGroupId());
     userRepo.save(currentUser);
 
