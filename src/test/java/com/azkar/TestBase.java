@@ -11,15 +11,12 @@ import com.azkar.entities.User;
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
-import com.azkar.payload.challengecontroller.requests.AddPersonalChallengeRequest;
-import com.azkar.payload.challengecontroller.responses.AddPersonalChallengeResponse;
 import com.azkar.services.NotificationsService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.mongobee.Mongobee;
 import com.github.mongobee.exception.MongobeeException;
 import java.io.UnsupportedEncodingException;
-import java.time.Instant;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -143,21 +140,4 @@ public abstract class TestBase {
     azkarApi.addAzkarChallenge(user, challenge).andExpect(status().isOk());
     return challenge;
   }
-
-  protected AzkarChallenge createPersonalChallenge(User user)
-      throws Exception {
-    long expiryDate = Instant.now().getEpochSecond() + ChallengeFactory.EXPIRY_DATE_OFFSET;
-    AddPersonalChallengeRequest request = PersonalAzkarChallengeTest
-        .createPersonalChallengeRequest(expiryDate);
-    return createPersonalChallenge(user, request);
-  }
-
-  protected AzkarChallenge createPersonalChallenge(User user, AddPersonalChallengeRequest request)
-      throws Exception {
-    ResultActions response = azkarApi.addPersonalChallenge(user, request)
-        .andExpect(status().isOk());
-    return getResponse(response, AddPersonalChallengeResponse.class).getData();
-  }
-
-
 }
