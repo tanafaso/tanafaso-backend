@@ -1,7 +1,6 @@
 package com.azkar.controllers;
 
 import com.azkar.entities.Friendship;
-import com.azkar.entities.Group;
 import com.azkar.entities.PubliclyAvailableFemaleUser;
 import com.azkar.entities.PubliclyAvailableMaleUser;
 import com.azkar.entities.User;
@@ -330,17 +329,13 @@ public class UserController extends BaseController {
   }
 
   private void deleteUserFromGroups(User user) {
-    user.getUserGroups().stream().forEach(userGroup -> {
-      Optional<Group> group = groupRepo.findById(userGroup.getGroupId());
-      if (!group.isPresent()) {
-        logger.error("Couldn't find group with ID {} to delete user {} from it.",
-            userGroup.getGroupId(), user.getId());
-        return;
-      }
-
-      group.get().getUsersIds().removeIf(userId -> userId.equals(user.getId()));
-      groupRepo.save(group.get());
-    });
+    groupRepo.findAll().stream()
+        .filter(group -> group.getUsersIds().contains(user.getId()))
+        .forEach(group -> {
+              group.getUsersIds().removeIf(userId -> userId.equals(user.getId()));
+              groupRepo.save(group);
+            }
+        );
   }
 
   private void deleteFriendships(String userId) {

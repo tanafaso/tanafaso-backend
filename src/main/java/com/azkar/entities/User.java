@@ -51,6 +51,7 @@ public class User extends EntityBase {
   @NotNull
   private String lastName;
   private UserFacebookData userFacebookData;
+  @Deprecated
   @Default
   private List<UserGroup> userGroups = new ArrayList();
   // Every Challenge instance in this list is a user-customized-copy of a Challenge document in

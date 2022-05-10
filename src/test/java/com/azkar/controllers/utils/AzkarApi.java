@@ -244,10 +244,6 @@ public class AzkarApi {
     return httpClient.performGetRequest(user, "/groups");
   }
 
-  public ResultActions getGroupLeaderboard(User user, String groupId) throws Exception {
-    return httpClient.performGetRequest(user, String.format("/groups/%s/leaderboard", groupId));
-  }
-
   public ResultActions addUserToGroup(User invitingUser, User invitedUser, String groupId)
       throws Exception {
     return httpClient.performPutRequest(invitingUser, String.format("/groups/%s/add/%s", groupId,

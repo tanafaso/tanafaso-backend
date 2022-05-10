@@ -203,9 +203,7 @@ public class FriendshipController extends BaseController {
             .monthScore(0)
             .totalScore(0)
             .build();
-    currentUser.getUserGroups().add(userGroup);
     User otherUser = userRepo.findById(otherUserId).get();
-    otherUser.getUserGroups().add(userGroup);
 
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);

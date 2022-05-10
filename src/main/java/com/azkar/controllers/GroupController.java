@@ -66,10 +66,6 @@ public class GroupController extends BaseController {
             .build();
     newGroup = groupRepo.save(newGroup);
 
-    currentUser.getUserGroups()
-        .add(UserGroup.builder().groupId(newGroup.getId()).groupName(newGroup.getName())
-            .invitingUserId(currentUser.getId())
-            .build());
     userRepo.save(currentUser);
 
     AddGroupResponse response = new AddGroupResponse();
@@ -80,18 +76,17 @@ public class GroupController extends BaseController {
   @GetMapping(value = "/{groupId}")
   public ResponseEntity<GetGroupResponse> getGroup(@PathVariable String groupId) {
     GetGroupResponse response = new GetGroupResponse();
-    User currentUser = getCurrentUser(userRepo);
-    if (!currentUser.getUserGroups().stream().anyMatch(
-        userGroup ->
-            userGroup.getGroupId().equals(groupId)
-    )) {
-      response.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
 
     Optional<Group> group = groupRepo.findById(groupId);
     // Check whether the group is deleted.
     if (!group.isPresent()) {
+      response.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    User currentUser = getCurrentUser(userRepo);
+    if (!group.get().getUsersIds().stream()
+        .anyMatch(userId -> userId.equals(currentUser.getId()))) {
       response.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
       return ResponseEntity.badRequest().body(response);
     }
@@ -107,114 +102,6 @@ public class GroupController extends BaseController {
     response.setData(groupsService.getGroups(getCurrentUser(userRepo)));
 
     return ResponseEntity.ok(response);
-  }
-
-
-  @GetMapping(value = "/{groupId}/leaderboard")
-  public ResponseEntity<GetGroupLeaderboardResponse> getGroupLeaderboard(
-      @PathVariable String groupId) {
-    GetGroupLeaderboardResponse response = new GetGroupLeaderboardResponse();
-    User currentUser = getCurrentUser(userRepo);
-    if (!currentUser.getUserGroups().stream().anyMatch(
-        userGroup ->
-            userGroup.getGroupId().equals(groupId)
-    )) {
-      response.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
-
-    Optional<Group> group = groupRepo.findById(groupId);
-    if (!group.isPresent()) {
-      throw new RuntimeException(String.format("User with id: %s, trying to get leaderboard of a "
-          + "non-existing group", currentUser.getId()));
-    }
-
-    boolean isBinaryGroup =
-        friendshipRepo.findByUserId(currentUser.getId()).getFriends().stream().anyMatch(
-            friend -> friend.getGroupId().equals(groupId)
-        );
-    if (group.get().getUsersIds().size() != 2) {
-      logger.error("Found conflicting information regarding a binary group with ID %s that has "
-          + "more than two members", group.get().getId());
-      // Fallback to calculating the leaderboard for non-binary groups.
-      isBinaryGroup = false;
-    }
-
-    List<UserScore> userScores;
-    if (isBinaryGroup) {
-      userScores = getBinaryGroupLeaderboard(group.get());
-    } else {
-      userScores = getNonBinaryGroupLeaderboard(group.get());
-    }
-    response.setData(userScores);
-    return ResponseEntity.ok(response);
-  }
-
-  // Accumulates the scores of the two users in all of the groups they are both members in.
-  private List<UserScore> getBinaryGroupLeaderboard(Group group) {
-    AtomicInteger user1Score = new AtomicInteger(0);
-    AtomicInteger user2Score = new AtomicInteger(0);
-    User user1 = userRepo.findById(group.getUsersIds().get(0)).get();
-    User user2 = userRepo.findById(group.getUsersIds().get(1)).get();
-    groupRepo.findAll().stream().filter(
-        grp -> (grp.getUsersIds().contains(user1.getId()) && grp.getUsersIds()
-            .contains(user2.getId())))
-        .forEach(grp -> {
-          Optional<UserScore> user1ScoreInGrp = getUserScoreInGroup(user1.getId(), grp);
-          Optional<UserScore> user2ScoreInGrp = getUserScoreInGroup(user2.getId(), grp);
-          user1ScoreInGrp.ifPresent(userScore -> user1Score.addAndGet(userScore.getTotalScore()));
-          user2ScoreInGrp.ifPresent(userScore -> user2Score.addAndGet(userScore.getTotalScore()));
-        });
-    UserScore userScore1 = UserScore.builder()
-        .username(user1.getUsername())
-        .firstName(user1.getFirstName())
-        .lastName(user1.getLastName())
-        .totalScore(user1Score.get())
-        .build();
-    UserScore userScore2 = UserScore.builder()
-        .username(user2.getUsername())
-        .firstName(user2.getFirstName())
-        .lastName(user2.getLastName())
-        .totalScore(user2Score.get())
-        .build();
-    return ImmutableList.of(userScore1, userScore2);
-  }
-
-  private List<UserScore> getNonBinaryGroupLeaderboard(Group group) {
-    List<UserScore> userScores = new ArrayList<>();
-    for (String groupMemberId : group.getUsersIds()) {
-      Optional<UserScore> userScore = getUserScoreInGroup(groupMemberId, group);
-      if (!userScore.isPresent()) {
-        logger.warn(String.format("Dangling group member: %s in group: %s", groupMemberId,
-            group.getId()));
-        continue;
-      }
-      userScores.add(userScore.get());
-    }
-
-    Collections.sort(userScores,
-        (u1, u2) -> Integer.compare(u2.getTotalScore(), u1.getTotalScore()));
-
-    return userScores;
-  }
-
-  private Optional<UserScore> getUserScoreInGroup(String userId, Group group) {
-    Optional<User> user = userRepo.findById(userId);
-    if (!user.isPresent()) {
-      return Optional.empty();
-    }
-
-    Optional<UserGroup> userGroup =
-        user.get().getUserGroups().stream()
-            .filter(userGroup1 -> userGroup1.getGroupId().equals(group.getId())).findFirst();
-    if (!userGroup.isPresent()) {
-      return Optional.empty();
-    }
-
-    return Optional.of(
-        UserScore.builder().firstName(user.get().getFirstName()).lastName(user.get().getLastName())
-            .username(user.get().getUsername())
-            .totalScore(userGroup.get().getTotalScore()).build());
   }
 
   @PutMapping(value = "/{groupId}/add/{userId}")
@@ -256,14 +143,6 @@ public class GroupController extends BaseController {
       return ResponseEntity.badRequest().body(response);
     }
 
-    User invitingUser = userRepo.findById(getCurrentUser().getUserId()).get();
-    // Only add the user group but don't add old challenges.
-    userToAdd.get().getUserGroups().add(
-        UserGroup.builder()
-            .groupId(groupId)
-            .groupName(group.get().getName())
-            .invitingUserId(invitingUser.getId())
-            .build());
     group.get().getUsersIds().add(userToAdd.get().getId());
     userRepo.save(userToAdd.get());
     groupRepo.save(group.get());

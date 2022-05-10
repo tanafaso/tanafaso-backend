@@ -85,20 +85,10 @@ public class GroupControllerTest extends TestBase {
 
     azkarApi.makeFriends(user1, user2);
 
-    int user2GroupsNumBefore = userRepo.findById(user2.getId()).get().getUserGroups().size();
-
     azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, user1Group.getId())
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-
-    User user2InRepo = userRepo.findById(user2.getId()).get();
-    List<UserGroup> user2Groups = user2InRepo.getUserGroups();
-    assertThat(user2Groups.size(), is(user2GroupsNumBefore + 1));
-
-    UserGroup user2Group = user2Groups.get(user2GroupsNumBefore + 0);
-    assertThat(user2Group.getGroupId(), is(user1Group.getId()));
-    assertThat(user2Group.getInvitingUserId(), is(user1.getId()));
 
     Group updatedGroup = groupRepo.findById(user1Group.getId()).get();
     assertThat(updatedGroup.getUsersIds().size(), is(2));
@@ -128,8 +118,6 @@ public class GroupControllerTest extends TestBase {
 
   @Test
   public void addUser_invalidGroup_shouldNotSucceed() throws Exception {
-    int user2GroupsBefore = user2.getUserGroups().size();
-
     Group unSavedGroup = GroupFactory.getNewGroup(user1.getId());
 
     AddToGroupResponse expectedResponse = new AddToGroupResponse();
@@ -139,9 +127,6 @@ public class GroupControllerTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
 
-    User user2InRepo = userRepo.findById(user2.getId()).get();
-    List<UserGroup> user2Groups = user2InRepo.getUserGroups();
-    assertThat(user2Groups.size(), is(user2GroupsBefore));
     Group user1GroupInRepo = groupRepo.findById(user1Group.getId()).get();
     assertThat(user1GroupInRepo.getUsersIds().size(), is(1));
   }
@@ -168,16 +153,10 @@ public class GroupControllerTest extends TestBase {
 
     azkarApi.makeFriends(user2, user3);
 
-    int user3NumGroupsBefore = userRepo.findById(user3.getId()).get().getUserGroups().size();
-
     azkarApi.addUserToGroup(/*invitingUser=*/user2, user3, user1Group.getId())
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)));
-
-    User user3InRepo = userRepo.findById(user3.getId()).get();
-    List<UserGroup> user3Groups = user3InRepo.getUserGroups();
-    assertThat(user3Groups.size(), is(user3NumGroupsBefore));
   }
 
   @Test
@@ -272,134 +251,5 @@ public class GroupControllerTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
         .andReturn();
-  }
-
-  @Test
-  public void getGroupLeaderboard_normalScenario_returnsSortedScores() throws Exception {
-    User user1 = getNewRegisteredUser();
-    User user2 = getNewRegisteredUser();
-    azkarApi.makeFriends(user1, user2);
-
-    Group group = azkarApi.addGroupAndReturn(user1, "group");
-    int user1GroupIndex = getLastAddedUserGroupIndex(user1);
-    azkarApi.addGroup(user1, "irrelevant group");
-    int user1IrrelevantGroupIndex = getLastAddedUserGroupIndex(user1);
-    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, group.getId());
-    int user2GroupIndex = getLastAddedUserGroupIndex(user2);
-
-    User user1InDb = userRepo.findById(user1.getId()).get();
-    User user2InDb = userRepo.findById(user2.getId()).get();
-    user1InDb.getUserGroups().get(user1GroupIndex).setTotalScore(5);
-    user1InDb.getUserGroups().get(user1IrrelevantGroupIndex).setTotalScore(20);
-    user2InDb.getUserGroups().get(user2GroupIndex).setTotalScore(10);
-    userRepo.save(user1InDb);
-    userRepo.save(user2InDb);
-    GetGroupLeaderboardResponse expectedResponse = new GetGroupLeaderboardResponse();
-    List<UserScore> expectedUserScores = new ArrayList<>();
-    expectedUserScores.add(
-        UserScore.builder().firstName(user2.getFirstName()).lastName(user2.getLastName())
-            .username(user2.getUsername()).totalScore(10)
-            .build());
-    expectedUserScores.add(
-        UserScore.builder().firstName(user1.getFirstName()).lastName(user1.getLastName())
-            .username(user1.getUsername()).totalScore(5)
-            .build());
-    expectedResponse.setData(expectedUserScores);
-
-    azkarApi.getGroupLeaderboard(user1, group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
-    azkarApi.getGroupLeaderboard(user2, group.getId())
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
-  }
-
-  @Test
-  public void getGroupLeaderboard_binaryGroup_accountsForOtherGroupsScore() throws Exception {
-    User user1 = getNewRegisteredUser();
-    int user1FriendsCountBefore = friendshipRepo.findByUserId(user1.getId()).getFriends().size();
-    User user2 = getNewRegisteredUser();
-    azkarApi.makeFriends(user1, user2);
-
-    Group group1 = azkarApi.addGroupAndReturn(user1, "group1");
-    int user1Group1Index = getLastAddedUserGroupIndex(user1);
-    azkarApi.addUserToGroup(/*invitingUser=*/user1, user2, group1.getId());
-    int user2Group1Index = getLastAddedUserGroupIndex(user2);
-
-    Group group2 = azkarApi.addGroupAndReturn(user2, "group2");
-    int user2Group2Index = getLastAddedUserGroupIndex(user2);
-    azkarApi.addUserToGroup(/*invitingUser=*/user2, user1, group2.getId());
-    int user1Group2Index = getLastAddedUserGroupIndex(user1);
-
-    azkarApi.addGroup(user1, "irrelevant group");
-    int user1IrrelevantGroupIndex = getLastAddedUserGroupIndex(user1);
-
-    User user1InDb = userRepo.findById(user1.getId()).get();
-    User user2InDb = userRepo.findById(user2.getId()).get();
-
-    user1InDb.getUserGroups().get(user1Group1Index).setTotalScore(5);
-    user1InDb.getUserGroups().get(user1Group2Index).setTotalScore(10);
-    user1InDb.getUserGroups().get(user1IrrelevantGroupIndex).setTotalScore(15);
-
-    user2InDb.getUserGroups().get(user2Group1Index).setTotalScore(50);
-    user2InDb.getUserGroups().get(user2Group2Index).setTotalScore(100);
-
-    userRepo.save(user1InDb);
-    userRepo.save(user2InDb);
-    GetGroupLeaderboardResponse expectedResponse = new GetGroupLeaderboardResponse();
-    List<UserScore> expectedUserScores = new ArrayList<>();
-    expectedUserScores.add(
-        UserScore.builder().firstName(user2.getFirstName()).lastName(user2.getLastName())
-            .username(user2.getUsername()).totalScore(150)
-            .build());
-    expectedUserScores.add(
-        UserScore.builder().firstName(user1.getFirstName()).lastName(user1.getLastName())
-            .username(user1.getUsername()).totalScore(15)
-            .build());
-    expectedResponse.setData(expectedUserScores);
-
-    String binaryGroupId =
-        friendshipRepo.findByUserId(user1.getId()).getFriends().get(user1FriendsCountBefore)
-            .getGroupId();
-    azkarApi.getGroupLeaderboard(user1, binaryGroupId)
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
-    azkarApi.getGroupLeaderboard(user2, binaryGroupId)
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
-  }
-
-  @Test
-  public void getGroupLeaderboard_userNotInGroup_shouldFail() throws Exception {
-    User user = UserFactory.getNewUser();
-    addNewUser(user);
-    User nonGroupUser = UserFactory.getNewUser();
-    addNewUser(nonGroupUser);
-    Group group = azkarApi.addGroupAndReturn(user, "group");
-
-    User user1InDb = userRepo.findById(user.getId()).get();
-    user1InDb.getUserGroups().get(0).setTotalScore(5);
-    userRepo.save(user1InDb);
-
-    GetGroupLeaderboardResponse expectedResponse = new GetGroupLeaderboardResponse();
-    expectedResponse.setStatus(new Status(Status.NOT_MEMBER_IN_GROUP_ERROR));
-
-    azkarApi.getGroupLeaderboard(nonGroupUser, group.getId())
-        .andExpect(status().isBadRequest())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().json(JsonHandler.toJson(expectedResponse)))
-        .andReturn();
-  }
-
-  private int getLastAddedUserGroupIndex(User user1) {
-    return userRepo.findById(user1.getId()).get().getUserGroups().size() - 1;
   }
 }

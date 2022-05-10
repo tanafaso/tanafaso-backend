@@ -301,9 +301,6 @@ public class UpdateAzkarChallengeTest extends TestBase {
 
   @Test
   public void updateChallenge_partiallyFinishedChallenge_shouldNotUpdateScore() throws Exception {
-    int userGroupsCountBefore = user.getUserGroups().size();
-    assertThat(userRepo.findById(user.getId()).get().getUserGroups().get(0).getTotalScore(), is(0));
-
     AzkarChallenge challenge = ChallengeFactory.getNewChallenge(group.getId());
     assertThat(challenge.getSubChallenges().size(), not(0));
     challenge.getSubChallenges().get(0).setRepetitions(2);
@@ -316,12 +313,6 @@ public class UpdateAzkarChallengeTest extends TestBase {
     UpdateChallengeRequest requestBody = createUpdateChallengeRequest(createdChallenge);
     updateChallenge(user, createdChallenge.getId(), requestBody)
         .andExpect(status().isOk());
-
-    User updatedUser = userRepo.findById(user.getId()).get();
-    assertThat(updatedUser.getUserGroups().size(), is(userGroupsCountBefore + 1));
-
-    UserGroup userGroup = updatedUser.getUserGroups().get(userGroupsCountBefore);
-    assertThat(userGroup.getTotalScore(), is(0));
   }
 
   private AzkarChallenge createNewChallenge(User user) throws Exception {
