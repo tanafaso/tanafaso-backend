@@ -325,10 +325,6 @@ public class AzkarApi {
         .performDeleteRequest(requester, String.format("/friends/%s", otherUser.getId()));
   }
 
-  public ResultActions getFriendsLeaderboard(User user) throws Exception {
-    return httpClient.performGetRequest(user, "/friends/leaderboard");
-  }
-
   public List<Friend> getFriendsLeaderboardV2AndReturn(User user) throws Exception {
     MvcResult result = getFriendsLeaderboardV2(user).andReturn();
     GetFriendsLeaderboardV2Response response =
