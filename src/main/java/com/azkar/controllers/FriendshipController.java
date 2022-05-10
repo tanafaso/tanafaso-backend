@@ -195,20 +195,9 @@ public class FriendshipController extends BaseController {
             .build()
     );
 
-    UserGroup userGroup =
-        UserGroup.builder()
-            .groupId(binaryGroup.getId())
-            .groupName(binaryGroup.getName())
-            .invitingUserId(binaryGroup.getCreatorId())
-            .monthScore(0)
-            .totalScore(0)
-            .build();
-    User otherUser = userRepo.findById(otherUserId).get();
-
     friendshipRepo.save(currentUserFriendship);
     friendshipRepo.save(otherUserFriendship);
     userRepo.save(currentUser);
-    userRepo.save(otherUser);
 
     notificationsService.sendNotificationToUser(userRepo.findById(otherUserId).get(),
         "تم قبول طلب الصداقة",

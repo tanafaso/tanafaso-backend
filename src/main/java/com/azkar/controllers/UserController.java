@@ -332,10 +332,9 @@ public class UserController extends BaseController {
     groupRepo.findAll().stream()
         .filter(group -> group.getUsersIds().contains(user.getId()))
         .forEach(group -> {
-              group.getUsersIds().removeIf(userId -> userId.equals(user.getId()));
-              groupRepo.save(group);
-            }
-        );
+          group.getUsersIds().removeIf(userId -> userId.equals(user.getId()));
+          groupRepo.save(group);
+        });
   }
 
   private void deleteFriendships(String userId) {
