@@ -18,7 +18,16 @@ import org.springframework.core.io.ClassPathResource;
 @Getter
 public class AzkarCacher {
 
+  private static class UnExpectedZekrException extends RuntimeException {
+    public UnExpectedZekrException (String message) {
+      super(message);
+    }
+  }
+
   private static final Logger logger = LoggerFactory.getLogger(AzkarCacher.class);
+  // This ID is preserved for Azkar created by users, so this shouldn't be used by pre-saved
+  // Azkar in azkar.csv.
+  private static final int CUSTOM_ZEKR_ID = 10_000;
   @Value("${files.azkar}")
   public String azkarFile;
   ArrayList<Zekr> azkar = new ArrayList<>();
@@ -34,6 +43,11 @@ public class AzkarCacher {
       while ((values = csvReader.readNext()) != null) {
         if (values.length != 2) {
           throw new IOException("Didn't find exactly 2 columns per row in CSV file: " + azkarFile);
+        }
+
+        if (Integer.parseInt(values[0]) == CUSTOM_ZEKR_ID) {
+         throw new UnExpectedZekrException(String.format("Didn't expect a Zekr in azkar.csv with "
+             + "ID %d, as this ID is preserved for Azkar created by users.", CUSTOM_ZEKR_ID));
         }
 
         Zekr zekr = Zekr.builder().id(Integer.parseInt(values[0])).zekr(values[1]).build();
