@@ -19,7 +19,7 @@ import org.springframework.core.io.ClassPathResource;
 public class AzkarCacher {
 
   private static class UnExpectedZekrException extends RuntimeException {
-    public UnExpectedZekrException (String message) {
+    public UnExpectedZekrException(String message) {
       super(message);
     }
   }
@@ -46,8 +46,8 @@ public class AzkarCacher {
         }
 
         if (Integer.parseInt(values[0]) == CUSTOM_ZEKR_ID) {
-         throw new UnExpectedZekrException(String.format("Didn't expect a Zekr in azkar.csv with "
-             + "ID %d, as this ID is preserved for Azkar created by users.", CUSTOM_ZEKR_ID));
+          throw new UnExpectedZekrException(String.format("Didn't expect a Zekr in azkar.csv with "
+              + "ID %d, as this ID is preserved for Azkar created by users.", CUSTOM_ZEKR_ID));
         }
 
         Zekr zekr = Zekr.builder().id(Integer.parseInt(values[0])).zekr(values[1]).build();
