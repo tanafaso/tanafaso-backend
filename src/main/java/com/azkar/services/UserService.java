@@ -223,6 +223,7 @@ public class UserService {
   // Note: Only this generator should be able to create usernames with the special character '-',
   // but users shouldn't be able to use this character while changing their usernames.
   private String generateUsername(String firstName, String lastName) {
+    lastName = lastName == null ? "" : lastName;
     firstName = firstName.replace(" ", "");
     lastName = lastName.replace(" ", "");
     firstName = firstName.toLowerCase();
