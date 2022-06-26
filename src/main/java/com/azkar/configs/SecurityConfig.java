@@ -40,7 +40,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       ApiAuthenticationController.RESET_PASSWORD_PATH,
       AppLinkController.STORE_LINK_ANDROID_PATH,
       AppLinkController.STORE_LINK_IOS_PATH,
-      PrivacyLinkController.PRIVACY_POLICY_PATH,
+      PrivacyLinkController.PRIVACY_PAGE_ROUTE,
   };
   @Autowired
   JwtAuthenticationFilter jwtAuthenticationFilter;
