@@ -12,9 +12,6 @@ public class WebHomeController extends BaseController {
 
   public static final String HOME_PAGE_VIEW_NAME = "home";
 
-  @Autowired
-  public UserRepo userRepo;
-
   @GetMapping(value = "/")
   public String homePage(Model model) {
     return HOME_PAGE_VIEW_NAME;
