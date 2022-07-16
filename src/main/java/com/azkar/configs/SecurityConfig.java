@@ -1,7 +1,6 @@
 package com.azkar.configs;
 
 import com.azkar.configs.authentication.JwtAuthenticationFilter;
-import com.azkar.configs.authentication.OAuthSuccessHandler;
 import com.azkar.controllers.AppLinkController;
 import com.azkar.controllers.PrivacyLinkController;
 import com.azkar.controllers.authenticationcontroller.ApiAuthenticationController;
@@ -44,8 +43,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   };
   @Autowired
   JwtAuthenticationFilter jwtAuthenticationFilter;
-  @Autowired
-  OAuthSuccessHandler oauthSuccessHandler;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
@@ -54,10 +51,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .permitAll()
         .antMatchers("/**")
         .authenticated()
-        .and()
-        .oauth2Login()
-        .failureUrl("/loginFailure")
-        .successHandler(oauthSuccessHandler)
         .and()
         .sessionManagement()
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
