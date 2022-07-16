@@ -7,16 +7,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.azkar.controllers.utils.AzkarApi;
 import com.azkar.controllers.utils.HttpClient;
 import com.azkar.controllers.utils.JsonHandler;
+import com.azkar.entities.Friendship;
 import com.azkar.entities.User;
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.factories.entities.UserFactory;
+import com.azkar.repos.FriendshipRepo;
+import com.azkar.repos.UserRepo;
 import com.azkar.services.NotificationsService;
 import com.azkar.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.mongobee.Mongobee;
-import com.github.mongobee.exception.MongobeeException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -57,14 +60,16 @@ public abstract class TestBase {
   @Autowired
   UserService userService;
   @Autowired
-  MongoTemplate mongoTemplate;
+  UserRepo userRepo;
   @Autowired
-  Mongobee mongobee;
+  FriendshipRepo friendshipRepo;
+  @Autowired
+  MongoTemplate mongoTemplate;
   @MockBean
   NotificationsService notificationsService;
 
   @Before
-  public final void beforeBase() throws MongobeeException {
+  public final void beforeBase() {
     Mockito.doNothing().when(notificationsService).
         sendNotificationToUser(any(), any(), any());
 
@@ -75,7 +80,25 @@ public abstract class TestBase {
     mongoTemplate.getCollectionNames().stream().forEach(name -> {
       mongoTemplate.dropCollection(name);
     });
-    mongobee.execute();
+
+    doSabeqBeforeAllSetup();
+  }
+
+  private void doSabeqBeforeAllSetup() {
+    User sabeq = User.builder()
+        .id(User.SABEQ_ID)
+        .firstName("سابق")
+        .lastName("\uD83C\uDFCE️️")
+        .username("sabeq")
+        .build();
+    userRepo.save(sabeq);
+
+    Friendship sabeqFriendship = Friendship.builder()
+        .userId(User.SABEQ_ID)
+        .friends(new ArrayList<>())
+        .id(new ObjectId().toString())
+        .build();
+    friendshipRepo.save(sabeqFriendship);
   }
 
   protected void addNewUser(User user) {

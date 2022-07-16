@@ -65,11 +65,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.github.mongobee</groupId>
-      <artifactId>mongobee</artifactId>
-      <version>0.13</version>
-    </dependency>
-    <dependency>
       <groupId>org.springframework.restdocs</groupId>
       <artifactId>spring-restdocs-mockmvc</artifactId>
       <scope>test</scope>
@@ -102,9 +97,11 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-mail -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-mail</artifactId>
+      <version>2.7.1</version>
     </dependency>
     <dependency>
       <groupId>com.opencsv</groupId>
@@ -157,6 +154,7 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>2.4.2</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
