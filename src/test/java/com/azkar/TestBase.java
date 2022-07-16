@@ -84,6 +84,7 @@ public abstract class TestBase {
     doSabeqBeforeAllSetup();
   }
 
+  // Add sabeq for tests. This was done as a DB migration on the prod DB.
   private void doSabeqBeforeAllSetup() {
     User sabeq = User.builder()
         .id(User.SABEQ_ID)
