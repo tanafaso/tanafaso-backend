@@ -119,8 +119,6 @@ public class ApiAuthenticationController extends BaseController {
   @Autowired
   private JavaMailSender javaMailSender;
   private RestTemplate restTemplate;
-  @Value("${GOOGLE_CLIENT_ID}")
-  private String googleClientId;
   @Value("${APPLE_TEAM_ID}")
   private String appleTeamId;
   @Value("${APPLE_SIGN_IN_KEY_ID}")
