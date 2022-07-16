@@ -589,6 +589,7 @@ public class ApiAuthenticationController extends BaseController {
       throws MessagingException, UnsupportedEncodingException {
     MimeMessage mimeMessage = javaMailSender.createMimeMessage();
     MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+    // This should be disregarded by new Mime clients.
     InternetAddress fromAddress = new InternetAddress("azkar_email_name@azkaremaildomain.com",
         "تنافسوا");
     helper.setFrom(fromAddress);
