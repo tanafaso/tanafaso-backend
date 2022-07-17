@@ -62,7 +62,6 @@ public class ApiHomeController extends BaseController {
     );
 
     challengesCleanerService.cleanOldUserChallengesAsync(currentUser);
-    logger.info("finished sync work");
     return ResponseEntity.ok(getHomeResponse);
   }
 }
