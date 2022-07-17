@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApiHomeController extends BaseController {
 
   private static final Logger logger = LoggerFactory.getLogger(ApiHomeController.class);
+  private static final int MAX_USER_CHALLENGES_WITH_SAME_TYPE = 10;
 
   @Autowired
   ChallengesService challengesService;
@@ -57,6 +59,27 @@ public class ApiHomeController extends BaseController {
         .build()
     );
 
+    cleanOldUserChallengesAsync(currentUser);
     return ResponseEntity.ok(getHomeResponse);
+  }
+
+  @Async
+  public void cleanOldUserChallengesAsync(User user) {
+    user.setAzkarChallenges(user.getAzkarChallenges().subList(
+        Math.max(0, user.getAzkarChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
+        user.getAzkarChallenges().size()));
+
+    user.setReadingQuranChallenges(user.getReadingQuranChallenges().subList(
+        Math.max(0, user.getReadingQuranChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
+        user.getReadingQuranChallenges().size()));
+
+    user.setMeaningChallenges(user.getMeaningChallenges().subList(
+        Math.max(0, user.getMeaningChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
+        user.getMeaningChallenges().size()));
+
+    user.setMemorizationChallenges(user.getMemorizationChallenges().subList(
+        Math.max(0, user.getMemorizationChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
+        user.getMemorizationChallenges().size()));
+    userRepo.save(user);
   }
 }
