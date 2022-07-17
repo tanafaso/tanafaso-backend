@@ -65,18 +65,27 @@ public class ApiHomeController extends BaseController {
 
   @Async
   public void cleanOldUserChallengesAsync(User user) {
+    logger.info("Deleting old challenges for {} asynchronously", user.getUsername());
+
+    logger.info("{} had {} azkar challenges", user.getUsername(), user.getAzkarChallenges().size());
     user.setAzkarChallenges(user.getAzkarChallenges().subList(
         Math.max(0, user.getAzkarChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
         user.getAzkarChallenges().size()));
 
+    logger.info("{} had {} reading quran challenges", user.getUsername(),
+        user.getReadingQuranChallenges().size());
     user.setReadingQuranChallenges(user.getReadingQuranChallenges().subList(
         Math.max(0, user.getReadingQuranChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
         user.getReadingQuranChallenges().size()));
 
+    logger.info("{} had {} meaning challenges", user.getUsername(),
+        user.getMeaningChallenges().size());
     user.setMeaningChallenges(user.getMeaningChallenges().subList(
         Math.max(0, user.getMeaningChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
         user.getMeaningChallenges().size()));
 
+    logger.info("{} had {} memorization challenges", user.getUsername(),
+        user.getMemorizationChallenges().size());
     user.setMemorizationChallenges(user.getMemorizationChallenges().subList(
         Math.max(0, user.getMemorizationChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
         user.getMemorizationChallenges().size()));
