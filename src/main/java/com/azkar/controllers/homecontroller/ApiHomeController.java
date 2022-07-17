@@ -8,6 +8,7 @@ import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.R
 import com.azkar.payload.homecontroller.GetHomeResponse;
 import com.azkar.payload.homecontroller.GetHomeResponse.Body;
 import com.azkar.repos.UserRepo;
+import com.azkar.services.ChallengesCleanerService;
 import com.azkar.services.ChallengesService;
 import com.azkar.services.FriendshipService;
 import com.azkar.services.GroupsService;
@@ -28,10 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApiHomeController extends BaseController {
 
   private static final Logger logger = LoggerFactory.getLogger(ApiHomeController.class);
-  private static final int MAX_USER_CHALLENGES_WITH_SAME_TYPE = 10;
 
   @Autowired
   ChallengesService challengesService;
+  @Autowired
+  ChallengesCleanerService challengesCleanerService;
   @Autowired
   FriendshipService friendshipService;
   @Autowired
@@ -59,36 +61,8 @@ public class ApiHomeController extends BaseController {
         .build()
     );
 
-    cleanOldUserChallengesAsync(currentUser);
+    challengesCleanerService.cleanOldUserChallengesAsync(currentUser);
+    logger.info("finished sync work");
     return ResponseEntity.ok(getHomeResponse);
-  }
-
-  @Async
-  public void cleanOldUserChallengesAsync(User user) {
-    logger.info("Deleting old challenges for {} asynchronously", user.getUsername());
-
-    logger.info("{} had {} azkar challenges", user.getUsername(), user.getAzkarChallenges().size());
-    user.setAzkarChallenges(user.getAzkarChallenges().subList(
-        Math.max(0, user.getAzkarChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
-        user.getAzkarChallenges().size()));
-
-    logger.info("{} had {} reading quran challenges", user.getUsername(),
-        user.getReadingQuranChallenges().size());
-    user.setReadingQuranChallenges(user.getReadingQuranChallenges().subList(
-        Math.max(0, user.getReadingQuranChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
-        user.getReadingQuranChallenges().size()));
-
-    logger.info("{} had {} meaning challenges", user.getUsername(),
-        user.getMeaningChallenges().size());
-    user.setMeaningChallenges(user.getMeaningChallenges().subList(
-        Math.max(0, user.getMeaningChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
-        user.getMeaningChallenges().size()));
-
-    logger.info("{} had {} memorization challenges", user.getUsername(),
-        user.getMemorizationChallenges().size());
-    user.setMemorizationChallenges(user.getMemorizationChallenges().subList(
-        Math.max(0, user.getMemorizationChallenges().size() - MAX_USER_CHALLENGES_WITH_SAME_TYPE),
-        user.getMemorizationChallenges().size()));
-    userRepo.save(user);
   }
 }
