@@ -1,10 +1,12 @@
+# These configurations are used by the tests.
+# Note: The tests will also inherit the configurations that are not set here but set in
+# application.yml
+
 app.jwtSecret: secret_test
 
 spring:
   data.mongodb:
-    auto-index-creation: false
-    uri: mongodb://localhost:27017/azkar_test
-    name: azkar_test
+    auto-index-creation: true
 
 files:
   azkar: test-azkar.csv

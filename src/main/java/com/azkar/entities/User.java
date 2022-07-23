@@ -41,10 +41,10 @@ public class User extends EntityBase {
   private String notificationsToken;
   // These Challenge instances are not documents in the challenges collection.
   @Deprecated
-  @Indexed(name = "username_index", unique = true)
   @Default
   private List<AzkarChallenge> personalChallenges = new ArrayList<>();
   private int finishedPersonalChallengesCount;
+  @Indexed(name = "username_index")
   private String username;
   @NotNull
   private String firstName;
@@ -109,7 +109,7 @@ public class User extends EntityBase {
   @AllArgsConstructor
   public static class UserFacebookData {
 
-    @Indexed(name = "user_facebook_data_index", unique = true)
+    @Indexed(name = "user_facebook_data_index")
     String userId;
     String accessToken;
     String email;

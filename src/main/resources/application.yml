@@ -11,21 +11,13 @@ org:
 
 server:
   port: ${SERVER_PORT}
-  ssl:
-    key-alias: ${KEY_ALIAS}
-    key-store-password: ${KEY_STORE_PASSWORD}
-    key-store-type: PKCS12
-    key-store: classpath:tanafaso.p12
-    enabled: false
 
 spring:
   main:
     lazy-initialization: true
   data.mongodb:
-    auto-index-creation: false
+    auto-index-creation: true
     uri: ${DATABASE_URI}
-    name: ${DATABASE_NAME}
-    database: ${DATABASE_NAME}
   http:
     log-request-details: true
   resources.add-mappings: false

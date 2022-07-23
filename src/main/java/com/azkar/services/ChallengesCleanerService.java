@@ -19,7 +19,7 @@ public class ChallengesCleanerService {
   @Autowired
   private UserRepo userRepo;
 
-  @Async(AsyncConfig.CONTROLLERS_TASK_EXECUTOR)
+  @Async(AsyncConfig.POST_CONTROLLERS_TASK_EXECUTOR)
   public void cleanOldUserChallengesAsync(User user) {
 
     logger.info("[Old Challenges Deletion] Starting for user: {}. Challenges "

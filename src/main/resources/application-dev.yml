@@ -11,16 +11,13 @@ org:
 
 server:
   port: ${SERVER_PORT}
-  ssl:
-    enabled: false
 
 spring:
   main:
     lazy-initialization: true
   data.mongodb:
-    auto-index-creation: false
+    auto-index-creation: true
     uri: mongodb://${DATABASE_USER}:${DATABASE_PASSWORD}@localhost:27017/${DATABASE_NAME}
-    name: ${DATABASE_NAME}
   http:
     log-request-details: true
   resources.add-mappings: false

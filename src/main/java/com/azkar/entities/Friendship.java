@@ -17,7 +17,6 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "friendships")
-@CompoundIndex(name = "user_user", def = "{'requesterId': 1, 'responderId': 1}", unique = true)
 @Data
 @Builder
 @NoArgsConstructor

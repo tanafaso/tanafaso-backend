@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -801,8 +802,21 @@ public class ChallengeController extends BaseController {
     }
 
     GetChallengesV2Response response = new GetChallengesV2Response();
-    List<ReturnedChallenge> returnedChallenges = challengesService.getAllChallenges(apiVersion,
-        getCurrentUser(userRepo));
+    List<ReturnedChallenge> returnedChallenges = null;
+    try {
+      returnedChallenges = challengesService.getAllChallenges(apiVersion,
+          getCurrentUser(userRepo)).get();
+    } catch (InterruptedException e) {
+      GetChallengesV2Response errorResponse = new GetChallengesV2Response();
+      errorResponse.setStatus(new Status(Status.DEFAULT_ERROR));
+      logger.error("Concurrency error", e);
+      return ResponseEntity.badRequest().body(errorResponse);
+    } catch (ExecutionException e) {
+      GetChallengesV2Response errorResponse = new GetChallengesV2Response();
+      errorResponse.setStatus(new Status(Status.DEFAULT_ERROR));
+      logger.error("Concurrency error", e);
+      return ResponseEntity.badRequest().body(errorResponse);
+    }
     response.setData(returnedChallenges);
     return ResponseEntity.ok(response);
   }

@@ -5,6 +5,7 @@ import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.payload.ResponseBase.Status;
+import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
 import com.azkar.payload.usercontroller.responses.AddFriendResponse;
 import com.azkar.payload.usercontroller.responses.DeleteFriendResponse;
 import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardV2Response;
@@ -20,6 +21,7 @@ import com.azkar.services.NotificationsService;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,8 +76,21 @@ public class FriendshipController extends BaseController {
       @RequestHeader(value = API_VERSION_HEADER, required = false) String apiVersion) {
     GetFriendsLeaderboardV2Response response = new GetFriendsLeaderboardV2Response();
 
-    List<Friend> friends = friendshipService.getFriendsLeaderboard(apiVersion,
-        getCurrentUser(userRepo));
+    List<Friend> friends = null;
+    try {
+      friends = friendshipService.getFriendsLeaderboard(apiVersion,
+          getCurrentUser(userRepo)).get();
+    } catch (InterruptedException e) {
+      GetFriendsLeaderboardV2Response errorResponse = new GetFriendsLeaderboardV2Response();
+      errorResponse.setStatus(new Status(Status.DEFAULT_ERROR));
+      logger.error("Concurrency error", e);
+      return ResponseEntity.badRequest().body(errorResponse);
+    } catch (ExecutionException e) {
+      GetFriendsLeaderboardV2Response errorResponse = new GetFriendsLeaderboardV2Response();
+      errorResponse.setStatus(new Status(Status.DEFAULT_ERROR));
+      logger.error("Concurrency error", e);
+      return ResponseEntity.badRequest().body(errorResponse);
+    }
 
     response.setData(friends);
     return ResponseEntity.ok(response);
