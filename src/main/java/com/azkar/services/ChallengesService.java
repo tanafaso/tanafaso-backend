@@ -1,5 +1,6 @@
 package com.azkar.services;
 
+import com.azkar.configs.AsyncConfig;
 import com.azkar.entities.User;
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
@@ -10,11 +11,17 @@ import com.azkar.payload.utils.FeaturesVersions;
 import com.azkar.payload.utils.VersionComparator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ChallengesService {
+
+  private static final Logger logger = LoggerFactory.getLogger(ChallengesService.class);
 
   private static final int MAX_RETURNED_AZKAR_CHALLENGES = 20;
   private static final int MAX_RETURNED_READING_QURAN_CHALLENGES = 5;
@@ -24,7 +31,8 @@ public class ChallengesService {
   @Autowired
   ReturnedChallengeComparator returnedChallengeComparator;
 
-  public List<ReturnedChallenge> getAllChallenges(String apiVersion, User user) {
+  @Async(value = AsyncConfig.CONTROLLERS_TASK_EXECUTOR)
+  public CompletableFuture<List<ReturnedChallenge>> getAllChallenges(String apiVersion, User user) {
     List<AzkarChallenge> allUserAzkarChallenges = user.getAzkarChallenges();
     List<MeaningChallenge> allUserMeaningChallenges =
         user.getMeaningChallenges();
@@ -77,6 +85,6 @@ public class ChallengesService {
     }
 
     challenges.sort(returnedChallengeComparator);
-    return challenges;
+    return CompletableFuture.completedFuture(challenges);
   }
 }

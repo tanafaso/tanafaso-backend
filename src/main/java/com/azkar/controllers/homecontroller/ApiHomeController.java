@@ -4,6 +4,7 @@ import com.azkar.controllers.BaseController;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
+import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
 import com.azkar.payload.homecontroller.GetHomeResponse;
 import com.azkar.payload.homecontroller.GetHomeResponse.Body;
@@ -13,12 +14,13 @@ import com.azkar.services.ChallengesService;
 import com.azkar.services.FriendshipService;
 import com.azkar.services.GroupsService;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,19 +49,31 @@ public class ApiHomeController extends BaseController {
     GetHomeResponse getHomeResponse = new GetHomeResponse();
 
     User currentUser = getCurrentUser(userRepo);
-    List<ReturnedChallenge> challenges =
+    CompletableFuture<List<ReturnedChallenge>> challenges =
         challengesService.getAllChallenges(apiVersion, currentUser);
-    List<Friend> friendsLeaderboard =
+    CompletableFuture<List<Friend>> friendsLeaderboard =
         friendshipService.getFriendsLeaderboard(apiVersion, currentUser);
     List<Group> groups = groupsService.getGroups(currentUser);
 
-    getHomeResponse.setData(Body
-        .builder()
-        .challenges(challenges)
-        .friends(friendsLeaderboard)
-        .groups(groups)
-        .build()
-    );
+    try {
+      getHomeResponse.setData(Body
+          .builder()
+          .challenges(challenges.get())
+          .friends(friendsLeaderboard.get())
+          .groups(groups)
+          .build()
+      );
+    } catch (InterruptedException e) {
+      GetHomeResponse errorResponse = new GetHomeResponse();
+      errorResponse.setStatus(new Status(Status.DEFAULT_ERROR));
+      logger.error("Concurrency error", e);
+      return ResponseEntity.badRequest().body(errorResponse);
+    } catch (ExecutionException e) {
+      GetHomeResponse errorResponse = new GetHomeResponse();
+      errorResponse.setStatus(new Status(Status.DEFAULT_ERROR));
+      logger.error("Concurrency error", e);
+      return ResponseEntity.badRequest().body(errorResponse);
+    }
 
     challengesCleanerService.cleanOldUserChallengesAsync(currentUser);
     return ResponseEntity.ok(getHomeResponse);
