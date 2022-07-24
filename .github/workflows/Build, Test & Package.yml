@@ -14,24 +14,5 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
-        with:
-          java-version: 1.8
-      - name: Run Mongo DB
-        run:  docker run --name mongo -d -p 27017:27017 mongo
-      - name: Initialize Mongo DB user
-        run: mongosh < ./mongo-init.js
-      - name: Build and test with Maven
-        run: ./mvnw package
-        env:
-          DATABASE_URI: mongodb://tanafaso-db-username:tanafaso-db-password@localhost:27017/tanafaso
-          SERVER_PORT: 8080
-          JWT_SECRET: example-secret
-          LOGS_PATH: ./logs
-          MAIL_HOST: smtp.gmail.com
-          MAIL_USERNAME: example@example.com
-          MAIL_PASSWORD: example-mail-password
-          MAIL_PORT: 587
-          APPLE_TEAM_ID: example-apple-team-id
-          APPLE_SIGN_IN_KEY_ID: example-apple-sign-in-key
+      - name: Run Docker Compose
+        run: docker compose up -f docker-compose-test.yml
