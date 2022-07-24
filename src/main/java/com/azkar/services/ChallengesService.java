@@ -107,6 +107,7 @@ public class ChallengesService {
         .groupId(azkarChallenge.getGroupId())
         .creatingUserId(azkarChallenge.getCreatingUserId())
         .id(azkarChallenge.getId())
+        .subChallenges(new ArrayList<>())
         .build()
     ).collect(Collectors.toList());
   }
