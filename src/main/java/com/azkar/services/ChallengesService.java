@@ -61,8 +61,9 @@ public class ChallengesService {
                 allUserMemorizationChallenges.size() - MAX_RETURNED_MEMORIZATION_CHALLENGES),
                 allUserMemorizationChallenges.size());
 
-
     List<ReturnedChallenge> challenges = new ArrayList<>();
+
+    filterAzkarDetails(recentUserAzkarChallenges);
     recentUserAzkarChallenges.forEach(azkarChallenge -> {
       challenges.add(ReturnedChallenge.builder().azkarChallenge(azkarChallenge).build());
     });
