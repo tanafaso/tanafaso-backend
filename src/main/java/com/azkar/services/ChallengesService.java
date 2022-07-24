@@ -12,6 +12,7 @@ import com.azkar.payload.utils.VersionComparator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +64,7 @@ public class ChallengesService {
 
     List<ReturnedChallenge> challenges = new ArrayList<>();
 
-    filterAzkarDetails(recentUserAzkarChallenges);
+    recentUserAzkarChallenges = filterAzkarDetails(recentUserAzkarChallenges);
     recentUserAzkarChallenges.forEach(azkarChallenge -> {
       challenges.add(ReturnedChallenge.builder().azkarChallenge(azkarChallenge).build());
     });
@@ -95,9 +96,18 @@ public class ChallengesService {
   // This removes the azkar text from the to-be-returned azkar challenges. That's because of
   // their significant size and contribution to latency and because clients request every azkar
   // challenge before viewing it.
-  private void filterAzkarDetails(List<AzkarChallenge> recentUserAzkarChallenges) {
-    recentUserAzkarChallenges.stream().forEach(azkarChallenge -> {
-      azkarChallenge.setSubChallenges(new ArrayList<>());
-    });
+  private List<AzkarChallenge> filterAzkarDetails(List<AzkarChallenge> recentUserAzkarChallenges) {
+    return recentUserAzkarChallenges.stream().map(azkarChallenge -> AzkarChallenge.builder()
+        .motivation(azkarChallenge.getMotivation())
+        .name(azkarChallenge.getName())
+        .expiryDate(azkarChallenge.getExpiryDate())
+        .createdAt(azkarChallenge.getCreatedAt())
+        .modifiedAt(azkarChallenge.getModifiedAt())
+        .usersFinished(azkarChallenge.getUsersFinished())
+        .groupId(azkarChallenge.getGroupId())
+        .creatingUserId(azkarChallenge.getCreatingUserId())
+        .id(azkarChallenge.getId())
+        .build()
+    ).collect(Collectors.toList());
   }
 }
