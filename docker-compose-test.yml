@@ -16,6 +16,8 @@ services:
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
   tanafaso-test:
     container_name: tanafaso-test
+    depends_on:
+      - "mongo"
     build:
       dockerfile: Dockerfile-Test
     environment:
