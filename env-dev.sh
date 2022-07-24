@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export DATABASE_URI=mongodb://tanafaso-db-username:tanafaso-db-password@mongo:27017/tanafaso
+export DATABASE_URI=mongodb://tanafaso-db-username:tanafaso-db-password@localhost:27017/tanafaso
 export SERVER_PORT=8080
 export JWT_SECRET=example-secret
 export LOGS_PATH=./logs
