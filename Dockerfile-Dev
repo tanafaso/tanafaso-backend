@@ -9,5 +9,3 @@ COPY . ./
 
 # Test, Compile & Run
 ENTRYPOINT ["./mvnw", "spring-boot:run"]
-
-
