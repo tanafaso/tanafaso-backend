@@ -14,13 +14,10 @@ services:
       - 27017:27017
     volumes:
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-  tanafaso-server:
-    depends_on:
-      - "mongo"
+  tanafaso-test:
+    container_name: tanafaso-test
     build:
-      dockerfile: Dockerfile-Run
-    ports:
-      - 8080:8080
+      dockerfile: Dockerfile-Test
     environment:
       DATABASE_URI: mongodb://tanafaso-db-username:tanafaso-db-password@mongo:27017/tanafaso
       SERVER_PORT: 8080

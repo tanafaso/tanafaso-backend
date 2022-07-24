@@ -7,5 +7,5 @@ WORKDIR /
 # Copy all files and folders to the build directory
 COPY . ./
 
-# Test, Compile & Run
-ENTRYPOINT ["./mvnw", "spring-boot:run"]
+# Compile & Run
+CMD ["./mvnw", "package"]
