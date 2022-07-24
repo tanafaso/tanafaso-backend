@@ -61,9 +61,9 @@ public class ChallengesService {
                 allUserMemorizationChallenges.size() - MAX_RETURNED_MEMORIZATION_CHALLENGES),
                 allUserMemorizationChallenges.size());
 
-    recentUserAzkarChallenges = filterAzkarDetails(recentUserAzkarChallenges);
-
     List<ReturnedChallenge> challenges = new ArrayList<>();
+
+    filterAzkarDetails(recentUserAzkarChallenges);
     recentUserAzkarChallenges.forEach(azkarChallenge -> {
       challenges.add(ReturnedChallenge.builder().azkarChallenge(azkarChallenge).build());
     });
@@ -95,10 +95,9 @@ public class ChallengesService {
   // This removes the azkar text from the to-be-returned azkar challenges. That's because of
   // their significant size and contribution to latency and because clients request every azkar
   // challenge before viewing it.
-  private List<AzkarChallenge> filterAzkarDetails(List<AzkarChallenge> recentUserAzkarChallenges) {
+  private void filterAzkarDetails(List<AzkarChallenge> recentUserAzkarChallenges) {
     recentUserAzkarChallenges.stream().forEach(azkarChallenge -> {
       azkarChallenge.setSubChallenges(new ArrayList<>());
     });
-    return null;
   }
 }
