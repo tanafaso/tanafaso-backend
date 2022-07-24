@@ -53,14 +53,14 @@ public class ApiHomeController extends BaseController {
         challengesService.getAllChallenges(apiVersion, currentUser);
     CompletableFuture<List<Friend>> friendsLeaderboard =
         friendshipService.getFriendsLeaderboard(apiVersion, currentUser);
-    List<Group> groups = groupsService.getGroups(currentUser);
+    CompletableFuture<List<Group>> groups = groupsService.getGroups(currentUser);
 
     try {
       getHomeResponse.setData(Body
           .builder()
           .challenges(challenges.get())
           .friends(friendsLeaderboard.get())
-          .groups(groups)
+          .groups(groups.get())
           .build()
       );
     } catch (InterruptedException e) {

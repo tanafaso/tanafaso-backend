@@ -23,10 +23,7 @@ public class ChallengesService {
 
   private static final Logger logger = LoggerFactory.getLogger(ChallengesService.class);
 
-  private static final int MAX_RETURNED_AZKAR_CHALLENGES = 20;
-  private static final int MAX_RETURNED_READING_QURAN_CHALLENGES = 5;
-  private static final int MAX_RETURNED_MEANING_CHALLENGES = 5;
-  private static final int MAX_RETURNED_MEMORIZATION_CHALLENGES = 5;
+  private static final int MAX_RETURNED_CHALLENGES_OF_SAME_TYPE = 10;
 
   @Autowired
   ReturnedChallengeComparator returnedChallengeComparator;
@@ -42,21 +39,22 @@ public class ChallengesService {
 
     List<AzkarChallenge> recentUserAzkarChallenges =
         allUserAzkarChallenges.subList(Math.max(0,
-            allUserAzkarChallenges.size() - MAX_RETURNED_AZKAR_CHALLENGES),
+            allUserAzkarChallenges.size() - MAX_RETURNED_CHALLENGES_OF_SAME_TYPE),
             allUserAzkarChallenges.size());
     List<MeaningChallenge> recentUserMeaningChallenges =
         allUserMeaningChallenges
-            .subList(Math.max(0, allUserMeaningChallenges.size() - MAX_RETURNED_MEANING_CHALLENGES),
+            .subList(
+                Math.max(0, allUserMeaningChallenges.size() - MAX_RETURNED_CHALLENGES_OF_SAME_TYPE),
                 allUserMeaningChallenges.size());
     List<ReadingQuranChallenge> recentReadingQuranChallenges =
         allUserReadingQuranChallenges
             .subList(Math.max(0,
-                allUserReadingQuranChallenges.size() - MAX_RETURNED_READING_QURAN_CHALLENGES),
+                allUserReadingQuranChallenges.size() - MAX_RETURNED_CHALLENGES_OF_SAME_TYPE),
                 allUserReadingQuranChallenges.size());
     List<MemorizationChallenge> recentMemorizationChallenges =
         allUserMemorizationChallenges
             .subList(Math.max(0,
-                allUserMemorizationChallenges.size() - MAX_RETURNED_MEMORIZATION_CHALLENGES),
+                allUserMemorizationChallenges.size() - MAX_RETURNED_CHALLENGES_OF_SAME_TYPE),
                 allUserMemorizationChallenges.size());
 
     List<ReturnedChallenge> challenges = new ArrayList<>();

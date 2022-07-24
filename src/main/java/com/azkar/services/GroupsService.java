@@ -3,8 +3,10 @@ package com.azkar.services;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.repos.GroupRepo;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,7 +17,7 @@ public class GroupsService {
   @Autowired
   GroupRepo groupRepo;
 
-  public List<Group> getGroups(User user) {
+  public CompletableFuture<List<Group>> getGroups(User user) {
     // Group IDs in use are the groups in which one of the user challenges belong to. Note that
     // old challenges are deleted periodically.
     HashSet<String> groupIdsInUse = new HashSet<>();
@@ -38,7 +40,8 @@ public class GroupsService {
             .collect(
                 Collectors.toList()));
 
-    return groupIdsInUse.stream().map(groupId -> groupRepo.findById(groupId).get())
-        .collect(Collectors.toList());
+    List<Group> result = new ArrayList<>();
+    groupRepo.findAllById(groupIdsInUse).forEach(result::add);
+    return CompletableFuture.completedFuture(result);
   }
 }

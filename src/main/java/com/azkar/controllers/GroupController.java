@@ -2,27 +2,22 @@ package com.azkar.controllers;
 
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
-import com.azkar.entities.User.UserGroup;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.groupcontroller.requests.AddGroupRequest;
 import com.azkar.payload.groupcontroller.responses.AddGroupResponse;
 import com.azkar.payload.groupcontroller.responses.AddToGroupResponse;
-import com.azkar.payload.groupcontroller.responses.GetGroupLeaderboardResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupResponse;
 import com.azkar.payload.groupcontroller.responses.GetGroupsResponse;
-import com.azkar.payload.utils.UserScore;
 import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.UserRepo;
 import com.azkar.services.GroupsService;
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,9 +93,21 @@ public class GroupController extends BaseController {
   @GetMapping()
   public ResponseEntity<GetGroupsResponse> getGroups() {
     GetGroupsResponse response = new GetGroupsResponse();
-
-    response.setData(groupsService.getGroups(getCurrentUser(userRepo)));
-
+    List<Group> groups;
+    try {
+      groups = groupsService.getGroups(getCurrentUser(userRepo)).get();
+    } catch (InterruptedException e) {
+      GetGroupsResponse errorResponse = new GetGroupsResponse();
+      errorResponse.setStatus(new Status(Status.DEFAULT_ERROR));
+      logger.error("Concurrency error", e);
+      return ResponseEntity.badRequest().body(errorResponse);
+    } catch (ExecutionException e) {
+      GetGroupsResponse errorResponse = new GetGroupsResponse();
+      errorResponse.setStatus(new Status(Status.DEFAULT_ERROR));
+      logger.error("Concurrency error", e);
+      return ResponseEntity.badRequest().body(errorResponse);
+    }
+    response.setData(groups);
     return ResponseEntity.ok(response);
   }
 
