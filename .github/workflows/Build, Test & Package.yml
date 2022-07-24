@@ -18,8 +18,10 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Run MongoDb in a container
+      - name: Run Mongo DB
         run:  docker run --name mongo -d -p 27017:27017 mongo
+      - name: Initialize Mongo DB user
+        run: mongo < ./mongo-init.js
       - name: Build and test with Maven
         run: ./mvnw package
         env:
