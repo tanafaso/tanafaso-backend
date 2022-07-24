@@ -33,6 +33,8 @@ import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
 import com.azkar.payload.challengecontroller.responses.GetFinishedChallengesCountResponse;
 import com.azkar.payload.challengecontroller.responses.GetMeaningChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.GetMemorizationChallenge;
+import com.azkar.payload.challengecontroller.responses.GetReadingQuranChallenge;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.AzkarChallengeRepo;
@@ -258,6 +260,46 @@ public class ChallengeController extends BaseController {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     response.setData(userMeaningChallenge.get());
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/reading-quran/{challengeId}")
+  public ResponseEntity<GetReadingQuranChallenge> getReadingQuranChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    GetReadingQuranChallenge response = new GetReadingQuranChallenge();
+    Optional<ReadingQuranChallenge> userReadingQuranChallenge =
+        getCurrentUser(userRepo).getReadingQuranChallenges()
+            .stream()
+            .filter(
+                challenge -> challenge.getId()
+                    .equals(
+                        challengeId))
+            .findFirst();
+    if (!userReadingQuranChallenge.isPresent()) {
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+    response.setData(userReadingQuranChallenge.get());
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/memorization/{challengeId}")
+  public ResponseEntity<GetMemorizationChallenge> getMemorizationChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    GetMemorizationChallenge response = new GetMemorizationChallenge();
+    Optional<MemorizationChallenge> userMemorizationChallenge =
+        getCurrentUser(userRepo).getMemorizationChallenges()
+            .stream()
+            .filter(
+                challenge -> challenge.getId()
+                    .equals(
+                        challengeId))
+            .findFirst();
+    if (!userMemorizationChallenge.isPresent()) {
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+    response.setData(userMemorizationChallenge.get());
     return ResponseEntity.ok(response);
   }
 
