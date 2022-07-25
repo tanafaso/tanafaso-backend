@@ -2,13 +2,16 @@ package com.azkar.services;
 
 import com.azkar.configs.AsyncConfig;
 import com.azkar.entities.User;
+import com.azkar.entities.Zekr;
 import com.azkar.entities.challenges.AzkarChallenge;
+import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.entities.challenges.MemorizationChallenge;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
 import com.azkar.payload.utils.FeaturesVersions;
 import com.azkar.payload.utils.VersionComparator;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -107,8 +110,16 @@ public class ChallengesService {
         .groupId(azkarChallenge.getGroupId())
         .creatingUserId(azkarChallenge.getCreatingUserId())
         .id(azkarChallenge.getId())
-        .subChallenges(new ArrayList<>())
+        .subChallenges(getEmptyOrOneSubChallengeList(azkarChallenge.finished()))
         .build()
     ).collect(Collectors.toList());
+  }
+
+  private List<SubChallenge> getEmptyOrOneSubChallengeList(boolean finished) {
+    if (finished) {
+      return new ArrayList<>();
+    }
+    return ImmutableList.of(
+        SubChallenge.builder().repetitions(1).zekr(Zekr.builder().zekr("").id(0).build()).build());
   }
 }
