@@ -178,7 +178,7 @@ public class ChallengeTest extends TestBase {
     assertThat(response.getData().get(2).getReadingQuranChallenge(), is(nullValue()));
     assertThat(response.getData().get(2).getMeaningChallenge(), is(nullValue()));
 
-    // First-to-be-expired first.
+    // Non-pending first then First-to-be-expired first.
     assertThat(response.getData().get(0).getReadingQuranChallenge().getId(),
         is(addReadingQuranChallengeResponse.getData().getId()));
     assertThat(response.getData().get(1).getMeaningChallenge().getId(),
@@ -186,7 +186,7 @@ public class ChallengeTest extends TestBase {
     assertThat(response.getData().get(2).getAzkarChallenge().getId(),
         is(addAzkarChallengeResponse.getData().getId()));
 
-    // Finish meaning challenge
+    // Finish meaning challenge.
     azkarApi.finishMeaningChallenge(user1, meaningChallengeResponse.getId());
 
     mvcResult = azkarApi.getAllChallengesV2(user1, FeaturesVersions.READING_QURAN_CHALLENGE_VERSION)
@@ -195,30 +195,14 @@ public class ChallengeTest extends TestBase {
     response = JsonHandler
         .fromJson(mvcResult.getResponse().getContentAsString(), GetChallengesV2Response.class);
 
-    // First-to-be-expired first.
+    // Non-pending first then First-to-be-expired first.
     assertThat(response.getData().get(0).getReadingQuranChallenge().getId(),
         is(addReadingQuranChallengeResponse.getData().getId()));
-    assertThat(response.getData().get(1).getMeaningChallenge().getId(),
-        is(meaningChallengeResponse.getId()));
-    assertThat(response.getData().get(2).getAzkarChallenge().getId(),
+    assertThat(response.getData().get(1).getAzkarChallenge().getId(),
         is(addAzkarChallengeResponse.getData().getId()));
-
-    // Finish readingQuranChallenge challenge
-    azkarApi.finishReadingQuranChallenge(user1, addReadingQuranChallengeResponse.getData().getId());
-
-    mvcResult = azkarApi.getAllChallengesV2(user1, FeaturesVersions.READING_QURAN_CHALLENGE_VERSION)
-        .andExpect(status().isOk())
-        .andReturn();
-    response = JsonHandler
-        .fromJson(mvcResult.getResponse().getContentAsString(), GetChallengesV2Response.class);
-
-    // First-to-be-expired first.
-    assertThat(response.getData().get(0).getReadingQuranChallenge().getId(),
-        is(addReadingQuranChallengeResponse.getData().getId()));
-    assertThat(response.getData().get(1).getMeaningChallenge().getId(),
+    // Skip the 3 automatically created challenges
+    assertThat(response.getData().get(5).getMeaningChallenge().getId(),
         is(meaningChallengeResponse.getId()));
-    assertThat(response.getData().get(2).getAzkarChallenge().getId(),
-        is(addAzkarChallengeResponse.getData().getId()));
   }
 
   @Test
