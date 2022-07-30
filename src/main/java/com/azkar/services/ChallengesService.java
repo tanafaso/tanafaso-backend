@@ -92,8 +92,8 @@ public class ChallengesService {
   private long getExpiryDate(ReturnedChallenge c1) {
     return c1.getAzkarChallenge() != null ? c1.getAzkarChallenge().getExpiryDate() :
         c1.getMemorizationChallenge() != null ? c1.getMemorizationChallenge().getExpiryDate() :
-            c1.getReadingQuranChallenge() != null ?
-                c1.getReadingQuranChallenge().getExpiryDate() : c1.getMeaningChallenge() != null
+            c1.getReadingQuranChallenge() != null
+                ? c1.getReadingQuranChallenge().getExpiryDate() : c1.getMeaningChallenge() != null
                 ? c1.getMeaningChallenge().getExpiryDate() : 0;
   }
 
