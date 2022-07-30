@@ -170,21 +170,21 @@ public class ChallengeTest extends TestBase {
     assertThat(response.getData().size(), is(/*new=*/3 + TestBase.STARTING_CHALLENGES_COUNT));
 
     assertThat(response.getData().get(0).getMeaningChallenge(), is(nullValue()));
-    assertThat(response.getData().get(0).getReadingQuranChallenge(), is(nullValue()));
+    assertThat(response.getData().get(0).getAzkarChallenge(), is(nullValue()));
 
     assertThat(response.getData().get(1).getAzkarChallenge(), is(nullValue()));
     assertThat(response.getData().get(1).getReadingQuranChallenge(), is(nullValue()));
 
-    assertThat(response.getData().get(2).getAzkarChallenge(), is(nullValue()));
+    assertThat(response.getData().get(2).getReadingQuranChallenge(), is(nullValue()));
     assertThat(response.getData().get(2).getMeaningChallenge(), is(nullValue()));
 
-    // Recently modified first.
-    assertThat(response.getData().get(0).getAzkarChallenge().getId(),
-        is(addAzkarChallengeResponse.getData().getId()));
+    // First-to-be-expired first.
+    assertThat(response.getData().get(0).getReadingQuranChallenge().getId(),
+        is(addReadingQuranChallengeResponse.getData().getId()));
     assertThat(response.getData().get(1).getMeaningChallenge().getId(),
         is(meaningChallengeResponse.getId()));
-    assertThat(response.getData().get(2).getReadingQuranChallenge().getId(),
-        is(addReadingQuranChallengeResponse.getData().getId()));
+    assertThat(response.getData().get(2).getAzkarChallenge().getId(),
+        is(addAzkarChallengeResponse.getData().getId()));
 
     // Finish meaning challenge
     azkarApi.finishMeaningChallenge(user1, meaningChallengeResponse.getId());
@@ -195,13 +195,13 @@ public class ChallengeTest extends TestBase {
     response = JsonHandler
         .fromJson(mvcResult.getResponse().getContentAsString(), GetChallengesV2Response.class);
 
-    // Recently modified first.
-    assertThat(response.getData().get(0).getMeaningChallenge().getId(),
-        is(meaningChallengeResponse.getId()));
-    assertThat(response.getData().get(1).getAzkarChallenge().getId(),
-        is(addAzkarChallengeResponse.getData().getId()));
-    assertThat(response.getData().get(2).getReadingQuranChallenge().getId(),
+    // First-to-be-expired first.
+    assertThat(response.getData().get(0).getReadingQuranChallenge().getId(),
         is(addReadingQuranChallengeResponse.getData().getId()));
+    assertThat(response.getData().get(1).getMeaningChallenge().getId(),
+        is(meaningChallengeResponse.getId()));
+    assertThat(response.getData().get(2).getAzkarChallenge().getId(),
+        is(addAzkarChallengeResponse.getData().getId()));
 
     // Finish readingQuranChallenge challenge
     azkarApi.finishReadingQuranChallenge(user1, addReadingQuranChallengeResponse.getData().getId());
@@ -212,7 +212,7 @@ public class ChallengeTest extends TestBase {
     response = JsonHandler
         .fromJson(mvcResult.getResponse().getContentAsString(), GetChallengesV2Response.class);
 
-    // Recently modified first.
+    // First-to-be-expired first.
     assertThat(response.getData().get(0).getReadingQuranChallenge().getId(),
         is(addReadingQuranChallengeResponse.getData().getId()));
     assertThat(response.getData().get(1).getMeaningChallenge().getId(),
