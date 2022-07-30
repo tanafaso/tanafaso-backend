@@ -93,8 +93,8 @@ public class ChallengesService {
 
     public boolean isFinished(ReturnedChallenge r) {
       return r.getAzkarChallenge() != null ? r.getAzkarChallenge().finished() :
-          r.getMeaningChallenge() != null ?
-              r.getMeaningChallenge().isFinished() :
+          r.getMeaningChallenge() != null
+              ? r.getMeaningChallenge().isFinished() :
               r.getReadingQuranChallenge() != null ? r.getReadingQuranChallenge().isFinished() :
                   r.getMemorizationChallenge() != null ? r.getMemorizationChallenge().finished()
                       : true;
@@ -102,11 +102,11 @@ public class ChallengesService {
 
     public long getExpiryDate(ReturnedChallenge r) {
       return r.getAzkarChallenge() != null ? r.getAzkarChallenge().getExpiryDate() :
-          r.getMeaningChallenge() != null ?
-              r.getMeaningChallenge().getExpiryDate() :
+          r.getMeaningChallenge() != null
+              ? r.getMeaningChallenge().getExpiryDate() :
               r.getReadingQuranChallenge() != null ? r.getReadingQuranChallenge().getExpiryDate() :
-                  r.getMemorizationChallenge() != null ?
-                      r.getMemorizationChallenge().getExpiryDate() : 0;
+                  r.getMemorizationChallenge() != null
+                      ? r.getMemorizationChallenge().getExpiryDate() : 0;
     }
 
     @Override public int compare(ReturnedChallenge r1, ReturnedChallenge r2) {
