@@ -91,12 +91,17 @@ public class ChallengesService {
 
   private static class ChallengesSorter implements Comparator<ReturnedChallenge> {
 
-    public boolean isFinished(ReturnedChallenge r) {
-      return r.getAzkarChallenge() != null ? r.getAzkarChallenge().finished() :
+    public boolean isFinishedOrExpired(ReturnedChallenge r) {
+      return r.getAzkarChallenge() != null ?
+          r.getAzkarChallenge().finished() || r.getAzkarChallenge().expired() :
           r.getMeaningChallenge() != null
-              ? r.getMeaningChallenge().isFinished() :
-              r.getReadingQuranChallenge() != null ? r.getReadingQuranChallenge().isFinished() :
-                  r.getMemorizationChallenge() != null ? r.getMemorizationChallenge().finished()
+              ? r.getMeaningChallenge().isFinished() || r.getMeaningChallenge().expired() :
+              r.getReadingQuranChallenge() != null ?
+                  r.getReadingQuranChallenge().isFinished() || r.getReadingQuranChallenge()
+                      .expired() :
+                  r.getMemorizationChallenge() != null ?
+                      r.getMemorizationChallenge().finished() || r.getMemorizationChallenge()
+                          .expired()
                       : true;
     }
 
@@ -110,8 +115,8 @@ public class ChallengesService {
     }
 
     @Override public int compare(ReturnedChallenge r1, ReturnedChallenge r2) {
-      boolean o1Finished = isFinished(r1);
-      boolean o2Finished = isFinished(r2);
+      boolean o1Finished = isFinishedOrExpired(r1);
+      boolean o2Finished = isFinishedOrExpired(r2);
 
       int comparisonResult;
       if (o1Finished == o2Finished) {
