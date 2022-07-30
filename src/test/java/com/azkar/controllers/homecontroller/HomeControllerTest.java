@@ -106,23 +106,21 @@ public class HomeControllerTest extends TestBase {
         is(/*new=*/3 + TestBase.STARTING_CHALLENGES_COUNT));
 
     assertThat(response.getData().getChallenges().get(0).getMeaningChallenge(), is(nullValue()));
-    assertThat(response.getData().getChallenges().get(0).getReadingQuranChallenge(),
-        is(nullValue()));
+    assertThat(response.getData().getChallenges().get(0).getAzkarChallenge(), is(nullValue()));
 
     assertThat(response.getData().getChallenges().get(1).getAzkarChallenge(), is(nullValue()));
-    assertThat(response.getData().getChallenges().get(1).getReadingQuranChallenge(),
-        is(nullValue()));
+    assertThat(response.getData().getChallenges().get(1).getReadingQuranChallenge(), is(nullValue()));
 
-    assertThat(response.getData().getChallenges().get(2).getAzkarChallenge(), is(nullValue()));
+    assertThat(response.getData().getChallenges().get(2).getReadingQuranChallenge(), is(nullValue()));
     assertThat(response.getData().getChallenges().get(2).getMeaningChallenge(), is(nullValue()));
 
-    // Recently modified first.
-    assertThat(response.getData().getChallenges().get(0).getAzkarChallenge().getId(),
-        is(addAzkarChallengeResponse.getData().getId()));
+    // First-to-be-expired first.
+    assertThat(response.getData().getChallenges().get(0).getReadingQuranChallenge().getId(),
+        is(addReadingQuranChallengeResponse.getData().getId()));
     assertThat(response.getData().getChallenges().get(1).getMeaningChallenge().getId(),
         is(meaningChallengeResponse.getId()));
-    assertThat(response.getData().getChallenges().get(2).getReadingQuranChallenge().getId(),
-        is(addReadingQuranChallengeResponse.getData().getId()));
+    assertThat(response.getData().getChallenges().get(2).getAzkarChallenge().getId(),
+        is(addAzkarChallengeResponse.getData().getId()));
 
     List<Friend> friendsInResponse = response.getData().getFriends();
     assertThat(friendsInResponse.get(0).getUserId(), is(User.SABEQ_ID));
