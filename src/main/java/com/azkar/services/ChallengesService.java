@@ -36,7 +36,7 @@ public class ChallengesService {
 
   /**
    * Returns the latest user created challenges respecting MAX_RETURNED_{challenge_name}_CHALLENGES
-   * and sorts them with the increasing order of expiry date.
+   * , puts pending ones first and then sorts them with the increasing order of expiry date.
    */
   @Async(value = AsyncConfig.CONTROLLERS_TASK_EXECUTOR)
   public CompletableFuture<List<ReturnedChallenge>> getAllChallenges(String apiVersion, User user) {
@@ -85,16 +85,42 @@ public class ChallengesService {
       }
     }
 
-    challenges.sort(Comparator.comparingLong(this::getExpiryDate));
+    challenges.sort(new ChallengesSorter());
     return CompletableFuture.completedFuture(challenges);
   }
 
-  private long getExpiryDate(ReturnedChallenge c1) {
-    return c1.getAzkarChallenge() != null ? c1.getAzkarChallenge().getExpiryDate() :
-        c1.getMemorizationChallenge() != null ? c1.getMemorizationChallenge().getExpiryDate() :
-            c1.getReadingQuranChallenge() != null
-                ? c1.getReadingQuranChallenge().getExpiryDate() : c1.getMeaningChallenge() != null
-                ? c1.getMeaningChallenge().getExpiryDate() : 0;
+  private static class ChallengesSorter implements Comparator<ReturnedChallenge> {
+
+    public boolean isFinished(ReturnedChallenge r) {
+      return r.getAzkarChallenge() != null ? r.getAzkarChallenge().finished() :
+          r.getMeaningChallenge() != null
+              ? r.getMeaningChallenge().isFinished() :
+              r.getReadingQuranChallenge() != null ? r.getReadingQuranChallenge().isFinished() :
+                  r.getMemorizationChallenge() != null ? r.getMemorizationChallenge().finished()
+                      : true;
+    }
+
+    public long getExpiryDate(ReturnedChallenge r) {
+      return r.getAzkarChallenge() != null ? r.getAzkarChallenge().getExpiryDate() :
+          r.getMeaningChallenge() != null
+              ? r.getMeaningChallenge().getExpiryDate() :
+              r.getReadingQuranChallenge() != null ? r.getReadingQuranChallenge().getExpiryDate() :
+                  r.getMemorizationChallenge() != null
+                      ? r.getMemorizationChallenge().getExpiryDate() : 0;
+    }
+
+    @Override public int compare(ReturnedChallenge r1, ReturnedChallenge r2) {
+      boolean o1Finished = isFinished(r1);
+      boolean o2Finished = isFinished(r2);
+
+      int comparisonResult;
+      if (o1Finished == o2Finished) {
+        comparisonResult = Long.compare(getExpiryDate(r1), getExpiryDate(r2));
+      } else {
+        comparisonResult = !o1Finished ? -1 : 1;
+      }
+      return comparisonResult;
+    }
   }
 
   // This removes the azkar text from the to-be-returned azkar challenge. That's because of
