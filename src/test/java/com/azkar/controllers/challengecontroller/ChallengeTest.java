@@ -200,7 +200,8 @@ public class ChallengeTest extends TestBase {
         is(addReadingQuranChallengeResponse.getData().getId()));
     assertThat(response.getData().get(1).getAzkarChallenge().getId(),
         is(addAzkarChallengeResponse.getData().getId()));
-    // Skip the 3 automatically created challenges
+    // Skip the 3 automatically created challenges because the user haven't finished them so they
+    // should appear before the finished one.
     assertThat(response.getData().get(5).getMeaningChallenge().getId(),
         is(meaningChallengeResponse.getId()));
   }
