@@ -35,8 +35,8 @@ public class ChallengesService {
 
 
   /**
-   * Returns the latest user created challenges respecting
-   * MAX_RETURNED_<challenge>_CHALLENGES and sorts them with the increasing order of expiry date.
+   * Returns the latest user created challenges respecting MAX_RETURNED_{challenge_name}_CHALLENGES
+   * and sorts them with the increasing order of expiry date.
    */
   @Async(value = AsyncConfig.CONTROLLERS_TASK_EXECUTOR)
   public CompletableFuture<List<ReturnedChallenge>> getAllChallenges(String apiVersion, User user) {
