@@ -92,15 +92,15 @@ public class ChallengesService {
   private static class ChallengesSorter implements Comparator<ReturnedChallenge> {
 
     public boolean isFinishedOrExpired(ReturnedChallenge r) {
-      return r.getAzkarChallenge() != null ?
-          r.getAzkarChallenge().finished() || r.getAzkarChallenge().expired() :
+      return r.getAzkarChallenge() != null
+          ? r.getAzkarChallenge().finished() || r.getAzkarChallenge().expired() :
           r.getMeaningChallenge() != null
               ? r.getMeaningChallenge().isFinished() || r.getMeaningChallenge().expired() :
-              r.getReadingQuranChallenge() != null ?
-                  r.getReadingQuranChallenge().isFinished() || r.getReadingQuranChallenge()
+              r.getReadingQuranChallenge() != null
+                  ? r.getReadingQuranChallenge().isFinished() || r.getReadingQuranChallenge()
                       .expired() :
-                  r.getMemorizationChallenge() != null ?
-                      r.getMemorizationChallenge().finished() || r.getMemorizationChallenge()
+                  r.getMemorizationChallenge() != null
+                      ? r.getMemorizationChallenge().finished() || r.getMemorizationChallenge()
                           .expired()
                       : true;
     }
