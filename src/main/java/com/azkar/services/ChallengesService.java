@@ -34,10 +34,6 @@ public class ChallengesService {
   private static final int MAX_RETURNED_MEMORIZATION_CHALLENGES = 5;
 
 
-  /**
-   * Returns the latest user created challenges respecting MAX_RETURNED_{challenge_name}_CHALLENGES
-   * , puts pending ones first and then sorts them with the increasing order of expiry date.
-   */
   @Async(value = AsyncConfig.CONTROLLERS_TASK_EXECUTOR)
   public CompletableFuture<List<ReturnedChallenge>> getAllChallenges(String apiVersion, User user) {
     List<AzkarChallenge> allUserAzkarChallenges = user.getAzkarChallenges();
@@ -120,7 +116,11 @@ public class ChallengesService {
 
       int comparisonResult;
       if (o1Finished == o2Finished) {
-        comparisonResult = Long.compare(getExpiryDate(r1), getExpiryDate(r2));
+        if (!o1Finished) {
+          comparisonResult = Long.compare(getExpiryDate(r1), getExpiryDate(r2));
+        } else {
+          comparisonResult = Long.compare(getExpiryDate(r2), getExpiryDate(r1));
+        }
       } else {
         comparisonResult = !o1Finished ? -1 : 1;
       }
