@@ -24,7 +24,7 @@ public class MongoConfig {
         .applyConnectionString(new ConnectionString(databaseUri))
         .applyToConnectionPoolSettings(builder ->
             builder
-                .minSize(7)
+                .minSize(2)
                 .maxWaitTime(10, TimeUnit.SECONDS)
                 .maxConnectionLifeTime(5, TimeUnit.MINUTES)
                 .build()
