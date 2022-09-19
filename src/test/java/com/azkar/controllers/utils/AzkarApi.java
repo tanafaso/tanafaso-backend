@@ -57,6 +57,12 @@ public class AzkarApi {
     return httpClient.performGetRequest(user, "/users/publicly_available_users");
   }
 
+  public ResultActions getPubliclyAvailableUsersWithPagination(User user, int pageNum)
+      throws Exception {
+    return httpClient.performGetRequest(user,
+        String.format("/users/publicly_available_users?page_num=%d", pageNum));
+  }
+
   public ResultActions addToPubliclyAvailableMales(User user) throws Exception {
     return httpClient.performPutRequest(user, "/users/publicly_available_males");
   }
