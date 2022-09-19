@@ -25,6 +25,9 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController extends BaseController {
 
   private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+  private static final int LIST_PUBLICLY_AVAILABLE_USERS_PAGE_SIZE = 10;
 
   @Autowired
   FriendshipRepo friendshipRepo;
@@ -165,7 +169,8 @@ public class UserController extends BaseController {
   }
 
   @GetMapping(path = "/publicly_available_users")
-  public ResponseEntity<GetPubliclyAvailableUsersResponse> getPubliclyAvailableUsers() {
+  public ResponseEntity<GetPubliclyAvailableUsersResponse> getPubliclyAvailableUsers(
+      @RequestParam(name = "page_num", required = false) String pageNum) {
     GetPubliclyAvailableUsersResponse response = new GetPubliclyAvailableUsersResponse();
 
     User user = getCurrentUser(userRepo);
@@ -182,46 +187,74 @@ public class UserController extends BaseController {
     }
 
     if (userAsPubliclyAvailableMale.isPresent()) {
-      List<PubliclyAvailableUser> publiclyAvailableUsers =
-          publiclyAvailableMaleUsersRepo
-              .findAll()
-              .stream()
-              // TODO(issue/335): Optimize filtering publicly available users by the ones without a
-              //  friend request sent
-              .filter(publiclyAvailableMaleUser ->
-                  !publiclyAvailableMaleUser.getUserId().equals(user.getId()) && !friendshipRepo
-                      .findByUserId(publiclyAvailableMaleUser.getUserId())
-                      .getFriends().stream().anyMatch(friend ->
-                          friend.getUserId().equals(user.getId())
-                      )
-              )
-              .map(publiclyAvailableMaleUser -> PubliclyAvailableUser.builder()
-                  .userId(publiclyAvailableMaleUser.getUserId())
-                  .firstName(publiclyAvailableMaleUser.getFirstName())
-                  .lastName(publiclyAvailableMaleUser.getLastName())
-                  .build())
-              .collect(Collectors.toList());
+      List<PubliclyAvailableMaleUser> all;
+      if (pageNum != null) {
+        Integer parsedPageNum;
+        try {
+          parsedPageNum = Integer.parseInt(pageNum);
+        } catch (NumberFormatException e) {
+          logger.error("Couldn't parse page number", e);
+          return ResponseEntity.badRequest().body(response);
+        }
+        all =
+            publiclyAvailableMaleUsersRepo.findAll(PageRequest.of(parsedPageNum,
+                LIST_PUBLICLY_AVAILABLE_USERS_PAGE_SIZE, Sort.by(Direction.DESC, "_id")))
+                .getContent();
+      } else {
+        all = publiclyAvailableMaleUsersRepo.findAll();
+      }
+
+      List<PubliclyAvailableUser> publiclyAvailableUsers = all.stream()
+          // TODO(issue/335): Optimize filtering publicly available users by the ones without a
+          //  friend request sent
+          .filter(publiclyAvailableMaleUser ->
+              !publiclyAvailableMaleUser.getUserId().equals(user.getId()) && !friendshipRepo
+                  .findByUserId(publiclyAvailableMaleUser.getUserId())
+                  .getFriends().stream().anyMatch(friend ->
+                      friend.getUserId().equals(user.getId())
+                  )
+          )
+          .map(publiclyAvailableMaleUser -> PubliclyAvailableUser.builder()
+              .userId(publiclyAvailableMaleUser.getUserId())
+              .firstName(publiclyAvailableMaleUser.getFirstName())
+              .lastName(publiclyAvailableMaleUser.getLastName())
+              .build())
+          .collect(Collectors.toList());
       response.setData(publiclyAvailableUsers);
       return ResponseEntity.ok(response);
     }
 
-    List<PubliclyAvailableUser> publiclyAvailableUsers =
-        publiclyAvailableFemaleUsersRepo
-            .findAll()
-            .stream()
-            .filter(publiclyAvailableFemaleUser ->
-                !publiclyAvailableFemaleUser.getUserId().equals(user.getId()) && !friendshipRepo
-                    .findByUserId(publiclyAvailableFemaleUser.getUserId())
-                    .getFriends().stream().anyMatch(friend ->
-                        friend.getUserId().equals(user.getId())
-                    )
-            )
-            .map(publiclyAvailableFemaleUser -> PubliclyAvailableUser.builder()
-                .userId(publiclyAvailableFemaleUser.getUserId())
-                .firstName(publiclyAvailableFemaleUser.getFirstName())
-                .lastName(publiclyAvailableFemaleUser.getLastName())
-                .build())
-            .collect(Collectors.toList());
+    List<PubliclyAvailableFemaleUser> all;
+    if (pageNum != null) {
+      Integer parsedPageNum;
+      try {
+        parsedPageNum = Integer.parseInt(pageNum);
+      } catch (NumberFormatException e) {
+        logger.error("Couldn't parse page number", e);
+        return ResponseEntity.badRequest().body(response);
+      }
+      all =
+          publiclyAvailableFemaleUsersRepo.findAll(PageRequest.of(parsedPageNum,
+              LIST_PUBLICLY_AVAILABLE_USERS_PAGE_SIZE, Sort.by(Direction.DESC, "_id")))
+              .getContent();
+    } else {
+      all = publiclyAvailableFemaleUsersRepo.findAll();
+    }
+
+    List<PubliclyAvailableUser> publiclyAvailableUsers = all.stream()
+        .filter(publiclyAvailableFemaleUser ->
+            !publiclyAvailableFemaleUser.getUserId().equals(user.getId()) && !friendshipRepo
+                .findByUserId(publiclyAvailableFemaleUser.getUserId())
+                .getFriends().stream().anyMatch(friend ->
+                    friend.getUserId().equals(user.getId())
+                )
+        )
+        .map(publiclyAvailableFemaleUser -> PubliclyAvailableUser.builder()
+            .userId(publiclyAvailableFemaleUser.getUserId())
+            .firstName(publiclyAvailableFemaleUser.getFirstName())
+            .lastName(publiclyAvailableFemaleUser.getLastName())
+            .build())
+        .collect(Collectors.toList());
 
     // Return them in reverse order so that newly added members are shown first.
     Collections.reverse(publiclyAvailableUsers);
