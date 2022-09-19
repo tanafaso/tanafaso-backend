@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController extends BaseController {
 
   private static final Logger logger = LoggerFactory.getLogger(UserController.class);
-  private static final int LIST_PUBLICLY_AVAILABLE_USERS_PAGE_SIZE = 10;
+  private static final int LIST_PUBLICLY_AVAILABLE_USERS_PAGE_SIZE = 20;
 
   @Autowired
   FriendshipRepo friendshipRepo;

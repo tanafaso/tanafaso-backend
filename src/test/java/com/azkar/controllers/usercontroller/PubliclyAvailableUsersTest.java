@@ -350,9 +350,8 @@ public class PubliclyAvailableUsersTest extends TestBase {
     User user = getNewRegisteredUser();
     azkarApi.addToPubliclyAvailableMales(user);
 
-    // Add 25 male users that will be expected to be returned in 3 pages (10 + 10 + 5) to
-    // another test user.
-    for (int i = 0; i < 25; i++) {
+    // Add 3 pages of users..
+    for (int i = 0; i < 20 + 20 + 10; i++) {
       User newUser = UserFactory.getNewUser();
       newUser.setFirstName(testUserFirstNamePrefix + i);
       addNewUser(newUser);
@@ -365,11 +364,11 @@ public class PubliclyAvailableUsersTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     GetPubliclyAvailableUsersResponse response = getResponse(resultActions,
         GetPubliclyAvailableUsersResponse.class);
-    assertThat(response.getData().size(), is(10));
+    assertThat(response.getData().size(), is(20));
     assertTrue("Note that users are returned in reverse order of registering in the publicly "
         + "available list", response.getData().stream().anyMatch(
         publiclyAvailableUser -> publiclyAvailableUser.getFirstName()
-            .equals(testUserFirstNamePrefix + "20")));
+            .equals(testUserFirstNamePrefix + "40")));
 
     // Get second page
     resultActions = azkarApi.getPubliclyAvailableUsersWithPagination(user, 1)
@@ -377,11 +376,11 @@ public class PubliclyAvailableUsersTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     response = getResponse(resultActions,
         GetPubliclyAvailableUsersResponse.class);
-    assertThat(response.getData().size(), is(10));
+    assertThat(response.getData().size(), is(20));
     assertTrue("Note that users are returned in reverse order of registering in the publicly "
         + "available list", response.getData().stream().anyMatch(
         publiclyAvailableUser -> publiclyAvailableUser.getFirstName()
-            .equals(testUserFirstNamePrefix + "10")));
+            .equals(testUserFirstNamePrefix + "20")));
 
     // Get third page
     resultActions = azkarApi.getPubliclyAvailableUsersWithPagination(user, 2)
@@ -389,7 +388,7 @@ public class PubliclyAvailableUsersTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     response = getResponse(resultActions,
         GetPubliclyAvailableUsersResponse.class);
-    assertThat(response.getData().size(), is(5));
+    assertThat(response.getData().size(), is(10));
     assertTrue("Note that users are returned in reverse order of registering in the publicly "
         + "available list", response.getData().stream().anyMatch(
         publiclyAvailableUser -> publiclyAvailableUser.getFirstName()
@@ -404,9 +403,8 @@ public class PubliclyAvailableUsersTest extends TestBase {
     User user = getNewRegisteredUser();
     azkarApi.addToPubliclyAvailableFemales(user);
 
-    // Add 25 male users that will be expected to be returned in 3 pages (10 + 10 + 5) to
-    // another test user.
-    for (int i = 0; i < 25; i++) {
+    // Add 3 pages of users..
+    for (int i = 0; i < 20 + 20 + 10; i++) {
       User newUser = UserFactory.getNewUser();
       newUser.setFirstName(testUserFirstNamePrefix + i);
       addNewUser(newUser);
@@ -419,11 +417,11 @@ public class PubliclyAvailableUsersTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     GetPubliclyAvailableUsersResponse response = getResponse(resultActions,
         GetPubliclyAvailableUsersResponse.class);
-    assertThat(response.getData().size(), is(10));
+    assertThat(response.getData().size(), is(20));
     assertTrue("Note that users are returned in reverse order of registering in the publicly "
         + "available list", response.getData().stream().anyMatch(
         publiclyAvailableUser -> publiclyAvailableUser.getFirstName()
-            .equals(testUserFirstNamePrefix + "20")));
+            .equals(testUserFirstNamePrefix + "40")));
 
     // Get second page
     resultActions = azkarApi.getPubliclyAvailableUsersWithPagination(user, 1)
@@ -431,11 +429,11 @@ public class PubliclyAvailableUsersTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     response = getResponse(resultActions,
         GetPubliclyAvailableUsersResponse.class);
-    assertThat(response.getData().size(), is(10));
+    assertThat(response.getData().size(), is(20));
     assertTrue("Note that users are returned in reverse order of registering in the publicly "
         + "available list", response.getData().stream().anyMatch(
         publiclyAvailableUser -> publiclyAvailableUser.getFirstName()
-            .equals(testUserFirstNamePrefix + "10")));
+            .equals(testUserFirstNamePrefix + "20")));
 
     // Get third page
     resultActions = azkarApi.getPubliclyAvailableUsersWithPagination(user, 2)
@@ -443,7 +441,7 @@ public class PubliclyAvailableUsersTest extends TestBase {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     response = getResponse(resultActions,
         GetPubliclyAvailableUsersResponse.class);
-    assertThat(response.getData().size(), is(5));
+    assertThat(response.getData().size(), is(10));
     assertTrue("Note that users are returned in reverse order of registering in the publicly "
         + "available list", response.getData().stream().anyMatch(
         publiclyAvailableUser -> publiclyAvailableUser.getFirstName()
