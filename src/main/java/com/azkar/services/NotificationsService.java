@@ -1,5 +1,6 @@
 package com.azkar.services;
 
+import com.azkar.configs.AsyncConfig;
 import com.azkar.entities.User;
 import com.azkar.repos.UserRepo;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -17,6 +18,7 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,6 +42,7 @@ public class NotificationsService {
     }
   }
 
+  @Async(value = AsyncConfig.POST_CONTROLLERS_TASK_EXECUTOR)
   public void sendNotificationToUser(User user, String title, String body) {
     if (user.getNotificationsToken() == null || user.getNotificationsToken().isEmpty()) {
       logger.warn(String.format("Token not found for user: %s", user.getId()));
