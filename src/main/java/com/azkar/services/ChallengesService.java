@@ -101,6 +101,9 @@ public class ChallengesService {
   @Async(value = AsyncConfig.POST_CONTROLLERS_TASK_EXECUTOR)
   public void sendNotificationOnFinishedAzkarChallenge(User userFinishedChallenge,
       AzkarChallenge challenge) {
+    logger.info("Sending notifications for user's {} friends on finished azkar challenge",
+        userFinishedChallenge.getUsername());
+
     Group group = groupRepo.findById(challenge.getGroupId()).get();
     group.getUsersIds().stream().forEach(userId -> {
       if (!userId.equals(userFinishedChallenge.getId())) {
