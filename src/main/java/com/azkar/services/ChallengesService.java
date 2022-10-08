@@ -1,6 +1,7 @@
 package com.azkar.services;
 
 import com.azkar.configs.AsyncConfig;
+import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.Zekr;
 import com.azkar.entities.challenges.AzkarChallenge;
@@ -11,6 +12,8 @@ import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
 import com.azkar.payload.utils.FeaturesVersions;
 import com.azkar.payload.utils.VersionComparator;
+import com.azkar.repos.GroupRepo;
+import com.azkar.repos.UserRepo;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,11 +21,21 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ChallengesService {
+
+  @Autowired
+  UserRepo userRepo;
+
+  @Autowired
+  GroupRepo groupRepo;
+
+  @Autowired
+  NotificationsService notificationsService;
 
   private static final Logger logger = LoggerFactory.getLogger(ChallengesService.class);
 
@@ -83,6 +96,102 @@ public class ChallengesService {
 
     challenges.sort(new ChallengesSorter());
     return CompletableFuture.completedFuture(challenges);
+  }
+
+  @Async(value = AsyncConfig.POST_CONTROLLERS_TASK_EXECUTOR)
+  public void sendNotificationOnFinishedAzkarChallenge(User userFinishedChallenge,
+      AzkarChallenge challenge) {
+    Group group = groupRepo.findById(challenge.getGroupId()).get();
+    group.getUsersIds().stream().forEach(userId -> {
+      if (!userId.equals(userFinishedChallenge.getId())) {
+
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += userFinishedChallenge.getFirstName();
+        body += " ";
+        body += userFinishedChallenge.getLastName();
+        body += " (";
+
+        body += challenge.getName();
+        body += ")";
+        notificationsService
+            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
+                body);
+      }
+    });
+  }
+
+  @Async(value = AsyncConfig.POST_CONTROLLERS_TASK_EXECUTOR)
+  public void sendNotificationOnFinishedMeaningChallenge(User userFinishedChallenge,
+      MeaningChallenge challenge) {
+    Group group = groupRepo.findById(challenge.getGroupId()).get();
+    group.getUsersIds().stream().forEach(userId -> {
+      if (!userId.equals(userFinishedChallenge.getId())) {
+
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += userFinishedChallenge.getFirstName();
+        body += " ";
+        body += userFinishedChallenge.getLastName();
+        body += " (";
+
+        body += "معاني كلمات القرآن";
+        body += ")";
+        notificationsService
+            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
+                body);
+      }
+    });
+  }
+
+  @Async(value = AsyncConfig.POST_CONTROLLERS_TASK_EXECUTOR)
+  public void sendNotificationOnFinishedReadingQuranChallenge(User userFinishedChallenge,
+      ReadingQuranChallenge challenge) {
+    Group group = groupRepo.findById(challenge.getGroupId()).get();
+    group.getUsersIds().stream().forEach(userId -> {
+      if (!userId.equals(userFinishedChallenge.getId())) {
+
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += userFinishedChallenge.getFirstName();
+        body += " ";
+        body += userFinishedChallenge.getLastName();
+        body += " (";
+
+        body += "قراءة قرآن";
+        body += ")";
+        notificationsService
+            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
+                body);
+      }
+    });
+  }
+
+  @Async(value = AsyncConfig.POST_CONTROLLERS_TASK_EXECUTOR)
+  public void sendNotificationOnFinishedMemorizationChallenge(User userFinishedChallenge,
+      MemorizationChallenge challenge) {
+    Group group = groupRepo.findById(challenge.getGroupId()).get();
+    group.getUsersIds().stream().forEach(userId -> {
+      if (!userId.equals(userFinishedChallenge.getId())) {
+
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += userFinishedChallenge.getFirstName();
+        body += " ";
+        body += userFinishedChallenge.getLastName();
+        body += " (";
+
+        body += "اختبار حفظ قرآن";
+        body += ")";
+        notificationsService
+            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
+                body);
+      }
+    });
   }
 
   private static class ChallengesSorter implements Comparator<ReturnedChallenge> {

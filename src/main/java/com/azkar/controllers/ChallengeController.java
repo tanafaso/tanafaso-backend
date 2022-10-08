@@ -917,7 +917,8 @@ public class ChallengeController extends BaseController {
       currentUser
           .setFinishedAzkarChallengesCount(currentUser.getFinishedAzkarChallengesCount() + 1);
 
-      sendNotificationOnFinishedAzkarChallenge(getCurrentUser(userRepo), challenge);
+      challengesService
+          .sendNotificationOnFinishedAzkarChallenge(getCurrentUser(userRepo), challenge);
       azkarChallengeRepo.save(challenge);
     }
     userRepo.save(currentUser);
@@ -965,7 +966,8 @@ public class ChallengeController extends BaseController {
     currentUser
         .setFinishedMeaningChallengesCount(currentUser.getFinishedMeaningChallengesCount() + 1);
 
-    sendNotificationOnFinishedMeaningChallenge(getCurrentUser(userRepo), challenge);
+    challengesService
+        .sendNotificationOnFinishedMeaningChallenge(getCurrentUser(userRepo), challenge);
     meaningChallengeRepo.save(challenge);
     userRepo.save(currentUser);
 
@@ -1012,7 +1014,8 @@ public class ChallengeController extends BaseController {
     currentUser.setFinishedReadingQuranChallengesCount(
         currentUser.getFinishedReadingQuranChallengesCount() + 1);
 
-    sendNotificationOnFinishedReadingQuranChallenge(getCurrentUser(userRepo), challenge);
+    challengesService.sendNotificationOnFinishedReadingQuranChallenge(getCurrentUser(userRepo),
+        challenge);
     readingQuranChallengeRepo.save(challenge);
     userRepo.save(currentUser);
 
@@ -1092,7 +1095,8 @@ public class ChallengeController extends BaseController {
     currentUser.setFinishedMemorizationChallengesCount(
         currentUser.getFinishedMemorizationChallengesCount() + 1);
 
-    sendNotificationOnFinishedMemorizationChallenge(getCurrentUser(userRepo), challenge);
+    challengesService.sendNotificationOnFinishedMemorizationChallenge(getCurrentUser(userRepo),
+        challenge);
     memorizationChallengeRepo.save(challenge);
     userRepo.save(currentUser);
 
@@ -1162,98 +1166,6 @@ public class ChallengeController extends BaseController {
         }
       });
       userRepo.save(user);
-    });
-  }
-
-  private void sendNotificationOnFinishedAzkarChallenge(User userFinishedChallenge,
-      AzkarChallenge challenge) {
-    Group group = groupRepo.findById(challenge.getGroupId()).get();
-    group.getUsersIds().stream().forEach(userId -> {
-      if (!userId.equals(userFinishedChallenge.getId())) {
-
-        // Fire emoji 🔥
-        String body = "\uD83D\uDD25";
-        body += " ";
-        body += userFinishedChallenge.getFirstName();
-        body += " ";
-        body += userFinishedChallenge.getLastName();
-        body += " (";
-
-        body += challenge.getName();
-        body += ")";
-        notificationsService
-            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
-                body);
-      }
-    });
-  }
-
-  private void sendNotificationOnFinishedMeaningChallenge(User userFinishedChallenge,
-      MeaningChallenge challenge) {
-    Group group = groupRepo.findById(challenge.getGroupId()).get();
-    group.getUsersIds().stream().forEach(userId -> {
-      if (!userId.equals(userFinishedChallenge.getId())) {
-
-        // Fire emoji 🔥
-        String body = "\uD83D\uDD25";
-        body += " ";
-        body += userFinishedChallenge.getFirstName();
-        body += " ";
-        body += userFinishedChallenge.getLastName();
-        body += " (";
-
-        body += "معاني كلمات القرآن";
-        body += ")";
-        notificationsService
-            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
-                body);
-      }
-    });
-  }
-
-  private void sendNotificationOnFinishedReadingQuranChallenge(User userFinishedChallenge,
-      ReadingQuranChallenge challenge) {
-    Group group = groupRepo.findById(challenge.getGroupId()).get();
-    group.getUsersIds().stream().forEach(userId -> {
-      if (!userId.equals(userFinishedChallenge.getId())) {
-
-        // Fire emoji 🔥
-        String body = "\uD83D\uDD25";
-        body += " ";
-        body += userFinishedChallenge.getFirstName();
-        body += " ";
-        body += userFinishedChallenge.getLastName();
-        body += " (";
-
-        body += "قراءة قرآن";
-        body += ")";
-        notificationsService
-            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
-                body);
-      }
-    });
-  }
-
-  private void sendNotificationOnFinishedMemorizationChallenge(User userFinishedChallenge,
-      MemorizationChallenge challenge) {
-    Group group = groupRepo.findById(challenge.getGroupId()).get();
-    group.getUsersIds().stream().forEach(userId -> {
-      if (!userId.equals(userFinishedChallenge.getId())) {
-
-        // Fire emoji 🔥
-        String body = "\uD83D\uDD25";
-        body += " ";
-        body += userFinishedChallenge.getFirstName();
-        body += " ";
-        body += userFinishedChallenge.getLastName();
-        body += " (";
-
-        body += "اختبار حفظ قرآن";
-        body += ")";
-        notificationsService
-            .sendNotificationToUser(userRepo.findById(userId).get(), "صديق لك أنهى تحدياً",
-                body);
-      }
     });
   }
 
