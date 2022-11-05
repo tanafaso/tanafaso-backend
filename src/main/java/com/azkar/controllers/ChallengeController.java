@@ -8,6 +8,7 @@ import com.azkar.entities.User;
 import com.azkar.entities.User.UserGroup;
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
+import com.azkar.entities.challenges.CustomSimpleChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.entities.challenges.MemorizationChallenge;
 import com.azkar.entities.challenges.MemorizationChallenge.Question;
@@ -15,15 +16,18 @@ import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddAzkarChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.AddCustomSimpleChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMemorizationChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddReadingQuranChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.AddCustomSimpleChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddMemorizationChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.FinishCustomSimpleChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.FinishMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.FinishMemorizationChallengeQuestionResponse;
 import com.azkar.payload.challengecontroller.responses.FinishReadingQuranChallengeResponse;
@@ -36,6 +40,7 @@ import com.azkar.payload.challengecontroller.responses.GetMeaningChallengeRespon
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.AzkarChallengeRepo;
+import com.azkar.repos.CustomSimpleChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.MeaningChallengeRepo;
@@ -93,6 +98,8 @@ public class ChallengeController extends BaseController {
   @Autowired
   private ReadingQuranChallengeRepo readingQuranChallengeRepo;
   @Autowired
+  private CustomSimpleChallengeRepo customSimpleChallengeRepo;
+  @Autowired
   private GroupRepo groupRepo;
   @Autowired
   private FriendshipRepo friendshipRepo;
@@ -103,70 +110,6 @@ public class ChallengeController extends BaseController {
   @Autowired
   private QuranService quranService;
 
-  // Note: This function may modify oldSubChallenges.
-  private static Optional<ResponseEntity<UpdateChallengeResponse>> updateOldSubChallenges(
-      List<SubChallenge> oldSubChallenges,
-      List<SubChallenge> newSubChallenges) {
-    UpdateChallengeResponse response = new UpdateChallengeResponse();
-    if (newSubChallenges.size() != oldSubChallenges.size()) {
-      response
-          .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
-      return Optional.of(ResponseEntity.badRequest().body(response));
-    }
-
-    // Set to make sure that the zekr IDs of both old and modified sub-challenges are identical.
-    Set<Integer> newZekrIds = new HashSet<>();
-    for (SubChallenge newSubChallenge : newSubChallenges) {
-      newZekrIds.add(newSubChallenge.getZekr().getId());
-      Optional<SubChallenge> subChallenge = findSubChallenge(oldSubChallenges, newSubChallenge);
-      if (!subChallenge.isPresent()) {
-        response.setStatus(new Status(Status.NON_EXISTENT_SUB_CHALLENGE_ERROR));
-        return Optional.of(ResponseEntity.badRequest().body(response));
-      }
-      Optional<Status> error = updateSubChallenge(subChallenge.get(), newSubChallenge);
-      if (error.isPresent()) {
-        response.setStatus(error.get());
-        return Optional.of(ResponseEntity.badRequest().body(response));
-      }
-    }
-    if (newZekrIds.size() != oldSubChallenges.size()) {
-      response
-          .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
-      return Optional.of(ResponseEntity.badRequest().body(response));
-    }
-    return Optional.empty();
-  }
-
-  private static Optional<SubChallenge> findSubChallenge(
-      List<SubChallenge> oldSubChallenges,
-      SubChallenge newSubChallenge) {
-    for (SubChallenge subChallenge : oldSubChallenges) {
-      if (subChallenge.getZekr().getId().equals(newSubChallenge.getZekr().getId())) {
-        return Optional.of(subChallenge);
-      }
-    }
-    return Optional.empty();
-  }
-
-  /**
-   * Updates the subChallenge as requested in newSubChallenge. If an error occurred the function
-   * returns an error, and returns empty object otherwise.
-   */
-  private static Optional<Status> updateSubChallenge(
-      SubChallenge subChallenge,
-      SubChallenge newSubChallenge) {
-    int newLeftRepetitions = newSubChallenge.getRepetitions();
-    if (newLeftRepetitions > subChallenge.getRepetitions()) {
-      return Optional.of(new Status(Status.INCREMENTING_LEFT_REPETITIONS_ERROR));
-    }
-    if (newLeftRepetitions < 0) {
-      logger.warn("Received UpdateChallenge request with negative leftRepetition value of: "
-          + newLeftRepetitions);
-      newLeftRepetitions = 0;
-    }
-    subChallenge.setRepetitions(newLeftRepetitions);
-    return Optional.empty();
-  }
 
   public static ArrayList<WordMeaningPair> getWordMeaningPairs(TafseerCacher tafseerCacher,
       int numberOfWords) {
@@ -187,40 +130,6 @@ public class ChallengeController extends BaseController {
     return wordMeaningPairs;
   }
 
-  private void updateScoreInFriendships(User user, String groupId) {
-    Group group = groupRepo.findById(groupId).orElse(null);
-    if (group == null) {
-      logger.warn("Group with ID: %s not found will trying to update score for user: %s", groupId,
-          user.getId());
-      return;
-    }
-
-    Friendship friendship = friendshipRepo.findByUserId(user.getId());
-
-    Set<String> friendsAndGroupMembers =
-        friendship.getFriends().stream()
-            .filter(friend -> group.getUsersIds().contains(friend.getUserId()))
-            .map(friend -> friend.getUserId()).collect(
-            Collectors.toSet());
-
-    // Update user friendship
-    friendship.getFriends().stream()
-        .filter(friend -> friendsAndGroupMembers.contains(friend.getUserId()))
-        .forEach(friend -> {
-          friend.setUserTotalScore(friend.getUserTotalScore() + 1);
-        });
-    friendshipRepo.save(friendship);
-
-    // Update friends' friendships
-    friendsAndGroupMembers.stream().forEach(friendUserId -> {
-      Friendship friendFriendship = friendshipRepo.findByUserId(friendUserId);
-
-      friendFriendship.getFriends().stream()
-          .filter(friend -> friend.getUserId().equals(user.getId()))
-          .forEach(friend -> friend.setFriendTotalScore(friend.getFriendTotalScore() + 1));
-      friendshipRepo.save(friendFriendship);
-    });
-  }
 
   @GetMapping("{challengeId}")
   public ResponseEntity<GetChallengeResponse> getChallenge(
@@ -261,68 +170,38 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  /*
-  Can be used for all types of challenges.
-   */
-  @DeleteMapping("{challengeId}")
-  public ResponseEntity<DeleteChallengeResponse> deleteChallenge(
-      @PathVariable(value = "challengeId") String challengeId) {
-    DeleteChallengeResponse response = new DeleteChallengeResponse();
-    User user = getCurrentUser(userRepo);
-
-    Optional<AzkarChallenge> azkarChallenge = user.getAzkarChallenges()
-        .stream()
-        .filter(
-            challenge -> challenge.getId()
-                .equals(
-                    challengeId))
-        .findFirst();
-
-    Optional<MeaningChallenge> meaningChallenge = user.getMeaningChallenges()
-        .stream(
-
-        )
-        .filter(
-            challenge -> challenge.getId()
-                .equals(
-                    challengeId))
-        .findFirst();
-
-    Optional<ReadingQuranChallenge> readingQuranChallenge = user.getReadingQuranChallenges()
-        .stream()
-        .filter(
-            challenge -> challenge.getId()
-                .equals(
-                    challengeId))
-        .findFirst();
-
-    Optional<MemorizationChallenge> memorizationChallenge = user.getMemorizationChallenges()
-        .stream()
-        .filter(
-            challenge -> challenge.getId()
-                .equals(
-                    challengeId))
-        .findFirst();
-    if (!azkarChallenge.isPresent() && !meaningChallenge.isPresent() && !readingQuranChallenge
-        .isPresent() && !memorizationChallenge.isPresent()) {
-      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+  // Note: This function may modify oldSubChallenges.
+  private static Optional<ResponseEntity<UpdateChallengeResponse>> updateOldSubChallenges(
+      List<SubChallenge> oldSubChallenges,
+      List<SubChallenge> newSubChallenges) {
+    UpdateChallengeResponse response = new UpdateChallengeResponse();
+    if (newSubChallenges.size() != oldSubChallenges.size()) {
+      response
+          .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+      return Optional.of(ResponseEntity.badRequest().body(response));
     }
-    if (azkarChallenge.isPresent()) {
-      user.getAzkarChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
-      response.setData(azkarChallenge.get());
-    } else if (meaningChallenge.isPresent()) {
-      user.getMeaningChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
-      response.setData(meaningChallenge.get());
-    } else if (readingQuranChallenge.isPresent()) {
-      user.getReadingQuranChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
-      response.setData(readingQuranChallenge.get());
-    } else {
-      user.getMemorizationChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
-      response.setData(memorizationChallenge.get());
+
+    // Set to make sure that the zekr IDs of both old and modified sub-challenges are identical.
+    Set<Integer> newZekrIds = new HashSet<>();
+    for (SubChallenge newSubChallenge : newSubChallenges) {
+      newZekrIds.add(newSubChallenge.getZekr().getId());
+      Optional<SubChallenge> subChallenge = findSubChallenge(oldSubChallenges, newSubChallenge);
+      if (!subChallenge.isPresent()) {
+        response.setStatus(new Status(Status.NON_EXISTENT_SUB_CHALLENGE_ERROR));
+        return Optional.of(ResponseEntity.badRequest().body(response));
+      }
+      Optional<Status> error = updateSubChallenge(subChallenge.get(), newSubChallenge);
+      if (error.isPresent()) {
+        response.setStatus(error.get());
+        return Optional.of(ResponseEntity.badRequest().body(response));
+      }
     }
-    userRepo.save(user);
-    return ResponseEntity.ok(response);
+    if (newZekrIds.size() != oldSubChallenges.size()) {
+      response
+          .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+      return Optional.of(ResponseEntity.badRequest().body(response));
+    }
+    return Optional.empty();
   }
 
   @GetMapping("/original/{challengeId}")
@@ -645,55 +524,6 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private MemorizationChallenge createMemorizationChallenge(AddMemorizationChallengeRequest request,
-      User user, Group group) {
-    MemorizationChallenge memorizationChallenge =
-        MemorizationChallenge.builder()
-            .id(new ObjectId().toString())
-            .creatingUserId(user.getId())
-            .groupId(group.getId())
-            .expiryDate(request.getExpiryDate())
-            .questions(new ArrayList<>())
-            .difficulty(request.getDifficulty())
-            .firstJuz(request.getFirstJuz())
-            .lastJuz(request.getLastJuz())
-            .build();
-
-    for (int i = 0; i < request.getNumberOfQuestions(); i++) {
-      int juz =
-          quranService.getRandomJuzInRange(request.getFirstJuz(), request.getLastJuz());
-      int ayah = quranService.getRandomAyahInJuz(juz);
-      int surah = quranService.getSurahOfAyah(ayah);
-      int firstAyahInJuz = quranService.getFirstAyahInJuz(juz);
-      int rub = quranService.getRubOfAya(ayah);
-      int firstAyahInRub = quranService.getFirstAyahInRub(rub);
-      List<Integer> wrongPreviousAyahOptions = quranService.getRandomTwoWrongPreviousAyahs(ayah);
-      List<Integer> wrongNextAyahOptions = quranService.getRandomTwoWrongNextAyahs(ayah);
-      List<Integer> wrongFirstAyahsInRubOptions =
-          quranService.getRandomTwoWrongFirstAyahsInRub(rub);
-      List<Integer> wrongFirstAyahsInJuzOptions =
-          quranService.getRandomTwoWrongFirstAyahsInJuz(juz);
-      List<Integer> wrongSurahsOptions = quranService.getRandomTwoWrongSurahsOfAyah(ayah);
-
-      Question question = Question.builder().build();
-      question.setNumber(i);
-      question.setJuz(juz);
-      question.setAyah(ayah);
-      question.setSurah(surah);
-      question.setFirstAyahInJuz(firstAyahInJuz);
-      question.setFirstAyahInRub(firstAyahInRub);
-      question.setWrongPreviousAyahOptions(wrongPreviousAyahOptions);
-      question.setWrongNextAyahOptions(wrongNextAyahOptions);
-      question.setWrongFirstAyahInRubOptions(wrongFirstAyahsInRubOptions);
-      question.setWrongFirstAyahInJuzOptions(wrongFirstAyahsInJuzOptions);
-      question.setWrongSurahOptions(wrongSurahsOptions);
-      question.setFinished(false);
-
-      memorizationChallenge.getQuestions().add(question);
-    }
-    return memorizationChallenge;
-  }
-
   @PostMapping("/reading_quran")
   public ResponseEntity<AddReadingQuranChallengeResponse> addReadingQuranChallenge(
       @RequestBody AddReadingQuranChallengeRequest request) {
@@ -722,13 +552,6 @@ public class ChallengeController extends BaseController {
         .id(new ObjectId().toString())
         .creatorId(currentUser.getId())
         .usersIds(groupMembers)
-        .build();
-
-    UserGroup userGroup = UserGroup.builder()
-        .groupId(newGroup.getId())
-        .invitingUserId(currentUser.getId())
-        .monthScore(0)
-        .totalScore(0)
         .build();
 
     ReadingQuranChallenge challenge = request.getReadingQuranChallenge().toBuilder()
@@ -770,28 +593,17 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private List<String> extractWords(ArrayList<WordMeaningPair> wordMeaningPairs) {
-    return wordMeaningPairs.stream()
-        .map(wordMeaningPair -> wordMeaningPair.getWord())
-        .collect(Collectors.toList());
+  private static Optional<SubChallenge> findSubChallenge(
+      List<SubChallenge> oldSubChallenges,
+      SubChallenge newSubChallenge) {
+    for (SubChallenge subChallenge : oldSubChallenges) {
+      if (subChallenge.getZekr().getId().equals(newSubChallenge.getZekr().getId())) {
+        return Optional.of(subChallenge);
+      }
+    }
+    return Optional.empty();
   }
 
-  private List<String> extractMeanings(ArrayList<WordMeaningPair> wordMeaningPairs) {
-    return wordMeaningPairs.stream()
-        .map(wordMeaningPair -> wordMeaningPair.getMeaning())
-        .collect(Collectors.toList());
-  }
-
-  private HashSet<String> getUserFriends(User user) {
-    Friendship friendship = friendshipRepo.findByUserId(user.getId());
-    HashSet<String> friends = new HashSet<>();
-    friendship.getFriends().forEach(friend -> friends.add(friend.getUserId()));
-    return friends;
-  }
-
-  private boolean groupContainsCurrentUser(Group group) {
-    return group.getUsersIds().contains(getCurrentUser().getUserId());
-  }
 
   // Returns all challenges with all types.
   @GetMapping(path = "/v2")
@@ -821,16 +633,6 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private List<AzkarChallenge> filterOutSabeqChallenges(List<AzkarChallenge> challenges) {
-    List<AzkarChallenge> filtered = challenges.stream().filter(challenge -> {
-      Optional<Group> group = groupRepo.findById(challenge.getGroupId());
-      if (!group.isPresent()) {
-        return false;
-      }
-      return !group.get().getUsersIds().contains(User.SABEQ_ID);
-    }).collect(Collectors.toList());
-    return filtered;
-  }
 
   @GetMapping(path = "/groups/{groupId}/")
   public ResponseEntity<GetChallengesResponse> getAllChallengesInGroup(
@@ -854,20 +656,6 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-
-  private ResponseEntity<GetChallengesResponse> validateGroupAndReturnError(
-      Optional<Group> optionalGroup) {
-    GetChallengesResponse response = new GetChallengesResponse();
-    if (!optionalGroup.isPresent()) {
-      response.setStatus(new Status(Status.GROUP_NOT_FOUND_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
-    if (!groupContainsCurrentUser(optionalGroup.get())) {
-      response.setStatus(new Status(Status.NON_GROUP_MEMBER_ERROR));
-      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-    }
-    return null;
-  }
 
   // TODO(issue/204): This is not an atomic operation anymore, i.e. it is not guranteed that if
   //  something wrong happened in the middle of handling a request, the state will remain the
@@ -1103,6 +891,263 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(new FinishMemorizationChallengeQuestionResponse());
   }
 
+  /**
+   * Updates the subChallenge as requested in newSubChallenge. If an error occurred the function
+   * returns an error, and returns empty object otherwise.
+   */
+  private static Optional<Status> updateSubChallenge(
+      SubChallenge subChallenge,
+      SubChallenge newSubChallenge) {
+    int newLeftRepetitions = newSubChallenge.getRepetitions();
+    if (newLeftRepetitions > subChallenge.getRepetitions()) {
+      return Optional.of(new Status(Status.INCREMENTING_LEFT_REPETITIONS_ERROR));
+    }
+    if (newLeftRepetitions < 0) {
+      logger.warn("Received UpdateChallenge request with negative leftRepetition value of: "
+          + newLeftRepetitions);
+      newLeftRepetitions = 0;
+    }
+    subChallenge.setRepetitions(newLeftRepetitions);
+    return Optional.empty();
+  }
+
+  /*
+  Can be used for all types of challenges.
+   */
+  @DeleteMapping("{challengeId}")
+  public ResponseEntity<DeleteChallengeResponse> deleteChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    DeleteChallengeResponse response = new DeleteChallengeResponse();
+    User user = getCurrentUser(userRepo);
+
+    Optional<AzkarChallenge> azkarChallenge = user.getAzkarChallenges()
+        .stream()
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
+
+    Optional<MeaningChallenge> meaningChallenge = user.getMeaningChallenges()
+        .stream(
+
+        )
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
+
+    Optional<ReadingQuranChallenge> readingQuranChallenge = user.getReadingQuranChallenges()
+        .stream()
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
+
+    Optional<MemorizationChallenge> memorizationChallenge = user.getMemorizationChallenges()
+        .stream()
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
+
+    Optional<CustomSimpleChallenge> customSimpleChallenge = user.getCustomSimpleChallenges()
+        .stream()
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
+        .findFirst();
+    if (!azkarChallenge.isPresent() && !meaningChallenge.isPresent() && !readingQuranChallenge
+        .isPresent() && !memorizationChallenge.isPresent() && !customSimpleChallenge.isPresent()) {
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+    if (azkarChallenge.isPresent()) {
+      user.getAzkarChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+      response.setData(azkarChallenge.get());
+    } else if (meaningChallenge.isPresent()) {
+      user.getMeaningChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+      response.setData(meaningChallenge.get());
+    } else if (readingQuranChallenge.isPresent()) {
+      user.getReadingQuranChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+      response.setData(readingQuranChallenge.get());
+    } else if (memorizationChallenge.isPresent()) {
+      user.getMemorizationChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+      response.setData(memorizationChallenge.get());
+    } else {
+      user.getCustomSimpleChallenges().removeIf(challenge -> challenge.getId().equals(challengeId));
+    }
+    userRepo.save(user);
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/simple")
+  public ResponseEntity<AddCustomSimpleChallengeResponse> addCustomSimpleChallenge(
+      @RequestBody AddCustomSimpleChallengeRequest request) {
+    AddCustomSimpleChallengeResponse response = new AddCustomSimpleChallengeResponse();
+
+    try {
+      request.validate();
+    } catch (BadRequestException e) {
+      response.setStatus(e.error);
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    User currentUser = getCurrentUser(userRepo);
+    HashSet<String> friendsIds = getUserFriends(currentUser);
+    boolean allValidFriends =
+        request.getFriendsIds().stream().allMatch(id -> friendsIds.contains(id));
+    if (!allValidFriends) {
+      response.setStatus(new Status(Status.ONE_OR_MORE_USERS_NOT_FRIENDS_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    List<String> groupMembers = new ArrayList<>(request.getFriendsIds());
+    groupMembers.add(currentUser.getId());
+
+    Group newGroup = Group.builder()
+        .id(new ObjectId().toString())
+        .creatorId(currentUser.getId())
+        .usersIds(groupMembers)
+        .build();
+
+    CustomSimpleChallenge challenge = CustomSimpleChallenge.builder()
+        .id(new ObjectId().toString())
+        .creatingUserId(currentUser.getId())
+        .groupId(newGroup.getId())
+        .finished(false)
+        .expiryDate(request.getExpiryDate())
+        .description(request.getDescription())
+        .build();
+
+    newGroup.getChallengesIds().add(challenge.getId());
+
+    Iterable<User> affectedUsers = userRepo.findAllById(groupMembers);
+    affectedUsers.forEach(user -> {
+      user.getCustomSimpleChallenges().add(challenge);
+    });
+
+    userRepo.saveAll(affectedUsers);
+    groupRepo.save(newGroup);
+    customSimpleChallengeRepo.save(challenge);
+
+    affectedUsers.forEach(affectedUser -> {
+      if (!affectedUser.getId().equals(currentUser.getId())) {
+        // Fire emoji 🔥
+        String body = "\uD83D\uDD25";
+        body += " ";
+        body += currentUser.getFirstName();
+        body += " ";
+        body += currentUser.getLastName();
+        body += " (";
+
+        body += challenge.getDescription();
+        body += ")";
+        notificationsService.sendNotificationToUser(affectedUser, "لديك تحدٍ جديد",
+            body);
+      }
+    });
+
+    response.setData(challenge);
+    return ResponseEntity.ok(response);
+  }
+
+  @PutMapping(path = "/finish/simple/{challengeId}")
+  public ResponseEntity<FinishCustomSimpleChallengeResponse> finishCustomSimpleChallenge(
+      @PathVariable(value = "challengeId") String challengeId) {
+    User currentUser = getCurrentUser(userRepo);
+    Optional<CustomSimpleChallenge> currentUserChallenge = currentUser.getCustomSimpleChallenges()
+        .stream()
+        .filter(challenge -> challenge.getId()
+            .equals(
+                challengeId))
+        .findFirst();
+    if (!currentUserChallenge.isPresent()) {
+      FinishCustomSimpleChallengeResponse response = new FinishCustomSimpleChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+    // TODO(issue#170): Time should be supplied by a bean to allow easier testing
+    if (currentUserChallenge.get().getExpiryDate() < Instant.now().getEpochSecond()) {
+      FinishCustomSimpleChallengeResponse response = new FinishCustomSimpleChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_EXPIRED_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    if (currentUserChallenge.get().isFinished()) {
+      FinishCustomSimpleChallengeResponse response = new FinishCustomSimpleChallengeResponse();
+      response.setStatus(new Status(Status.CHALLENGE_HAS_ALREADY_BEEN_FINISHED));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    currentUserChallenge.get().setFinished(true);
+    updateScoreInFriendships(currentUser, currentUserChallenge.get().getGroupId());
+    userRepo.save(currentUser);
+
+    CustomSimpleChallenge challenge = customSimpleChallengeRepo.findById(challengeId).get();
+    updateCustomSimpleChallengeOnUserFinished(challenge, currentUser);
+    // Invalidate current user because it may have changed indirectly (by changing only the
+    // database instance) after calling updateChallengeOnUserFinished.
+    currentUser = userRepo.findById(currentUser.getId()).get();
+    currentUser.setFinishedCustomSimpleChallengesCount(
+        currentUser.getFinishedCustomSimpleChallengesCount() + 1);
+
+    challengesService.sendNotificationOnFinishedCustomSimpleChallenge(getCurrentUser(userRepo),
+        challenge);
+    customSimpleChallengeRepo.save(challenge);
+    userRepo.save(currentUser);
+
+    return ResponseEntity.ok(new FinishCustomSimpleChallengeResponse());
+  }
+
+  @GetMapping("/finished-challenges-count")
+  public ResponseEntity<GetFinishedChallengesCountResponse> getFinishedChallengesCount() {
+    GetFinishedChallengesCountResponse response = new GetFinishedChallengesCountResponse();
+
+    User user = getCurrentUser(userRepo);
+    int finishedChallengesCount =
+        user.getFinishedAzkarChallengesCount()
+            + user.getFinishedMeaningChallengesCount()
+            + user.getFinishedReadingQuranChallengesCount()
+            + user.getFinishedMemorizationChallengesCount()
+            + user.getFinishedCustomSimpleChallengesCount()
+            + user.getFinishedPersonalChallengesCount();
+
+    response.setData(finishedChallengesCount);
+    return ResponseEntity.ok(response);
+  }
+
+  private ResponseEntity<GetChallengesResponse> validateGroupAndReturnError(
+      Optional<Group> optionalGroup) {
+    GetChallengesResponse response = new GetChallengesResponse();
+    if (!optionalGroup.isPresent()) {
+      response.setStatus(new Status(Status.GROUP_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+    if (!groupContainsCurrentUser(optionalGroup.get())) {
+      response.setStatus(new Status(Status.NON_GROUP_MEMBER_ERROR));
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+    return null;
+  }
+
+  private List<String> extractWords(ArrayList<WordMeaningPair> wordMeaningPairs) {
+    return wordMeaningPairs.stream()
+        .map(wordMeaningPair -> wordMeaningPair.getWord())
+        .collect(Collectors.toList());
+  }
+
+  private List<String> extractMeanings(ArrayList<WordMeaningPair> wordMeaningPairs) {
+    return wordMeaningPairs.stream()
+        .map(wordMeaningPair -> wordMeaningPair.getMeaning())
+        .collect(Collectors.toList());
+  }
+
+
   private void updateAzkarChallengeOnUserFinished(AzkarChallenge challenge, User currentUser) {
     // Update the original copy of the challenge
     challenge.getUsersFinished().add(currentUser.getId());
@@ -1152,6 +1197,13 @@ public class ChallengeController extends BaseController {
     });
   }
 
+  private HashSet<String> getUserFriends(User user) {
+    Friendship friendship = friendshipRepo.findByUserId(user.getId());
+    HashSet<String> friends = new HashSet<>();
+    friendship.getFriends().forEach(friend -> friends.add(friend.getUserId()));
+    return friends;
+  }
+
   private void updateMemorizationChallengeOnUserFinished(MemorizationChallenge challenge,
       User currentUser) {
     // Update the original copy of the challenge
@@ -1169,19 +1221,119 @@ public class ChallengeController extends BaseController {
     });
   }
 
-  @GetMapping("/finished-challenges-count")
-  public ResponseEntity<GetFinishedChallengesCountResponse> getFinishedChallengesCount() {
-    GetFinishedChallengesCountResponse response = new GetFinishedChallengesCountResponse();
+  private boolean groupContainsCurrentUser(Group group) {
+    return group.getUsersIds().contains(getCurrentUser().getUserId());
+  }
 
-    User user = getCurrentUser(userRepo);
-    int finishedChallengesCount =
-        user.getFinishedAzkarChallengesCount()
-            + user.getFinishedMeaningChallengesCount()
-            + user.getFinishedReadingQuranChallengesCount()
-            + user.getFinishedMemorizationChallengesCount()
-            + user.getFinishedPersonalChallengesCount();
+  private List<AzkarChallenge> filterOutSabeqChallenges(List<AzkarChallenge> challenges) {
+    List<AzkarChallenge> filtered = challenges.stream().filter(challenge -> {
+      Optional<Group> group = groupRepo.findById(challenge.getGroupId());
+      if (!group.isPresent()) {
+        return false;
+      }
+      return !group.get().getUsersIds().contains(User.SABEQ_ID);
+    }).collect(Collectors.toList());
+    return filtered;
+  }
 
-    response.setData(finishedChallengesCount);
-    return ResponseEntity.ok(response);
+  private void updateCustomSimpleChallengeOnUserFinished(CustomSimpleChallenge challenge,
+      User currentUser) {
+    // Update the original copy of the challenge
+    challenge.getUsersFinished().add(currentUser.getId());
+
+    // Update users copies of the challenge
+    groupRepo.findById(challenge.getGroupId()).get().getUsersIds().forEach(groupMember -> {
+      User user = userRepo.findById(groupMember).get();
+      user.getCustomSimpleChallenges().forEach(userChallenge -> {
+        if (userChallenge.getId().equals(challenge.getId())) {
+          userChallenge.getUsersFinished().add(currentUser.getId());
+        }
+      });
+      userRepo.save(user);
+    });
+  }
+
+  private MemorizationChallenge createMemorizationChallenge(AddMemorizationChallengeRequest request,
+      User user, Group group) {
+    MemorizationChallenge memorizationChallenge =
+        MemorizationChallenge.builder()
+            .id(new ObjectId().toString())
+            .creatingUserId(user.getId())
+            .groupId(group.getId())
+            .expiryDate(request.getExpiryDate())
+            .questions(new ArrayList<>())
+            .difficulty(request.getDifficulty())
+            .firstJuz(request.getFirstJuz())
+            .lastJuz(request.getLastJuz())
+            .build();
+
+    for (int i = 0; i < request.getNumberOfQuestions(); i++) {
+      int juz =
+          quranService.getRandomJuzInRange(request.getFirstJuz(), request.getLastJuz());
+      int ayah = quranService.getRandomAyahInJuz(juz);
+      int surah = quranService.getSurahOfAyah(ayah);
+      int firstAyahInJuz = quranService.getFirstAyahInJuz(juz);
+      int rub = quranService.getRubOfAya(ayah);
+      int firstAyahInRub = quranService.getFirstAyahInRub(rub);
+      List<Integer> wrongPreviousAyahOptions = quranService.getRandomTwoWrongPreviousAyahs(ayah);
+      List<Integer> wrongNextAyahOptions = quranService.getRandomTwoWrongNextAyahs(ayah);
+      List<Integer> wrongFirstAyahsInRubOptions =
+          quranService.getRandomTwoWrongFirstAyahsInRub(rub);
+      List<Integer> wrongFirstAyahsInJuzOptions =
+          quranService.getRandomTwoWrongFirstAyahsInJuz(juz);
+      List<Integer> wrongSurahsOptions = quranService.getRandomTwoWrongSurahsOfAyah(ayah);
+
+      Question question = Question.builder().build();
+      question.setNumber(i);
+      question.setJuz(juz);
+      question.setAyah(ayah);
+      question.setSurah(surah);
+      question.setFirstAyahInJuz(firstAyahInJuz);
+      question.setFirstAyahInRub(firstAyahInRub);
+      question.setWrongPreviousAyahOptions(wrongPreviousAyahOptions);
+      question.setWrongNextAyahOptions(wrongNextAyahOptions);
+      question.setWrongFirstAyahInRubOptions(wrongFirstAyahsInRubOptions);
+      question.setWrongFirstAyahInJuzOptions(wrongFirstAyahsInJuzOptions);
+      question.setWrongSurahOptions(wrongSurahsOptions);
+      question.setFinished(false);
+
+      memorizationChallenge.getQuestions().add(question);
+    }
+    return memorizationChallenge;
+  }
+
+  private void updateScoreInFriendships(User user, String groupId) {
+    Group group = groupRepo.findById(groupId).orElse(null);
+    if (group == null) {
+      logger.warn("Group with ID: %s not found will trying to update score for user: %s", groupId,
+          user.getId());
+      return;
+    }
+
+    Friendship friendship = friendshipRepo.findByUserId(user.getId());
+
+    Set<String> friendsAndGroupMembers =
+        friendship.getFriends().stream()
+            .filter(friend -> group.getUsersIds().contains(friend.getUserId()))
+            .map(friend -> friend.getUserId()).collect(
+            Collectors.toSet());
+
+    // Update user friendship
+    friendship.getFriends().stream()
+        .filter(friend -> friendsAndGroupMembers.contains(friend.getUserId()))
+        .forEach(friend -> {
+          friend.setUserTotalScore(friend.getUserTotalScore() + 1);
+        });
+    friendshipRepo.save(friendship);
+
+    // Update friends' friendships
+    friendsAndGroupMembers.stream().forEach(friendUserId -> {
+      Friendship friendFriendship = friendshipRepo.findByUserId(friendUserId);
+
+      friendFriendship.getFriends().stream()
+          .filter(friend -> friend.getUserId().equals(user.getId()))
+          .forEach(friend -> friend.setFriendTotalScore(friend.getFriendTotalScore() + 1));
+      friendshipRepo.save(friendFriendship);
+    });
   }
 }

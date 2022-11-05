@@ -4,17 +4,20 @@ import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.challenges.AzkarChallenge;
+import com.azkar.entities.challenges.CustomSimpleChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.entities.challenges.MemorizationChallenge;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.payload.authenticationcontroller.requests.ResetPasswordRequest;
 import com.azkar.payload.challengecontroller.requests.AddAzkarChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.AddCustomSimpleChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMemorizationChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddReadingQuranChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.UpdateChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.AddCustomSimpleChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddMemorizationChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
@@ -140,11 +143,29 @@ public class AzkarApi {
     return response.getData();
   }
 
+
   public ResultActions addReadingQuranChallenge(User user,
       AddReadingQuranChallengeRequest request) throws Exception {
     return httpClient.performPostRequest(user, "/challenges/reading_quran",
         JsonHandler.toJson(request));
   }
+
+  public CustomSimpleChallenge addCustomSimpleChallengeAndReturn(User user,
+      AddCustomSimpleChallengeRequest request) throws Exception {
+    MvcResult result = addCustomSimpleChallenge(user, request).andReturn();
+    AddCustomSimpleChallengeResponse response =
+        JsonHandler.fromJson(result.getResponse().getContentAsString(),
+            AddCustomSimpleChallengeResponse.class);
+    return response.getData();
+  }
+
+
+  public ResultActions addCustomSimpleChallenge(User user,
+      AddCustomSimpleChallengeRequest request) throws Exception {
+    return httpClient.performPostRequest(user, "/challenges/simple",
+        JsonHandler.toJson(request));
+  }
+
 
   public MemorizationChallenge addMemorizationChallengeAndReturn(User user,
       AddMemorizationChallengeRequest request) throws Exception {
@@ -188,6 +209,12 @@ public class AzkarApi {
       throws Exception {
     return httpClient.performPutRequest(user, String.format("/challenges/finish/reading_quran/%s",
         readingQuranChallengeId));
+  }
+
+  public ResultActions finishCustomSimpleChallenge(User user, String customSimpleChallengeId)
+      throws Exception {
+    return httpClient.performPutRequest(user, String.format("/challenges/finish/simple/%s",
+        customSimpleChallengeId));
   }
 
   public ResultActions finishMemorizationChallengeQuestion(User user,

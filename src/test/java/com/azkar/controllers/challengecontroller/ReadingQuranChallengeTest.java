@@ -1,12 +1,10 @@
 package com.azkar.controllers.challengecontroller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -15,7 +13,6 @@ import com.azkar.TestBase;
 import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
-import com.azkar.entities.User.UserGroup;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.entities.challenges.ReadingQuranChallenge.SurahSubChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
@@ -214,14 +211,14 @@ public class ReadingQuranChallengeTest extends TestBase {
   }
 
   @Test
-  public void addReadingQuranChallenge_pastExpiryDate_shouldNotSucceed() throws Exception {
+  public void addReadingQuranChallenge_beforeExpiryDate_shouldNotSucceed() throws Exception {
     User user2 = getNewRegisteredUser();
 
     azkarApi.makeFriends(user1, user2);
 
-    long pastExpiryDate = Instant.now().getEpochSecond() - ChallengeFactory.EXPIRY_DATE_OFFSET;
+    long beforeExpiryDate = Instant.now().getEpochSecond() - ChallengeFactory.EXPIRY_DATE_OFFSET;
     ReadingQuranChallenge challenge = ReadingQuranChallenge.builder()
-        .expiryDate(pastExpiryDate)
+        .expiryDate(beforeExpiryDate)
         .surahSubChallenges(
             ImmutableList.of(ChallengeFactory.quranSubChallenge1()))
         .groupId(validGroup.getId())

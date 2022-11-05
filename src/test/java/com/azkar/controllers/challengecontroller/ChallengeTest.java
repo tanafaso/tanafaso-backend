@@ -13,6 +13,7 @@ import com.azkar.controllers.utils.JsonHandler;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.entities.challenges.AzkarChallenge;
+import com.azkar.entities.challenges.CustomSimpleChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
@@ -20,6 +21,7 @@ import com.azkar.factories.entities.GroupFactory;
 import com.azkar.factories.entities.UserFactory;
 import com.azkar.payload.ResponseBase.Status;
 import com.azkar.payload.challengecontroller.requests.AddAzkarChallengeRequest;
+import com.azkar.payload.challengecontroller.requests.AddCustomSimpleChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest;
 import com.azkar.payload.challengecontroller.requests.AddReadingQuranChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
@@ -115,6 +117,7 @@ public class ChallengeTest extends TestBase {
     long readingQuranChallengeExpiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
     long meaningChallengeExpiryDate = readingQuranChallengeExpiryDate + EXPIRY_DATE_OFFSET;
     long azkarChallengeExpiryDate = meaningChallengeExpiryDate + EXPIRY_DATE_OFFSET;
+    long customSimpleChallengeExpiryDate = azkarChallengeExpiryDate + EXPIRY_DATE_OFFSET;
 
     // Add one reading Quran challenge.
     ReadingQuranChallenge readingQuranChallenge = ChallengeFactory.getNewReadingChallenge(
@@ -204,6 +207,33 @@ public class ChallengeTest extends TestBase {
     // should appear before the finished one.
     assertThat(response.getData().get(5).getMeaningChallenge().getId(),
         is(meaningChallengeResponse.getId()));
+
+    // Add one meaning challenge.
+    AddCustomSimpleChallengeRequest addCustomSimpleChallengeRequest =
+        AddCustomSimpleChallengeRequest.builder()
+            .friendsIds(ImmutableList.of(user2.getId()))
+            .expiryDate(customSimpleChallengeExpiryDate)
+            .description("description")
+            .build();
+    CustomSimpleChallenge addCustomSimpleChallengeResponse =
+        azkarApi.addCustomSimpleChallengeAndReturn(user1, addCustomSimpleChallengeRequest);
+
+    mvcResult = azkarApi.getAllChallengesV2(user1, FeaturesVersions.CUSTOM_SIMPLE_CHALLENGE_VERSION)
+        .andExpect(status().isOk())
+        .andReturn();
+    response = JsonHandler
+        .fromJson(mvcResult.getResponse().getContentAsString(), GetChallengesV2Response.class);
+
+    assertThat(response.getData().get(0).getReadingQuranChallenge().getId(),
+        is(addReadingQuranChallengeResponse.getData().getId()));
+    assertThat(response.getData().get(1).getAzkarChallenge().getId(),
+        is(addAzkarChallengeResponse.getData().getId()));
+    assertThat(response.getData().get(2).getCustomSimpleChallenge().getId(),
+        is(addCustomSimpleChallengeResponse.getId()));
+    // Skip the 3 automatically created challenges because the user haven't finished them so they
+    // should appear before the finished one.
+    assertThat(response.getData().get(6).getMeaningChallenge().getId(),
+        is(meaningChallengeResponse.getId()));
   }
 
   @Test
@@ -218,6 +248,7 @@ public class ChallengeTest extends TestBase {
     long readingQuranChallengeExpiryDate = Instant.now().getEpochSecond() + EXPIRY_DATE_OFFSET;
     long meaningChallengeExpiryDate = readingQuranChallengeExpiryDate + EXPIRY_DATE_OFFSET;
     long azkarChallengeExpiryDate = meaningChallengeExpiryDate + EXPIRY_DATE_OFFSET;
+    long customSimpleChallengeExpiryDate = azkarChallengeExpiryDate + EXPIRY_DATE_OFFSET;
 
     // Add one reading Quran challenge.
     ReadingQuranChallenge readingQuranChallenge = ChallengeFactory.getNewReadingChallenge(
@@ -257,13 +288,24 @@ public class ChallengeTest extends TestBase {
             .challenge(challenge)
             .build();
 
-    result = azkarApi.addAzkarChallenge(user1, addAzkarChallengeRequest)
+    azkarApi.addAzkarChallenge(user1, addAzkarChallengeRequest)
         .andExpect(status().isOk())
         .andReturn();
+
+    // Add one meaning challenge.
+    AddCustomSimpleChallengeRequest addCustomSimpleChallengeRequest =
+        AddCustomSimpleChallengeRequest.builder()
+            .friendsIds(ImmutableList.of(user2.getId()))
+            .expiryDate(customSimpleChallengeExpiryDate)
+            .description("description")
+            .build();
+    CustomSimpleChallenge addCustomSimpleChallengeResponse =
+        azkarApi.addCustomSimpleChallengeAndReturn(user1, addCustomSimpleChallengeRequest);
 
     // Finish some challenges
     azkarApi.finishMeaningChallenge(user1, meaningChallengeResponse.getId());
     azkarApi.finishReadingQuranChallenge(user1, addReadingQuranChallengeResponse.getData().getId());
+    azkarApi.finishCustomSimpleChallenge(user1, addCustomSimpleChallengeResponse.getId());
 
     MvcResult mvcResult = azkarApi.getFinishedChallengesCount(user1)
         .andExpect(status().isOk())
@@ -272,7 +314,7 @@ public class ChallengeTest extends TestBase {
         .fromJson(mvcResult.getResponse().getContentAsString(),
             GetFinishedChallengesCountResponse.class);
 
-    assertThat(response.getData(), is(2));
+    assertThat(response.getData(), is(3));
   }
 
   private AzkarChallenge createGroupChallenge(User user, Group group)

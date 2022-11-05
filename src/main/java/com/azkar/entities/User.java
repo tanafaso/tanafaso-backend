@@ -1,6 +1,7 @@
 package com.azkar.entities;
 
 import com.azkar.entities.challenges.AzkarChallenge;
+import com.azkar.entities.challenges.CustomSimpleChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.entities.challenges.MemorizationChallenge;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
@@ -72,6 +73,9 @@ public class User extends EntityBase {
   @Default
   private List<ReadingQuranChallenge> readingQuranChallenges = new ArrayList();
   private int finishedReadingQuranChallengesCount;
+  @Default
+  private List<CustomSimpleChallenge> customSimpleChallenges = new ArrayList();
+  private int finishedCustomSimpleChallengesCount;
   @JsonIgnore
   @Default
   private String resetPasswordToken = "";
