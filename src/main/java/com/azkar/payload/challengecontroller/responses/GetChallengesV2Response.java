@@ -1,6 +1,7 @@
 package com.azkar.payload.challengecontroller.responses;
 
 import com.azkar.entities.challenges.AzkarChallenge;
+import com.azkar.entities.challenges.CustomSimpleChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.entities.challenges.MemorizationChallenge;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
@@ -27,5 +28,6 @@ public class GetChallengesV2Response extends ResponseBase<List<ReturnedChallenge
     MeaningChallenge meaningChallenge;
     ReadingQuranChallenge readingQuranChallenge;
     MemorizationChallenge memorizationChallenge;
+    CustomSimpleChallenge customSimpleChallenge;
   }
 }
