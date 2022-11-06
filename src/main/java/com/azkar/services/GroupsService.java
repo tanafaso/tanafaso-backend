@@ -39,6 +39,11 @@ public class GroupsService {
             .map(memorizationChallenge -> memorizationChallenge.getGroupId())
             .collect(
                 Collectors.toList()));
+    groupIdsInUse.addAll(
+        user.getCustomSimpleChallenges().stream()
+            .map(customSimpleChallenge -> customSimpleChallenge.getGroupId())
+            .collect(
+                Collectors.toList()));
 
     List<Group> result = new ArrayList<>();
     groupRepo.findAllById(groupIdsInUse).forEach(result::add);
