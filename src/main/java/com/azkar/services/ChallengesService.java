@@ -261,8 +261,8 @@ public class ChallengesService {
               r.getReadingQuranChallenge() != null ? r.getReadingQuranChallenge().getExpiryDate() :
                   r.getMemorizationChallenge() != null
                       ? r.getMemorizationChallenge().getExpiryDate() :
-                      r.getCustomSimpleChallenge() != null ?
-                          r.getCustomSimpleChallenge().getExpiryDate() : 0;
+                      r.getCustomSimpleChallenge() != null
+                          ? r.getCustomSimpleChallenge().getExpiryDate() : 0;
     }
 
     @Override public int compare(ReturnedChallenge r1, ReturnedChallenge r2) {
