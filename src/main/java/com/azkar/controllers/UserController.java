@@ -117,8 +117,8 @@ public class UserController extends BaseController {
   }
 
   @PutMapping(path = "/notifications/token")
-  public ResponseEntity<SetNotificationTokenResponse> setNotificationsToken(@RequestBody
-      SetNotificationTokenRequestBody body) {
+  public ResponseEntity<SetNotificationTokenResponse> setNotificationsToken(
+      @RequestBody SetNotificationTokenRequestBody body) {
     body.validate();
 
     User user = getCurrentUser(userRepo);
@@ -198,7 +198,7 @@ public class UserController extends BaseController {
         }
         all =
             publiclyAvailableMaleUsersRepo.findAll(PageRequest.of(parsedPageNum,
-                LIST_PUBLICLY_AVAILABLE_USERS_PAGE_SIZE, Sort.by(Direction.DESC, "_id")))
+                    LIST_PUBLICLY_AVAILABLE_USERS_PAGE_SIZE, Sort.by(Direction.DESC, "_id")))
                 .getContent();
       } else {
         all = publiclyAvailableMaleUsersRepo.findAll();
@@ -235,7 +235,7 @@ public class UserController extends BaseController {
       }
       all =
           publiclyAvailableFemaleUsersRepo.findAll(PageRequest.of(parsedPageNum,
-              LIST_PUBLICLY_AVAILABLE_USERS_PAGE_SIZE, Sort.by(Direction.DESC, "_id")))
+                  LIST_PUBLICLY_AVAILABLE_USERS_PAGE_SIZE, Sort.by(Direction.DESC, "_id")))
               .getContent();
     } else {
       all = publiclyAvailableFemaleUsersRepo.findAll();
