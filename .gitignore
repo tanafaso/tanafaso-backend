@@ -11,3 +11,4 @@ firebase-key.json
 /src/main/resources/sign_in_with_apple_auth_key
 feedback.csv
 Dockerfile
+deployCommand.txt

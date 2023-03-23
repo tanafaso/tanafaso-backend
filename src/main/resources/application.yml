@@ -29,3 +29,5 @@ files:
   tafseer: tafseer.txt
   quran-metadata: quran_metadata.csv
   apple_auth_private_key: sign_in_with_apple_auth_key
+
+job-mode: true
