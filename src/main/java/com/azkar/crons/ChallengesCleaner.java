@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -28,11 +29,19 @@ public class ChallengesCleaner implements ApplicationRunner {
   @Autowired
   private ApplicationContext appContext;
 
+  @Value("${job-mode}")
+  public boolean jobMode;
+
   // Run every while to clean old challenges. Note that although after every challenge creation
   // done by a certain user, we clean the old challenges for this user, that's not enough because
   // we don't clean for all other users who are also part of that challenge.
   @Override
   public void run(ApplicationArguments args) throws Exception {
+    if (!jobMode) {
+      logger.info("[Challenges cleaner] skipping as the application is not running in job mode");
+      return;
+    }
+
     logger.info("[Challenges cleaner] started!");
 
     long numberOfUsers = userRepo.count();
