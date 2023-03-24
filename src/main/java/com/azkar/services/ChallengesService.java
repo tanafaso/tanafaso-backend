@@ -63,13 +63,13 @@ public class ChallengesService {
     for (int i = 0; i < Math.min(MAX_RETURNED_AZKAR_CHALLENGES, allUserAzkarChallenges.size());
         i++) {
       challenges.add(ReturnedChallenge.builder().azkarChallenge(
-          filterAzkarDetails(allUserAzkarChallenges.get(allUserAzkarChallenges.size() - 1 - i)))
+              filterAzkarDetails(allUserAzkarChallenges.get(allUserAzkarChallenges.size() - 1 - i)))
           .build());
     }
     for (int i = 0; i < Math.min(MAX_RETURNED_MEANING_CHALLENGES, allUserMeaningChallenges.size());
         i++) {
       challenges.add(ReturnedChallenge.builder().meaningChallenge(
-          allUserMeaningChallenges.get(allUserMeaningChallenges.size() - 1 - i))
+              allUserMeaningChallenges.get(allUserMeaningChallenges.size() - 1 - i))
           .build());
     }
 
@@ -80,7 +80,7 @@ public class ChallengesService {
           i < Math.min(MAX_RETURNED_READING_QURAN_CHALLENGES, allUserReadingQuranChallenges.size());
           i++) {
         challenges.add(ReturnedChallenge.builder().readingQuranChallenge(
-            allUserReadingQuranChallenges.get(allUserReadingQuranChallenges.size() - 1 - i))
+                allUserReadingQuranChallenges.get(allUserReadingQuranChallenges.size() - 1 - i))
             .build());
       }
     }
@@ -92,7 +92,7 @@ public class ChallengesService {
           i < Math.min(MAX_RETURNED_MEMORIZATION_CHALLENGES, allUserMemorizationChallenges.size());
           i++) {
         challenges.add(ReturnedChallenge.builder().memorizationChallenge(
-            allUserMemorizationChallenges.get(allUserMemorizationChallenges.size() - 1 - i))
+                allUserMemorizationChallenges.get(allUserMemorizationChallenges.size() - 1 - i))
             .build());
       }
     }
@@ -104,7 +104,7 @@ public class ChallengesService {
           i < Math.min(MAX_RETURNED_CUSTOM_SIMPLE_CHALLENGES, allUserCustomSimpleChallenges.size());
           i++) {
         challenges.add(ReturnedChallenge.builder().customSimpleChallenge(
-            allUserCustomSimpleChallenges.get(allUserCustomSimpleChallenges.size() - 1 - i))
+                allUserCustomSimpleChallenges.get(allUserCustomSimpleChallenges.size() - 1 - i))
             .build());
       }
     }

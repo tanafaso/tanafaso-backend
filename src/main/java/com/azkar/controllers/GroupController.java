@@ -15,6 +15,7 @@ import com.azkar.repos.UserRepo;
 import com.azkar.services.GroupsService;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -57,7 +58,7 @@ public class GroupController extends BaseController {
         Group.builder()
             .name(req.getName())
             .creatorId(currentUser.getId())
-            .usersIds(new ArrayList<>(Arrays.asList(currentUser.getId())))
+            .usersIds(new ArrayList<>(Collections.singletonList(currentUser.getId())))
             .build();
     newGroup = groupRepo.save(newGroup);
 

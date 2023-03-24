@@ -82,7 +82,7 @@ public abstract class ResponseBase<T> {
     public static final int MEMORIZATION_QUESTION_HAS_ALREADY_BEEN_FINISHED = 62;
     public static final int AUTHENTICATION_WITH_APPLE_ERROR = 63;
     public static final int CUSTOM_SIMPLE_CHALLENGE_DESCRIPTION_EMPTY_ERROR = 64;
-
+    public static final int MEMORIZATION_CHALLENGE_SURAH_RANGE_INVALID_ERROR = 65;
     public int code;
 
     public Status(int code) {

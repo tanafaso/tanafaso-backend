@@ -5,7 +5,6 @@ import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.entities.User;
 import com.azkar.payload.ResponseBase.Status;
-import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
 import com.azkar.payload.usercontroller.responses.AddFriendResponse;
 import com.azkar.payload.usercontroller.responses.DeleteFriendResponse;
 import com.azkar.payload.usercontroller.responses.GetFriendsLeaderboardV2Response;

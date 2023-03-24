@@ -11,6 +11,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 @EnableAsync
 public class AsyncConfig {
+
   private static final Logger logger = LoggerFactory.getLogger(AsyncConfig.class);
 
   public static final String CONTROLLERS_TASK_EXECUTOR = "controllers-task-executor";

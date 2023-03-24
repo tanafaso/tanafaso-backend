@@ -33,6 +33,7 @@ public class QuranService {
         quranMetadataCacher.getFirstAyahsInJuzs().get(juz + 1) - 1;
   }
 
+
   public int getRandomAyahInJuz(int juz) {
     int firstAyahInJuz = getFirstAyahInJuz(juz);
     int lastAyahInJuz = getLastAyahInJuz(juz);
@@ -42,8 +43,31 @@ public class QuranService {
     return getRandomNumberInRange(firstAyahInJuz + 3, lastAyahInJuz - 3);
   }
 
+  public int getRandomSurahInRange(int firstSurahInclusive, int lastSurahInclusive) {
+    return getRandomNumberInRange(firstSurahInclusive, lastSurahInclusive);
+  }
+
+  public int getFirstAyahInSurah(int surah) {
+    return quranMetadataCacher.getFirstAyahsInSurahs().get(surah);
+  }
+
+  public int getLastAyahInSurah(int surah) {
+    return surah == LAST_SURAH_IN_QURAN ? LAST_AYAH_IN_QURAN :
+        quranMetadataCacher.getFirstAyahsInSurahs().get(surah + 1) - 1;
+  }
+
+
   public int getRandomJuzInRange(int firstJuzInclusive, int lastJuzInclusive) {
     return getRandomNumberInRange(firstJuzInclusive, lastJuzInclusive);
+  }
+
+  public int getRandomAyahInSurahRange(int firstSurah, int lastSurah) {
+    int firstAyah = getFirstAyahInSurah(firstSurah);
+    int lastAyah = getLastAyahInSurah(lastSurah);
+
+    // Don't consider the first 3 or the last 3 Ayahs in Juz while choosing a random one to avoid
+    // corner cases.
+    return getRandomNumberInRange(firstAyah + 3, lastAyah - 3);
   }
 
   public List<Integer> getRandomTwoWrongPreviousAyahs(int ayah) {
@@ -203,6 +227,10 @@ public class QuranService {
 
   public int getRubOfAya(int ayah) {
     return quranMetadataCacher.getAyahsMetadata().get(ayah).getRub();
+  }
+
+  public int getJuzOfAya(int ayah) {
+    return quranMetadataCacher.getAyahsMetadata().get(ayah).getJuz();
   }
 
   public int getFirstAyahInRub(int rub) {

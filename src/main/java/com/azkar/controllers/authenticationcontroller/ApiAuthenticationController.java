@@ -118,7 +118,7 @@ public class ApiAuthenticationController extends BaseController {
   private RegistrationEmailConfirmationStateRepo registrationEmailConfirmationStateRepo;
   @Autowired
   private JavaMailSender javaMailSender;
-  private RestTemplate restTemplate;
+  private final RestTemplate restTemplate;
   @Value("${APPLE_TEAM_ID}")
   private String appleTeamId;
   @Value("${APPLE_SIGN_IN_KEY_ID}")
@@ -468,7 +468,7 @@ public class ApiAuthenticationController extends BaseController {
     Payload payload = idToken.getPayload();
     String userId = payload.getSubject();
     String email = payload.getEmail();
-    boolean emailVerified = Boolean.valueOf(payload.getEmailVerified());
+    boolean emailVerified = payload.getEmailVerified();
     String name = (String) payload.get("name");
     String familyName = (String) payload.get("family_name");
     String givenName = (String) payload.get("given_name");
@@ -697,7 +697,7 @@ public class ApiAuthenticationController extends BaseController {
 
     logger.info("Failed to verify user signing in with apple as apple API returned status code: "
             + "{} for email={}, firstName={}, lastName={}",
-        appleIdToken.getStatusCode().toString(), request.getEmail(), request.getFirstName(),
+        appleIdToken.getStatusCode(), request.getEmail(), request.getFirstName(),
         request.getLastName());
     return false;
   }

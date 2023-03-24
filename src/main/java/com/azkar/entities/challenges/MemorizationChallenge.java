@@ -26,6 +26,10 @@ public class MemorizationChallenge extends ChallengeBase {
   private int firstJuz;
   @NotNull
   private int lastJuz;
+  @NotNull
+  private int firstSurah;
+  @NotNull
+  private int lastSurah;
 
   public boolean finished() {
     return !questions.stream().anyMatch(question -> !question.isFinished());
@@ -50,6 +54,7 @@ public class MemorizationChallenge extends ChallengeBase {
     private int firstAyahInRub;
     @NotNull
     private int firstAyahInJuz;
+    @NotNull
     @NotNull
     private List<Integer> wrongPreviousAyahOptions;
     @NotNull

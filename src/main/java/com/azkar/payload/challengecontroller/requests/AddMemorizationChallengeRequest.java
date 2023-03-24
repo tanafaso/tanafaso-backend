@@ -23,12 +23,16 @@ public class AddMemorizationChallengeRequest extends RequestBodyBase {
   private static int MINIMUM_JUZ_NUM = 1;
   private static int MAXIMUM_JUZ_NUM = 30;
 
+  private static int MINIMUM_SURAH_NUM = 2;
+  private static int MAXIMUM_SURAH_NUM = 57;
   private List<String> friendsIds;
   private long expiryDate;
 
   private int difficulty;
   private int firstJuz;
   private int lastJuz;
+  private int firstSurah;
+  private int lastSurah;
   private int numberOfQuestions;
 
   @Override
@@ -36,8 +40,13 @@ public class AddMemorizationChallengeRequest extends RequestBodyBase {
     ChallengeValidationUtil.validateExpiryDate(expiryDate);
     validateFriendIds();
     validateDifficulty();
-    validateJuzs();
     validateNumberOfQuestions();
+    // Either Juz range or Surah range should be specified
+    if (firstJuz == 0 && lastJuz == 0) {
+      validateSurahs();
+    } else if (firstSurah == 0 && lastSurah == 0) {
+      validateJuzs();
+    }
   }
 
   private void validateFriendIds() {
@@ -57,6 +66,13 @@ public class AddMemorizationChallengeRequest extends RequestBodyBase {
     if (firstJuz > lastJuz || firstJuz < MINIMUM_JUZ_NUM || lastJuz > MAXIMUM_JUZ_NUM) {
       throw new BadRequestException(
           new Status(Status.MEMORIZATION_CHALLENGE_JUZ_RANGE_INVALID_ERROR));
+    }
+  }
+
+  private void validateSurahs() {
+    if (firstSurah > lastSurah || firstSurah < MINIMUM_SURAH_NUM || lastSurah > MAXIMUM_SURAH_NUM) {
+      throw new BadRequestException(
+          new Status(Status.MEMORIZATION_CHALLENGE_SURAH_RANGE_INVALID_ERROR));
     }
   }
 

@@ -5,7 +5,6 @@ import com.azkar.controllers.AppLinkController;
 import com.azkar.controllers.PrivacyLinkController;
 import com.azkar.controllers.authenticationcontroller.ApiAuthenticationController;
 import com.azkar.controllers.authenticationcontroller.WebAuthenticationController;
-import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
