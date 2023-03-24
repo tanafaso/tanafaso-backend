@@ -813,7 +813,7 @@ public class ChallengeController extends BaseController {
   // question is 0-based.
   @PutMapping(path = "/finish/memorization/{challengeId}/{question}")
   public ResponseEntity<FinishMemorizationChallengeQuestionResponse>
-  finishMemorizationChallengeQuestion(
+      finishMemorizationChallengeQuestion(
       @PathVariable(value = "challengeId") String challengeId,
       @PathVariable(value = "question") String question) {
     User currentUser = getCurrentUser(userRepo);
@@ -1270,7 +1270,8 @@ public class ChallengeController extends BaseController {
             .build();
 
     for (int i = 0; i < request.getNumberOfQuestions(); i++) {
-      int juz, ayah;
+      int juz;
+      int ayah;
       if (request.getFirstJuz() == 0) {
         // Surah range specified
         ayah = quranService.getRandomAyahInSurahRange(request.getFirstSurah(),
