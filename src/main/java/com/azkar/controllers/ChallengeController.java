@@ -813,9 +813,9 @@ public class ChallengeController extends BaseController {
   // question is 0-based.
   @PutMapping(path = "/finish/memorization/{challengeId}/{question}")
   public ResponseEntity<FinishMemorizationChallengeQuestionResponse>
-      finishMemorizationChallengeQuestion(
-        @PathVariable(value = "challengeId") String challengeId,
-        @PathVariable(value = "question") String question) {
+  finishMemorizationChallengeQuestion(
+      @PathVariable(value = "challengeId") String challengeId,
+      @PathVariable(value = "question") String question) {
     User currentUser = getCurrentUser(userRepo);
     Optional<MemorizationChallenge> currentUserChallenge = currentUser.getMemorizationChallenges()
         .stream()
@@ -1265,12 +1265,22 @@ public class ChallengeController extends BaseController {
             .difficulty(request.getDifficulty())
             .firstJuz(request.getFirstJuz())
             .lastJuz(request.getLastJuz())
+            .firstSurah(request.getFirstSurah())
+            .lastSurah(request.getLastSurah())
             .build();
 
     for (int i = 0; i < request.getNumberOfQuestions(); i++) {
-      int juz =
-          quranService.getRandomJuzInRange(request.getFirstJuz(), request.getLastJuz());
-      int ayah = quranService.getRandomAyahInJuz(juz);
+      int juz, ayah;
+      if (request.getFirstJuz() == 0) {
+        // Surah range specified
+        ayah = quranService.getRandomAyahInSurahRange(request.getFirstSurah(),
+            request.getLastSurah());
+        juz = quranService.getJuzOfAya(ayah);
+      } else {
+        juz =
+            quranService.getRandomJuzInRange(request.getFirstJuz(), request.getLastJuz());
+        ayah = quranService.getRandomAyahInJuz(juz);
+      }
       int surah = quranService.getSurahOfAyah(ayah);
       int firstAyahInJuz = quranService.getFirstAyahInJuz(juz);
       int rub = quranService.getRubOfAya(ayah);
@@ -1316,7 +1326,7 @@ public class ChallengeController extends BaseController {
         friendship.getFriends().stream()
             .filter(friend -> group.getUsersIds().contains(friend.getUserId()))
             .map(friend -> friend.getUserId()).collect(
-            Collectors.toSet());
+                Collectors.toSet());
 
     // Update user friendship
     friendship.getFriends().stream()

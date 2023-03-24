@@ -19,6 +19,7 @@ import org.springframework.core.io.ClassPathResource;
 public class AzkarCacher {
 
   private static class UnExpectedZekrException extends RuntimeException {
+
     public UnExpectedZekrException(String message) {
       super(message);
     }
