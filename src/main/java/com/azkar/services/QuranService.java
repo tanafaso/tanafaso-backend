@@ -43,10 +43,6 @@ public class QuranService {
     return getRandomNumberInRange(firstAyahInJuz + 3, lastAyahInJuz - 3);
   }
 
-  public int getRandomSurahInRange(int firstSurahInclusive, int lastSurahInclusive) {
-    return getRandomNumberInRange(firstSurahInclusive, lastSurahInclusive);
-  }
-
   public int getFirstAyahInSurah(int surah) {
     return quranMetadataCacher.getFirstAyahsInSurahs().get(surah);
   }
@@ -72,7 +68,7 @@ public class QuranService {
 
   public List<Integer> getRandomTwoWrongPreviousAyahs(int ayah) {
     int juz = quranMetadataCacher.getAyahsMetadata().get(ayah).getJuz();
-    int firstToChooseFrom = getFirstAyahInJuz(juz);
+    int firstToChooseFrom = Math.max(1, Math.min(ayah - 5, getFirstAyahInJuz(juz)));
     int lastToChooseFrom = ayah - 2;
 
     int firstWrongOption = getRandomNumberInRange(firstToChooseFrom, lastToChooseFrom);
@@ -102,7 +98,7 @@ public class QuranService {
   public List<Integer> getRandomTwoWrongNextAyahs(int ayah) {
     int juz = quranMetadataCacher.getAyahsMetadata().get(ayah).getJuz();
     int firstToChooseFrom = ayah + 2;
-    int lastToChooseFrom = getLastAyahInJuz(juz);
+    int lastToChooseFrom = Math.min(LAST_AYAH_IN_QURAN, Math.max(ayah + 5, getLastAyahInJuz(juz)));
 
     int firstWrongOption = getRandomNumberInRange(firstToChooseFrom, lastToChooseFrom);
     Optional<Integer> secondWrongOption = Optional.empty();
