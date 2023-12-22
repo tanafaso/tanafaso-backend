@@ -23,6 +23,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   public static final String[] PRE_AUTHENTICAITON_ALLOWED_ENDPOINT_PATTERNS = {
       "/",
+      "/delete_me",
       "/contact",
       "/feedback",
       "/images/**",
