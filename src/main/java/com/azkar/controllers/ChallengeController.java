@@ -9,6 +9,7 @@ import com.azkar.entities.User.UserGroup;
 import com.azkar.entities.challenges.AzkarChallenge;
 import com.azkar.entities.challenges.AzkarChallenge.SubChallenge;
 import com.azkar.entities.challenges.CustomSimpleChallenge;
+import com.azkar.entities.challenges.GlobalChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.entities.challenges.MemorizationChallenge;
 import com.azkar.entities.challenges.MemorizationChallenge.Question;
@@ -28,6 +29,7 @@ import com.azkar.payload.challengecontroller.responses.AddMemorizationChallengeR
 import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.DeleteChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.FinishCustomSimpleChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.FinishGlobalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.FinishMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.FinishMemorizationChallengeQuestionResponse;
 import com.azkar.payload.challengecontroller.responses.FinishReadingQuranChallengeResponse;
@@ -36,12 +38,14 @@ import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
 import com.azkar.payload.challengecontroller.responses.GetFinishedChallengesCountResponse;
+import com.azkar.payload.challengecontroller.responses.GetGlobalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetMeaningChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.CustomSimpleChallengeRepo;
 import com.azkar.repos.FriendshipRepo;
+import com.azkar.repos.GlobalChallengeRepo;
 import com.azkar.repos.GroupRepo;
 import com.azkar.repos.MeaningChallengeRepo;
 import com.azkar.repos.MemorizationChallengeRepo;
@@ -91,6 +95,8 @@ public class ChallengeController extends BaseController {
   private UserRepo userRepo;
   @Autowired
   private AzkarChallengeRepo azkarChallengeRepo;
+  @Autowired
+  private GlobalChallengeRepo globalChallengeRepo;
   @Autowired
   private MeaningChallengeRepo meaningChallengeRepo;
   @Autowired
@@ -229,6 +235,53 @@ public class ChallengeController extends BaseController {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     response.setData(originalChallenge.get());
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/global")
+  public ResponseEntity<GetGlobalChallengeResponse> getGlobalChallenge() {
+    GetGlobalChallengeResponse response = new GetGlobalChallengeResponse();
+    List<GlobalChallenge> globalChallenges = globalChallengeRepo.findAll();
+
+    if (globalChallenges.size() != 1) {
+      logger.error("Found {} global challenges, although only one is expected",
+          globalChallenges.size());
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    GlobalChallenge globalChallenge = globalChallenges.get(0);
+    Optional<AzkarChallenge> azkarChallenge =
+        azkarChallengeRepo.findById(globalChallenge.getAzkarChallengeIdRef());
+
+    if (!azkarChallenge.isPresent()) {
+      logger.error("Didn't find the global Azkar challenge with ID {}",
+          globalChallenge.getAzkarChallengeIdRef());
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    response.setData(
+        GetGlobalChallengeResponse.ReturnedChallenge.builder()
+            .azkarChallenge(azkarChallenge.get())
+            .finishedCount(globalChallenge.getFinishedCount())
+            .build());
+    return ResponseEntity.ok(response);
+  }
+
+  @PutMapping("/global")
+  public ResponseEntity<FinishGlobalChallengeResponse> finishGlobalChallenge() {
+    FinishGlobalChallengeResponse response = new FinishGlobalChallengeResponse();
+    List<GlobalChallenge> globalChallenges = globalChallengeRepo.findAll();
+
+    if (globalChallenges.size() != 1) {
+      logger.error("Found {} global challenges, although only one is expected",
+          globalChallenges.size());
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    globalChallengeRepo.findAndIncrementFinishedCountById(globalChallenges.get(0).getId());
     return ResponseEntity.ok(response);
   }
 
@@ -813,7 +866,7 @@ public class ChallengeController extends BaseController {
   // question is 0-based.
   @PutMapping(path = "/finish/memorization/{challengeId}/{question}")
   public ResponseEntity<FinishMemorizationChallengeQuestionResponse>
-      finishMemorizationChallengeQuestion(
+  finishMemorizationChallengeQuestion(
       @PathVariable(value = "challengeId") String challengeId,
       @PathVariable(value = "question") String question) {
     User currentUser = getCurrentUser(userRepo);
