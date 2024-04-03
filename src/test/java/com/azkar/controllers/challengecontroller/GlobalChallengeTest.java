@@ -19,7 +19,10 @@ import com.azkar.repos.GlobalChallengeRepo;
 import com.azkar.repos.UserRepo;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
@@ -34,6 +37,11 @@ public class GlobalChallengeTest extends TestBase {
 
   @Autowired
   GlobalChallengeRepo globalChallengeRepo;
+
+  @After
+  public void afterEach() {
+    globalChallengeRepo.deleteAll(globalChallengeRepo.findAll());
+  }
 
   @Test
   public void getGlobalChallenge_normalScenario_shouldSucceed() throws Exception {
