@@ -2,6 +2,8 @@ package com.azkar.controllers.challengecontroller;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 import com.azkar.TestBase;
 import com.azkar.controllers.utils.JsonHandler;
@@ -44,7 +46,7 @@ public class GlobalChallengeTest extends TestBase {
   }
 
   @Test
-  public void getGlobalChallenge_normalScenario_shouldSucceed() throws Exception {
+  public void globalChallenge_requestingGlobalChallenge_shouldSucceed() throws Exception {
     AzkarChallenge unusedAzkarChallenge1 = ChallengeFactory.getNewChallenge("unused_challenge1",
         "unused_group_id1");
     AzkarChallenge azkarChallenge = ChallengeFactory.getNewChallenge("used_challenge",
@@ -75,7 +77,7 @@ public class GlobalChallengeTest extends TestBase {
   }
 
   @Test
-  public void getGlobalChallenge_usersFinishedChallenge_shouldSucceed() throws Exception {
+  public void globalChallenge_usersFinishedChallenge_shouldSucceed() throws Exception {
     AzkarChallenge unusedAzkarChallenge1 = ChallengeFactory.getNewChallenge("unused_challenge1",
         "unused_group_id1");
     AzkarChallenge azkarChallenge = ChallengeFactory.getNewChallenge("used_challenge",
@@ -107,6 +109,8 @@ public class GlobalChallengeTest extends TestBase {
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedFinishGlobalChallengeReponse)));
+    assertThat(userRepo.findById(user1.getId()).get().getFinishedAzkarChallengesCount(), is(2));
+    assertThat(userRepo.findById(user2.getId()).get().getFinishedAzkarChallengesCount(), is(0));
 
     // Users retrieve the global challenge.
     GetGlobalChallengeResponse expectedGetGlobalChallengeReponse = new GetGlobalChallengeResponse();
@@ -128,6 +132,8 @@ public class GlobalChallengeTest extends TestBase {
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedFinishGlobalChallengeReponse)));
+    assertThat(userRepo.findById(user1.getId()).get().getFinishedAzkarChallengesCount(), is(2));
+    assertThat(userRepo.findById(user2.getId()).get().getFinishedAzkarChallengesCount(), is(1));
 
     // Users retrieve the global challenge.
     expectedGetGlobalChallengeReponse.setData(ReturnedChallenge.builder()

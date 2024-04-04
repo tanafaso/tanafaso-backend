@@ -269,22 +269,6 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  @PutMapping("/global")
-  public ResponseEntity<FinishGlobalChallengeResponse> finishGlobalChallenge() {
-    FinishGlobalChallengeResponse response = new FinishGlobalChallengeResponse();
-    List<GlobalChallenge> globalChallenges = globalChallengeRepo.findAll();
-
-    if (globalChallenges.size() != 1) {
-      logger.error("Found {} global challenges, although only one is expected",
-          globalChallenges.size());
-      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
-      return ResponseEntity.badRequest().body(response);
-    }
-
-    globalChallengeRepo.findAndIncrementFinishedCountById(globalChallenges.get(0).getId());
-    return ResponseEntity.ok(response);
-  }
-
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<AddAzkarChallengeResponse> addGroupChallenge(
       @RequestBody AddChallengeRequest req) {
@@ -942,6 +926,28 @@ public class ChallengeController extends BaseController {
     userRepo.save(currentUser);
 
     return ResponseEntity.ok(new FinishMemorizationChallengeQuestionResponse());
+  }
+
+  @PutMapping("/global")
+  public ResponseEntity<FinishGlobalChallengeResponse> finishGlobalChallenge() {
+    FinishGlobalChallengeResponse response = new FinishGlobalChallengeResponse();
+    List<GlobalChallenge> globalChallenges = globalChallengeRepo.findAll();
+
+    if (globalChallenges.size() != 1) {
+      logger.error("Found {} global challenges, although only one is expected",
+          globalChallenges.size());
+      response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
+      return ResponseEntity.badRequest().body(response);
+    }
+
+    globalChallengeRepo.findAndIncrementFinishedCountById(globalChallenges.get(0).getId());
+
+    User currentUser = getCurrentUser(userRepo);
+    currentUser
+        .setFinishedAzkarChallengesCount(currentUser.getFinishedAzkarChallengesCount() + 1);
+    userRepo.save(currentUser);
+
+    return ResponseEntity.ok(response);
   }
 
   /**
