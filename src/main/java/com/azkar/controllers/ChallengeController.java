@@ -127,7 +127,8 @@ public class ChallengeController extends BaseController {
     int lastRandomIndex = randomIndex1;
     for (int i = 0; i < numberOfWords - 1; i++) {
       int randomIndex =
-          (lastRandomIndex + RANDOMLY_CHOSEN_WORDS_INDEX_DIFF) % tafseerCacher.getWordMeaningPairs()
+          (lastRandomIndex + RANDOMLY_CHOSEN_WORDS_INDEX_DIFF)
+              % tafseerCacher.getWordMeaningPairs()
               .size();
       wordMeaningPairs.add(tafseerCacher.getWordMeaningPairs().get(randomIndex));
 
@@ -136,6 +137,70 @@ public class ChallengeController extends BaseController {
     return wordMeaningPairs;
   }
 
+  // Note: This function may modify oldSubChallenges.
+  private static Optional<ResponseEntity<UpdateChallengeResponse>> updateOldSubChallenges(
+      List<SubChallenge> oldSubChallenges,
+      List<SubChallenge> newSubChallenges) {
+    UpdateChallengeResponse response = new UpdateChallengeResponse();
+    if (newSubChallenges.size() != oldSubChallenges.size()) {
+      response
+          .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+      return Optional.of(ResponseEntity.badRequest().body(response));
+    }
+
+    // Set to make sure that the zekr IDs of both old and modified sub-challenges are identical.
+    Set<Integer> newZekrIds = new HashSet<>();
+    for (SubChallenge newSubChallenge : newSubChallenges) {
+      newZekrIds.add(newSubChallenge.getZekr().getId());
+      Optional<SubChallenge> subChallenge = findSubChallenge(oldSubChallenges, newSubChallenge);
+      if (!subChallenge.isPresent()) {
+        response.setStatus(new Status(Status.NON_EXISTENT_SUB_CHALLENGE_ERROR));
+        return Optional.of(ResponseEntity.badRequest().body(response));
+      }
+      Optional<Status> error = updateSubChallenge(subChallenge.get(), newSubChallenge);
+      if (error.isPresent()) {
+        response.setStatus(error.get());
+        return Optional.of(ResponseEntity.badRequest().body(response));
+      }
+    }
+    if (newZekrIds.size() != oldSubChallenges.size()) {
+      response
+          .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
+      return Optional.of(ResponseEntity.badRequest().body(response));
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<SubChallenge> findSubChallenge(
+      List<SubChallenge> oldSubChallenges,
+      SubChallenge newSubChallenge) {
+    for (SubChallenge subChallenge : oldSubChallenges) {
+      if (subChallenge.getZekr().getId().equals(newSubChallenge.getZekr().getId())) {
+        return Optional.of(subChallenge);
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Updates the subChallenge as requested in newSubChallenge. If an error occurred the function
+   * returns an error, and returns empty object otherwise.
+   */
+  private static Optional<Status> updateSubChallenge(
+      SubChallenge subChallenge,
+      SubChallenge newSubChallenge) {
+    int newLeftRepetitions = newSubChallenge.getRepetitions();
+    if (newLeftRepetitions > subChallenge.getRepetitions()) {
+      return Optional.of(new Status(Status.INCREMENTING_LEFT_REPETITIONS_ERROR));
+    }
+    if (newLeftRepetitions < 0) {
+      logger.warn("Received UpdateChallenge request with negative leftRepetition value of: "
+          + newLeftRepetitions);
+      newLeftRepetitions = 0;
+    }
+    subChallenge.setRepetitions(newLeftRepetitions);
+    return Optional.empty();
+  }
 
   @GetMapping("{challengeId}")
   public ResponseEntity<GetChallengeResponse> getChallenge(
@@ -174,40 +239,6 @@ public class ChallengeController extends BaseController {
     }
     response.setData(userMeaningChallenge.get());
     return ResponseEntity.ok(response);
-  }
-
-  // Note: This function may modify oldSubChallenges.
-  private static Optional<ResponseEntity<UpdateChallengeResponse>> updateOldSubChallenges(
-      List<SubChallenge> oldSubChallenges,
-      List<SubChallenge> newSubChallenges) {
-    UpdateChallengeResponse response = new UpdateChallengeResponse();
-    if (newSubChallenges.size() != oldSubChallenges.size()) {
-      response
-          .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
-      return Optional.of(ResponseEntity.badRequest().body(response));
-    }
-
-    // Set to make sure that the zekr IDs of both old and modified sub-challenges are identical.
-    Set<Integer> newZekrIds = new HashSet<>();
-    for (SubChallenge newSubChallenge : newSubChallenges) {
-      newZekrIds.add(newSubChallenge.getZekr().getId());
-      Optional<SubChallenge> subChallenge = findSubChallenge(oldSubChallenges, newSubChallenge);
-      if (!subChallenge.isPresent()) {
-        response.setStatus(new Status(Status.NON_EXISTENT_SUB_CHALLENGE_ERROR));
-        return Optional.of(ResponseEntity.badRequest().body(response));
-      }
-      Optional<Status> error = updateSubChallenge(subChallenge.get(), newSubChallenge);
-      if (error.isPresent()) {
-        response.setStatus(error.get());
-        return Optional.of(ResponseEntity.badRequest().body(response));
-      }
-    }
-    if (newZekrIds.size() != oldSubChallenges.size()) {
-      response
-          .setStatus(new Status(Status.MISSING_OR_DUPLICATED_SUB_CHALLENGE_ERROR));
-      return Optional.of(ResponseEntity.badRequest().body(response));
-    }
-    return Optional.empty();
   }
 
   @GetMapping("/original/{challengeId}")
@@ -630,18 +661,6 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  private static Optional<SubChallenge> findSubChallenge(
-      List<SubChallenge> oldSubChallenges,
-      SubChallenge newSubChallenge) {
-    for (SubChallenge subChallenge : oldSubChallenges) {
-      if (subChallenge.getZekr().getId().equals(newSubChallenge.getZekr().getId())) {
-        return Optional.of(subChallenge);
-      }
-    }
-    return Optional.empty();
-  }
-
-
   // Returns all challenges with all types.
   @GetMapping(path = "/v2")
   public ResponseEntity<GetChallengesV2Response> getAllChallengesV2(
@@ -670,7 +689,6 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-
   @GetMapping(path = "/groups/{groupId}/")
   public ResponseEntity<GetChallengesResponse> getAllChallengesInGroup(
       @PathVariable(value = "groupId") String groupId) {
@@ -692,7 +710,6 @@ public class ChallengeController extends BaseController {
     response.setData(challengesInGroup);
     return ResponseEntity.ok(response);
   }
-
 
   // TODO(issue/204): This is not an atomic operation anymore, i.e. it is not guranteed that if
   //  something wrong happened in the middle of handling a request, the state will remain the
@@ -805,9 +822,10 @@ public class ChallengeController extends BaseController {
     User currentUser = getCurrentUser(userRepo);
     Optional<ReadingQuranChallenge> currentUserChallenge = currentUser.getReadingQuranChallenges()
         .stream()
-        .filter(challenge -> challenge.getId()
-            .equals(
-                challengeId))
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
         .findFirst();
     if (!currentUserChallenge.isPresent()) {
       FinishReadingQuranChallengeResponse response = new FinishReadingQuranChallengeResponse();
@@ -849,16 +867,16 @@ public class ChallengeController extends BaseController {
 
   // question is 0-based.
   @PutMapping(path = "/finish/memorization/{challengeId}/{question}")
-  public ResponseEntity<FinishMemorizationChallengeQuestionResponse>
-  finishMemorizationChallengeQuestion(
+  public ResponseEntity<FinishMemorizationChallengeQuestionResponse> finishMemorizationQuestion(
       @PathVariable(value = "challengeId") String challengeId,
       @PathVariable(value = "question") String question) {
     User currentUser = getCurrentUser(userRepo);
     Optional<MemorizationChallenge> currentUserChallenge = currentUser.getMemorizationChallenges()
         .stream()
-        .filter(challenge -> challenge.getId()
-            .equals(
-                challengeId))
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
         .findFirst();
     if (!currentUserChallenge.isPresent()) {
       FinishMemorizationChallengeQuestionResponse response =
@@ -950,26 +968,6 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(response);
   }
 
-  /**
-   * Updates the subChallenge as requested in newSubChallenge. If an error occurred the function
-   * returns an error, and returns empty object otherwise.
-   */
-  private static Optional<Status> updateSubChallenge(
-      SubChallenge subChallenge,
-      SubChallenge newSubChallenge) {
-    int newLeftRepetitions = newSubChallenge.getRepetitions();
-    if (newLeftRepetitions > subChallenge.getRepetitions()) {
-      return Optional.of(new Status(Status.INCREMENTING_LEFT_REPETITIONS_ERROR));
-    }
-    if (newLeftRepetitions < 0) {
-      logger.warn("Received UpdateChallenge request with negative leftRepetition value of: "
-          + newLeftRepetitions);
-      newLeftRepetitions = 0;
-    }
-    subChallenge.setRepetitions(newLeftRepetitions);
-    return Optional.empty();
-  }
-
   /*
   Can be used for all types of challenges.
    */
@@ -1021,7 +1019,9 @@ public class ChallengeController extends BaseController {
                     challengeId))
         .findFirst();
     if (!azkarChallenge.isPresent() && !meaningChallenge.isPresent() && !readingQuranChallenge
-        .isPresent() && !memorizationChallenge.isPresent() && !customSimpleChallenge.isPresent()) {
+        .isPresent()
+        && !memorizationChallenge.isPresent()
+        && !customSimpleChallenge.isPresent()) {
       response.setStatus(new Status(Status.CHALLENGE_NOT_FOUND_ERROR));
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
@@ -1121,9 +1121,10 @@ public class ChallengeController extends BaseController {
     User currentUser = getCurrentUser(userRepo);
     Optional<CustomSimpleChallenge> currentUserChallenge = currentUser.getCustomSimpleChallenges()
         .stream()
-        .filter(challenge -> challenge.getId()
-            .equals(
-                challengeId))
+        .filter(
+            challenge -> challenge.getId()
+                .equals(
+                    challengeId))
         .findFirst();
     if (!currentUserChallenge.isPresent()) {
       FinishCustomSimpleChallengeResponse response = new FinishCustomSimpleChallengeResponse();
