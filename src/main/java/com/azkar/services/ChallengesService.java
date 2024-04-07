@@ -10,7 +10,7 @@ import com.azkar.entities.challenges.CustomSimpleChallenge;
 import com.azkar.entities.challenges.MeaningChallenge;
 import com.azkar.entities.challenges.MemorizationChallenge;
 import com.azkar.entities.challenges.ReadingQuranChallenge;
-import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
+import com.azkar.payload.challengecontroller.responses.ReturnedChallenge;
 import com.azkar.payload.utils.FeaturesVersions;
 import com.azkar.payload.utils.VersionComparator;
 import com.azkar.repos.GroupRepo;
@@ -60,6 +60,7 @@ public class ChallengesService {
     List<CustomSimpleChallenge> allUserCustomSimpleChallenges = user.getCustomSimpleChallenges();
 
     List<ReturnedChallenge> challenges = new ArrayList<>();
+
     for (int i = 0; i < Math.min(MAX_RETURNED_AZKAR_CHALLENGES, allUserAzkarChallenges.size());
         i++) {
       challenges.add(ReturnedChallenge.builder().azkarChallenge(

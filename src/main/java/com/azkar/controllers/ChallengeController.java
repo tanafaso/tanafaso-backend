@@ -36,7 +36,7 @@ import com.azkar.payload.challengecontroller.responses.FinishReadingQuranChallen
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
-import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
+import com.azkar.payload.challengecontroller.responses.ReturnedChallenge;
 import com.azkar.payload.challengecontroller.responses.GetFinishedChallengesCountResponse;
 import com.azkar.payload.challengecontroller.responses.GetGlobalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetMeaningChallengeResponse;
@@ -293,8 +293,12 @@ public class ChallengeController extends BaseController {
     }
 
     response.setData(
-        GetGlobalChallengeResponse.ReturnedChallenge.builder()
-            .azkarChallenge(azkarChallenge.get())
+        GetGlobalChallengeResponse.ReturnedGlobalChallenge.builder()
+            .challenge(
+                ReturnedChallenge.builder()
+                    .azkarChallenge(azkarChallenge.get())
+                    .build()
+            )
             .finishedCount(globalChallenge.getFinishedCount())
             .build());
     return ResponseEntity.ok(response);
@@ -946,7 +950,7 @@ public class ChallengeController extends BaseController {
     return ResponseEntity.ok(new FinishMemorizationChallengeQuestionResponse());
   }
 
-  @PutMapping("/global")
+  @PutMapping("/finish/global")
   public ResponseEntity<FinishGlobalChallengeResponse> finishGlobalChallenge() {
     FinishGlobalChallengeResponse response = new FinishGlobalChallengeResponse();
     List<GlobalChallenge> globalChallenges = globalChallengeRepo.findAll();

@@ -1,9 +1,9 @@
 package com.azkar.controllers.challengecontroller;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.azkar.TestBase;
 import com.azkar.controllers.utils.JsonHandler;
@@ -13,21 +13,15 @@ import com.azkar.entities.challenges.GlobalChallenge;
 import com.azkar.factories.entities.ChallengeFactory;
 import com.azkar.payload.challengecontroller.responses.FinishGlobalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetGlobalChallengeResponse;
-import com.azkar.payload.challengecontroller.responses.GetGlobalChallengeResponse.ReturnedChallenge;
-import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse;
-import com.azkar.payload.usercontroller.responses.GetPubliclyAvailableUsersResponse.PubliclyAvailableUser;
+import com.azkar.payload.challengecontroller.responses.GetGlobalChallengeResponse.ReturnedGlobalChallenge;
+import com.azkar.payload.challengecontroller.responses.ReturnedChallenge;
 import com.azkar.repos.AzkarChallengeRepo;
 import com.azkar.repos.GlobalChallengeRepo;
 import com.azkar.repos.UserRepo;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
 public class GlobalChallengeTest extends TestBase {
 
@@ -66,8 +60,10 @@ public class GlobalChallengeTest extends TestBase {
 
     User user = getNewRegisteredUser();
     GetGlobalChallengeResponse expectedResponse = new GetGlobalChallengeResponse();
-    expectedResponse.setData(ReturnedChallenge.builder()
-        .azkarChallenge(azkarChallenge)
+    expectedResponse.setData(ReturnedGlobalChallenge.builder()
+        .challenge(ReturnedChallenge.builder()
+            .azkarChallenge(azkarChallenge)
+            .build())
         .finishedCount(0)
         .build());
     httpClient.performGetRequest(user, "/challenges/global")
@@ -92,6 +88,7 @@ public class GlobalChallengeTest extends TestBase {
     globalChallengeRepo.save(
         GlobalChallenge.builder()
             .azkarChallengeIdRef(azkarChallenge.getId())
+            .finishedCount(0)
             .build()
     );
 
@@ -101,11 +98,11 @@ public class GlobalChallengeTest extends TestBase {
     // User1 finishes the challenge twice.
     FinishGlobalChallengeResponse expectedFinishGlobalChallengeReponse =
         new FinishGlobalChallengeResponse();
-    httpClient.performPutRequest(user1, "/challenges/global")
+    httpClient.performPutRequest(user1, "/challenges/finish/global")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedFinishGlobalChallengeReponse)));
-    httpClient.performPutRequest(user1, "/challenges/global")
+    httpClient.performPutRequest(user1, "/challenges/finish/global")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedFinishGlobalChallengeReponse)));
@@ -114,8 +111,10 @@ public class GlobalChallengeTest extends TestBase {
 
     // Users retrieve the global challenge.
     GetGlobalChallengeResponse expectedGetGlobalChallengeReponse = new GetGlobalChallengeResponse();
-    expectedGetGlobalChallengeReponse.setData(ReturnedChallenge.builder()
-        .azkarChallenge(azkarChallenge)
+    expectedGetGlobalChallengeReponse.setData(ReturnedGlobalChallenge.builder()
+        .challenge(ReturnedChallenge.builder()
+            .azkarChallenge(azkarChallenge)
+            .build())
         .finishedCount(2)
         .build());
     httpClient.performGetRequest(user1, "/challenges/global")
@@ -128,7 +127,7 @@ public class GlobalChallengeTest extends TestBase {
         .andExpect(content().json(JsonHandler.toJson(expectedGetGlobalChallengeReponse)));
 
     // User two finishes the global challenge.
-    httpClient.performPutRequest(user2, "/challenges/global")
+    httpClient.performPutRequest(user2, "/challenges/finish/global")
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json(JsonHandler.toJson(expectedFinishGlobalChallengeReponse)));
@@ -136,8 +135,10 @@ public class GlobalChallengeTest extends TestBase {
     assertThat(userRepo.findById(user2.getId()).get().getFinishedAzkarChallengesCount(), is(1));
 
     // Users retrieve the global challenge.
-    expectedGetGlobalChallengeReponse.setData(ReturnedChallenge.builder()
-        .azkarChallenge(azkarChallenge)
+    expectedGetGlobalChallengeReponse.setData(ReturnedGlobalChallenge.builder()
+        .challenge(ReturnedChallenge.builder()
+            .azkarChallenge(azkarChallenge)
+            .build())
         .finishedCount(3)
         .build());
     httpClient.performGetRequest(user1, "/challenges/global")

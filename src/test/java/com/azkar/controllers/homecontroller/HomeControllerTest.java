@@ -21,7 +21,7 @@ import com.azkar.payload.challengecontroller.requests.AddMeaningChallengeRequest
 import com.azkar.payload.challengecontroller.requests.AddReadingQuranChallengeRequest;
 import com.azkar.payload.challengecontroller.responses.AddAzkarChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.AddReadingQuranChallengeResponse;
-import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
+import com.azkar.payload.challengecontroller.responses.ReturnedChallenge;
 import com.azkar.payload.homecontroller.GetHomeResponse;
 import com.azkar.payload.utils.FeaturesVersions;
 import com.google.common.collect.ImmutableList;

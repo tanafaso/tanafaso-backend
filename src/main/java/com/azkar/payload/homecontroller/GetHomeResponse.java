@@ -3,7 +3,7 @@ package com.azkar.payload.homecontroller;
 import com.azkar.entities.Friendship.Friend;
 import com.azkar.entities.Group;
 import com.azkar.payload.ResponseBase;
-import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response.ReturnedChallenge;
+import com.azkar.payload.challengecontroller.responses.ReturnedChallenge;
 import com.azkar.payload.homecontroller.GetHomeResponse.Body;
 import java.util.List;
 import lombok.AllArgsConstructor;
