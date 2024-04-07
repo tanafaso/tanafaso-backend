@@ -36,10 +36,10 @@ import com.azkar.payload.challengecontroller.responses.FinishReadingQuranChallen
 import com.azkar.payload.challengecontroller.responses.GetChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesResponse;
 import com.azkar.payload.challengecontroller.responses.GetChallengesV2Response;
-import com.azkar.payload.challengecontroller.responses.ReturnedChallenge;
 import com.azkar.payload.challengecontroller.responses.GetFinishedChallengesCountResponse;
 import com.azkar.payload.challengecontroller.responses.GetGlobalChallengeResponse;
 import com.azkar.payload.challengecontroller.responses.GetMeaningChallengeResponse;
+import com.azkar.payload.challengecontroller.responses.ReturnedChallenge;
 import com.azkar.payload.challengecontroller.responses.UpdateChallengeResponse;
 import com.azkar.payload.exceptions.BadRequestException;
 import com.azkar.repos.AzkarChallengeRepo;
