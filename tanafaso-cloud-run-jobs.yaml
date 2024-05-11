@@ -18,4 +18,4 @@ spec:
           maxRetries: 0
           timeoutSeconds: 3600
           containers:
-            - image: europe-west1-docker.pkg.dev/tanafaso/tanafaso-jobs/tanafaso-jobs:randomtag00027311
+            - image: europe-west1-docker.pkg.dev/tanafaso/tanafaso-jobs/tanafaso-jobs:randomtag00004412

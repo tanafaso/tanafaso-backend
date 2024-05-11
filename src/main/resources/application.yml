@@ -32,4 +32,4 @@ files:
 
 challenges-cleaner-job-run-mode: false
 friendship-empty-group-id-cleaner-job-run-mode: false
-
+backfill-null-lastnames-job-run-mode: true

@@ -19,9 +19,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FriendshipEmptyGroupIdCleaner implements ApplicationRunner {
+public class FriendshipEmptyGroupIdCleanerJob implements ApplicationRunner {
 
-  private static final Logger logger = LoggerFactory.getLogger(FriendshipEmptyGroupIdCleaner.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(FriendshipEmptyGroupIdCleanerJob.class);
   private static final int FRIENDSHIPS_BATCH_SIZE = 100;
   @Value("${friendship-empty-group-id-cleaner-job-run-mode}")
   public boolean jobMode;
@@ -30,7 +31,8 @@ public class FriendshipEmptyGroupIdCleaner implements ApplicationRunner {
   @Autowired
   private ApplicationContext appContext;
 
-  // This is a cleanup after the fix https://github.com/tanafaso/tanafaso-backend/pull/463.
+  // This is a cleanup after the fix:
+  // https://github.com/tanafaso/tanafaso-backend/pull/463.
   @Override
   public void run(ApplicationArguments args) throws Exception {
     if (!jobMode) {
