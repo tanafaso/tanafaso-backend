@@ -146,6 +146,9 @@ public class FriendshipTest extends TestBase {
 
     Friend user2Friend2 = user2Friendship.getFriends().get(1);
     assertFriendship(user2Friend2, USER1, /*isPending=*/false);
+
+    assertThat(user1Friend2.getGroupId(), notNullValue());
+    assertThat(user1Friend2.getGroupId(), is(user2Friend2.getGroupId()));
   }
 
 
