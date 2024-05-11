@@ -59,7 +59,8 @@ public class UserService {
 
 
   public User buildNewUser(String email, String firstName, String lastName) {
-    return buildNewUser(email, firstName, lastName, /*encodedPassword=*/null);
+    return buildNewUser(email, firstName, lastName == null ? "" : lastName, /*encodedPassword=*/
+        null);
   }
 
   public User buildNewUser(String email, String firstName, String lastName,
