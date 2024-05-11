@@ -31,5 +31,5 @@ files:
   apple_auth_private_key: sign_in_with_apple_auth_key
 
 challenges-cleaner-job-run-mode: false
-friendship-empty-group-id-cleaner-job-run-mode: true
+friendship-empty-group-id-cleaner-job-run-mode: false
 
