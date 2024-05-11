@@ -128,13 +128,18 @@ public class FriendshipController extends BaseController {
         .filter(f -> f.getUserId().equals(otherUserId))
         .findAny();
     if (friend.isPresent()) {
+      Group binaryGroup = generateBinaryGroup(currentUser, friend.get());
+      groupRepo.save(binaryGroup);
+
       // Set isPending for the current user.
       friend.get().setPending(false);
+      friend.get().setGroupId(binaryGroup.getId());
 
       // Set isPending for the current user.
       otherUserFriendship.getFriends().add(
           Friend.builder()
               .userId(currentUser.getId())
+              .groupId(binaryGroup.getId())
               .username(currentUser.getUsername())
               .firstName(currentUser.getFirstName())
               .lastName(currentUser.getLastName())
