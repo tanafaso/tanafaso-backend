@@ -18,9 +18,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ChallengesCleaner implements ApplicationRunner {
+public class ChallengesCleanerJob implements ApplicationRunner {
 
-  private static final Logger logger = LoggerFactory.getLogger(ChallengesCleaner.class);
+  private static final Logger logger = LoggerFactory.getLogger(ChallengesCleanerJob.class);
   private static final int USERS_BATCH_SIZE = 100;
 
   @Autowired
