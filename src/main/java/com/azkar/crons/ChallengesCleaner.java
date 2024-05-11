@@ -29,7 +29,7 @@ public class ChallengesCleaner implements ApplicationRunner {
   @Autowired
   private ApplicationContext appContext;
 
-  @Value("${job-mode}")
+  @Value("${challenges-cleaner-job-run-mode}")
   public boolean jobMode;
 
   // Run every while to clean old challenges. Note that although after every challenge creation

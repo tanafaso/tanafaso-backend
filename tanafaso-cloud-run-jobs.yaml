@@ -1,0 +1,21 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: tanafaso-jobs
+  namespace: 'tanafaso'
+  labels:
+    cloud.googleapis.com/location: europe-west1
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+spec:
+  template:
+    spec:
+      parallelism: 1
+      taskCount: 1
+      template:
+        spec:
+          maxRetries: 0
+          timeoutSeconds: 3600
+          containers:
+            - image: europe-west1-docker.pkg.dev/tanafaso/tanafaso-jobs/tanafaso-jobs:randomtag00027311
